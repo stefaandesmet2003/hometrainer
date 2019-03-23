@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+  <title>Direto Test App</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+</head>
+<body onload="onBodyLoad()">
+
+<h1 id="connect">Direto Test App - Click to connect!</h1>
+
+<pre id="log"></pre>
+<pre id="bikedata">--</pre>
+<button id="testbutton"> start test</button>
+
+<script src="../direto.js"></script>
+
+<script>
+  var diretoConnected = false;
+  function onBodyLoad() {
+    log("start");
+
+    document.querySelector('#connect').addEventListener('click', diretoConnectDisconnect);
+
+    document.querySelector('#log').addEventListener('dblclick', function () {
+      document.querySelector('#log').textContent = "";
+    });
+
+    document.querySelector('#testbutton').addEventListener('click', onTestButtonClick);
+
+  } // onBodyLoad
+
+  async function diretoConnectDisconnect() {
+    let clickConnect = document.querySelector('#connect');
+    if (!diretoConnected) {
+      try {
+      await direto.connect();
+      log("connect done");
+      clickConnect.textContent = "Connected!";
+      diretoConnected = true;
+
+      await direto.init();
+      /* workaround
+      need a little timeout here.
+      strange : the start() command fails with code 4-FAILED, but the elapsedTime starts to roll nevertheless ??
+      manual start from the command line returns code 1-SUCCESS, hinting that a delay is required here
+      */
+      //await direto.start(); 
+      log("start done")
+      await direto.setResistance(20).then(()=>{
+        direto.start();
+      });
+      direto.addEventListener('onbikedata', onBikeData);
+
+    } catch(error)  {
+        log('error in diretoStart : ' + error);
+      }
+
+    } else {
+      direto.stop().then(()=>{
+        direto.disconnect();
+      });
+      log("direto disconnected!");
+      clickConnect.textContent = "Direto Test app - click to connect!";
+      diretoConnected = false;
+
+
+    }
+
+  } // diretoStart
+
+  var idInterval = null; // signals test ongoing
+  function onTestButtonClick(event) {
+    if (!idInterval) {
+      idInterval = setInterval(() => {direto.setResistance(20)},250);
+    }
+    else {
+      clearInterval(idInterval);
+      idInterval = null;
+    }
+  }
+
+  function onBikeData (bikeData) {
+    let bikeDataTxt = document.querySelector('#bikedata');
+    bikeDataTxt.textContent = "";
+    for (var prop in bikeData) {
+      bikeDataTxt.textContent += `${prop} = ${bikeData[prop]}\n`;
+    }
+    // bikeData.textContent = `${bikeDataPower} W - ${bikeDataCadence} rpm - ${bikeDataElapsedTime} s`;
+  } // onBikeData
+  
+  /*
+  function log(line) {
+    document.querySelector('#log').textContent += line + '\n';
+
+  }
+  */
+  function log(line) {
+    let n = Date.now() & 0xffff;
+    console.log (`${n} - ${line}`);
+  }
+</script>
+
+</body>
+</html>
