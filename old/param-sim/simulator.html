@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="jquery-2.0.3.js"></script>
+  <script src="gpxFile.js"></script>
+  <script src="rouvyXmlFile.js"></script>
+  <script src="VincentyFormula.js"></script>
+  <script src="esp32dongle.js"></script>
+  
+  <style>
+  * {
+      box-sizing: border-box;
+  }
+  body {
+      margin: 0;
+      font-family: Arial;
+      font-size: 17px;
+  }
+
+  #myVideo {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      min-width: 100%; 
+      min-height: 100%;
+  }
+
+  .graphicsOverlay {
+      position: fixed;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      color: #f1f1f1;
+      width: 100%;
+      padding: 20px;
+  }
+
+  button {
+      width: 200px;
+      font-size: 18px;
+      padding: 10px;
+      border: none;
+      background: #000;
+      color: #fff;
+      cursor: pointer;
+  }
+
+  button:hover {
+      background: #ddd;
+      color: black;
+  }
+  
+  #canvasGradient {
+  }
+  </style>
+
+</head>
+<body onload="onBodyLoad()">
+
+  <script>
+  // html interface
+  var video;
+  var buttonPlay;
+  var videoFile;
+  var trackFile;
+  var canvasGradient;
+  var ctx;
+  var buttonDownload;
+
+  // text on html page
+  var curSpeedTxt, curDistanceTxt, curElevationTxt, curGradientTxt;
+  var debugTxt;
+
+  var gpxxml; // the raw xml from the gpx file
+  var tracks = [];
+
+  const SIMULATION_IDLE      = 0;
+  const SIMULATION_READY     = 1;
+  const SIMULATION_RUNNING   = 2;
+  const SIMULATION_PAUSED    = 3;
+  const SIMULATION_COMPLETED = 4;
+  var simState;
+
+  // bike simulation parameters
+  const Cd = 0.63;
+  const A = 0.5; //0.5
+  const W = 82.0+9.0; // kg
+  const g = 9.8067;
+  const Rho = 1.226;
+  const Crr = 0.0033; //0.0033
+
+  var resistanceValueInput; // temp, for the manual setting of resistance levels
+  var curResistance; // value set in the trainer
+
+  // ride parameters
+  var curPower; // watts
+  var curCadence; // rpm
+  var curSpeed; // m/s
+  var curDistance; // m
+  var curGradient; // %
+  var curElevation, prevElevation; // prevElevation needed for totalAscent, totalDescent;
+  var totalAscent, totalDescent;
+  var curTrackFilePos = 0; // for keeping track of the gpx file playback
+  var totalTime;
+  
+  var allClimbs = [];
+
+  var ridelog = [];
+
+  // video parameters
+  var videoSpeed; // een uitgemiddelde ref snelheid (m/s) waaraan in de video wordt gereden
+  var curVideoSeconds = 0.0; // target position in the video file
+  var curVideoFilePos = 0; // current position in the VideoPoints array (voorlopig enkel rouvy, maar moet ook voor kinomap)
+  
+  // simulator
+  var simStartTime = Date.parse(Date()) - 3600*24*7*1000; // 1 week earlier
+  var simSeconds = 0;
+
+
+  function onBodyLoad() {
+    video = document.getElementById("myVideo");
+    video.playbackRate = 0.0; // de playback rate wordt door de secondUpdate bijgestuurd
+    video.pause();
+    videoFile = document.getElementById("fileVideo");
+    videoFile.onchange = handleVideoFileSelect;
+    trackFile = document.getElementById("fileTrack");
+    trackFile.onchange = handleTrackFileSelect;
+    buttonPlay = document.getElementById("buttonPlay");
+    buttonDownload = $("#buttonDownload");
+    
+    inputResistanceValue = document.getElementById("resistanceValue");
+    
+    canvasGradient = document.getElementById("canvasGradient");
+    ctx = canvasGradient.getContext("2d");
+    
+    simState = SIMULATION_IDLE;
+    
+    // init ride parameters
+    curPower = 0.0;
+    curCadence = 0.0;
+    curSpeed = 0.0;
+    curDistance = 0.0;
+    curGradient = 0.0;
+    curElevation = 0.0;
+    prevElevation = 0.0;
+    totalAscent = 0.0;
+    totalDescent = 0.0;
+    totalTime = 0;
+    
+    curResistance = 0;
+    
+    // html page info
+    curSpeedTxt = document.getElementById("curSpeed");
+    curDistanceTxt = document.getElementById("curDistance");
+    curElevationTxt = document.getElementById("curElevation");
+    curGradientTxt = document.getElementById("curGradient");
+    debugTxt = document.getElementById("debugTxt");
+    
+    //setInterval(secUpdate, 1000);
+    
+  } // onBodyLoad  
+
+  function playFunction() {
+    if ((simState == SIMULATION_READY) || (simState == SIMULATION_PAUSED)) {
+      //SIM video.play();
+      buttonPlay.innerHTML = "Pause";
+      simState = SIMULATION_RUNNING;
+      //SIM dongleCmdStart();
+      // run the complete simulation in 1 go to produce the gpx output
+      while (simState != SIMULATION_COMPLETED) {
+        secUpdate();
+      }
+      // one more to retrieve the gpx
+      secUpdate();
+      
+    }
+    else if (simState == SIMULATION_RUNNING) {
+      //SIM video.pause();
+      buttonPlay.innerHTML = "Start";
+      simState = SIMULATION_PAUSED;
+      //SIM dongleCmdStop();
+    }
+  } // playFunction
+
+  function handleVideoFileSelect(evt) {
+    var id = evt.target.id; // 
+    var files = evt.target.files; // FileList object
+    if (files.length == 0)
+      return;
+    // files[0] is de video file
+    
+    //video.setAttribute("src", files[0].name);
+    video.setAttribute("src",URL.createObjectURL(event.target.files[0]));
+   
+    video.load();
+    video.playbackRate = 0.0; // de playback rate wordt door de secondUpdate bijgestuurd
+    video.loop = false;
+    video.pause();
+  } // handleVideoFileSelect
+
+   function handleTrackFileSelect(evt) {
+    var id = evt.target.id; // voor het geval we verschillende choose file buttons zouden gaan gebruiken die allemaal naar deze functie wijzen
+    var files = evt.target.files; // FileList object
+    
+    var trackData;
+    
+    // voorlopig wordt maar enkel de 1ste file uit de FileList geparsed
+    
+    if (files.length == 0)
+      return;
+    var fileExtension =  files[0].name.split('.').pop();
+    
+    var reader = new FileReader();
+    reader.onload = function() {
+      gpxxml = reader.result;
+      if (fileExtension == "xml") {
+        var rouvyXmlFile= new RouvyXmlFile(); // global of niet? in smoother.js was dit global, maar hier hebben we die niet meer nodig nadat de trackData geparsed zijn, toch?
+        trackData = rouvyXmlFile.parseXML(gpxxml);
+      }
+      else if (fileExtension == "gpx") {
+        var gpxFile= new GPXFile(); // global of niet? in smoother.js was dit global, maar hier hebben we die niet meer nodig nadat de trackData geparsed zijn, toch?
+        trackData = gpxFile.parseGPX(gpxxml);
+        trackData = gpxFile.smoothGPX(trackData);
+      }
+      else {
+        console.log ("unsupported file format");
+        return;
+      }
+      curElevation = trackData.TrackPoints[0].elevation;
+      console.log("Track distance = " + trackData.TrackPoints[trackData.TrackPoints.length-1].totalDistance + "Video distance = " + trackData.VideoPoints[trackData.VideoPoints.length-1].totalDistance);
+      
+      // TODO : clean this up
+      // 1st track is used for the simulation, all subsequent tracks are ghosts
+      // we don't want to alter the allClimbs object after the first time
+      if (simState == SIMULATION_IDLE) {
+        allClimbs = findAllClimbs(trackData);
+
+        var i;
+        for (i = 0; i< allClimbs.length; i ++) {
+          var startPos = allClimbs[i].startPos;
+          var endPos = allClimbs[i].endPos;
+          var eleDiff = trackData.TrackPoints[endPos].elevation - trackData.TrackPoints[startPos].elevation;
+          var climbLength = trackData.TrackPoints[endPos].totalDistance - trackData.TrackPoints[startPos].totalDistance;
+          console.log("found summit @ " + allClimbs[i].climbSummitElevation +"m, " + eleDiff.toFixed(0) + "m over " + climbLength.toFixed(0) + 
+                          "m, avg gradient = " +(100*eleDiff / climbLength).toFixed(1) + "%" );
+        }
+      }
+      
+      tracks.push(trackData);
+
+      simState = SIMULATION_READY;
+      console.log ("there are now " + tracks.length + " tracks available");
+      
+      // todo : wat als er geen elevation data in de gpx zitten?
+    };
+    reader.readAsText(files[0]);
+  }  // handleTrackFileSelect
+
+  // draws a section of the gradient canvas with gradient (color); the section runs from startPercent (0..1) to endPercent (0..1) 
+  function drawGradient (gradient, startPercent, endPercent) {
+    //console.log ("drawing " + (100*gradient).toFixed(2) + "% from " + (100*startPercent).toFixed(0) + "% to " + (100*endPercent).toFixed(0) + "%");
+    
+    // height of the fill
+/* height 10 versie    
+    var yMin = 0, yMax = 0;
+    const canvasHeight = 10;
+    if (gradient > 0) {
+      // filling the upper part of the canvas section
+      yMax = 7;
+      if (gradient < 0.01) yMin = 6;
+      else if (gradient < 0.02) yMin = 5;
+      else if (gradient < 0.03) yMin = 4;
+      else if (gradient < 0.05) yMin = 3;
+      else if (gradient < 0.07) yMin = 2;
+      else if (gradient < 0.09) yMin = 1;
+      else yMin = 0;
+    }
+    else if (gradient < 0) {
+      // filling the lower part of the canvas section
+      yMin = 7;
+      if (gradient > -0.02) yMax = 8;
+      else if (gradient > -0.05) yMax = 9;
+      else yMax = 10;
+    }
+*/
+    // height 15 versie
+    var yMin = 0, yMax = 0;
+    const canvasHeight = 15;
+    if (gradient > 0) {
+      // filling the upper part of the canvas section
+      yMax = 10;
+      yMin = Math.max(Math.floor(11-gradient*100),0);
+    }
+    else if (gradient < 0) {
+      // filling the lower part of the canvas section
+      yMin = 10;
+      if (gradient > -0.01) yMax = 11;
+      if (gradient > -0.02) yMax = 12;
+      if (gradient > -0.05) yMax = 13;
+      else yMax = 14;
+    }
+    
+    // length of the fill -> from startPercent to endPercent
+    // 500 = length of the total canvas
+    var xMin = Math.round(startPercent*500);
+    var xMax = Math.round(endPercent*500);
+    
+    // determine the fill color
+    var color;
+    if (gradient < 0.0) color = "#00FF00"; // green
+    else if (gradient < 0.04) color = "#FFFF00"; // yellow
+    else if (gradient < 0.08) color = "#FF8C00"; // dark orange
+    else color = "#FF0000"; // red
+    
+    // do the filling
+    // empty the section first
+    //ctx.fillStyle = "#000000";
+    ctx.clearRect(xMin,0, xMax-xMin,canvasHeight);
+
+    ctx.fillStyle = color;
+    ctx.fillRect(xMin,yMin, xMax-xMin,yMax-yMin);
+    
+  } // drawGradient
+  
+  // find all climbs in the trackData
+  // climb ends if elevation descreases by more than 10 VM
+  function findAllClimbs (trackData) {
+
+    const state_findingStartOfClimb = 0;
+    const state_findingEndOfClimb = 1;
+    const minClimbElevation = 10.0; // parameter for the algorithm
+    var allClimbs = [];
+    const length = trackData.TrackPoints.length;
+    
+    var stateAlgo = state_findingStartOfClimb;
+    var pos = 0;
+    var climbStartPos = 0;
+    var climbEndPos = 0;
+    var refElevation = trackData.TrackPoints[0].elevation;
+    
+    while (pos < (trackData.TrackPoints.length - 1)) {
+      pos ++;
+      if (stateAlgo == state_findingStartOfClimb) {
+        if (trackData.TrackPoints[pos].elevation > refElevation) {
+          // we are climbing -> let's now find the end of this climb
+          stateAlgo = state_findingEndOfClimb;
+          climbStartPos = pos - 1;
+        }
+        else if (trackData.TrackPoints[pos].elevation < refElevation) {
+          // we are not climbing, keep searching
+        }
+        refElevation = trackData.TrackPoints[pos].elevation;
+      }
+      else if (stateAlgo == state_findingEndOfClimb) {
+        if (trackData.TrackPoints[pos].elevation > refElevation) {
+          refElevation = trackData.TrackPoints[pos].elevation;
+          climbEndPos = pos;
+        }
+        if (trackData.TrackPoints[pos].elevation < (refElevation - minClimbElevation)) {
+          // back in a descent; did we find a climb?
+          if ( (trackData.TrackPoints[pos].elevation - trackData.TrackPoints[climbStartPos].elevation) > minClimbElevation ) {
+            // we need at least 10m of elevation difference to quality it as a 'climb'
+            var climb = {};
+            climb.startPos = climbStartPos;
+            climb.endPos = climbEndPos;
+            climb.climbSummitElevation = refElevation;
+            allClimbs.push(climb);
+          }
+          else {
+            // startPos is just a hump in the road; let's restart the search for a climb
+          }
+          stateAlgo = state_findingStartOfClimb; // start finding next climb
+          refElevation = trackData.TrackPoints[pos].elevation;
+        }
+      }
+    }
+    // did we leave the loop in the middle of a climb -> let's count it in
+    if ((stateAlgo == state_findingEndOfClimb) && ((trackData.TrackPoints[climbEndPos].elevation - trackData.TrackPoints[climbStartPos].elevation) > minClimbElevation)) {
+      var climb = {};
+      climb.startPos = climbStartPos;
+      climb.endPos = climbEndPos;
+      climb.climbSummitElevation = refElevation;
+      allClimbs.push(climb);
+    }
+    
+    return allClimbs;
+  
+  } // findAllClimbs
+  
+  function calcGradientOverDistance (trackData, curPos, distance) {
+    var refElevation = curPos.elevation;
+    var refDistance;
+    var pos = 0;
+    const length = trackData.TrackPoints.length;
+    
+    // refDistance not beyond the end of the track
+    refDistance = Math.min (curPos.distance + distance, trackData.TrackPoints[length-1].totalDistance );
+    
+    // find elevation at refDistance + distance;
+    while ((trackData.TrackPoints[pos].totalDistance <= refDistance) && (pos < length-1)) {
+       pos++;
+    }
+    // refDistance ligt nu ts pos-1 en pos
+    var frx = (refDistance - trackData.TrackPoints[pos-1].totalDistance) / (trackData.TrackPoints[pos].totalDistance - trackData.TrackPoints[pos-1].totalDistance);
+    var refElevation = trackData.TrackPoints[pos-1].elevation + frx*(trackData.TrackPoints[pos].elevation - trackData.TrackPoints[pos-1].elevation);
+    return ((refElevation - curPos.elevation)/distance);
+    
+  } // calcGradientOverDistance
+  
+  // function is called every second
+  function secUpdate() {
+  
+    var trackData = tracks[0];
+
+    // take info from dongle
+    curPower = bikeDataPower;
+    //SIM : if ghost exists, take curPower from the ghost
+    if (tracks.length > 1) {
+      if (totalTime < tracks[1].TrackPoints.length)
+        curPower = tracks[1].TrackPoints[totalTime].power;
+      else {
+        // pretend to continue with last available power
+        curPower = tracks[1].TrackPoints[tracks[1].TrackPoints.length-1].power;
+      }
+    }
+    curCadence = bikeDataCadence;
+
+    if (simState == SIMULATION_RUNNING) {
+      
+      totalTime++; // in seconds - alternatively use the bikeDataElapsedTime from the trainer
+      curDistance+= curSpeed*1.0; // 1.0 = 1 second update interval
+    
+      // update position in gps track 'curTrackFilePos' based on curDistance
+      // TODO : dit werkt niet als we manueel de curDistance terugzetten (omdat curTrackFilePos enkel verhoogt)
+      // temp : bij elke secUpdate curTrackFilePos vanaf start zoeken
+      curTrackFilePos = 0; // temp, tot we weten hoe we via de UI in de video vooruit/achteruit gaan 
+      curVideoFilePos = 0; // idem
+      while (trackData.TrackPoints[curTrackFilePos].totalDistance < curDistance) {
+         curTrackFilePos++;
+         if (curTrackFilePos == trackData.TrackPoints.length) break;
+      }
+      
+      if (curTrackFilePos == trackData.TrackPoints.length) {
+      // --> stop de simulatie, we hebben gedaan!
+        simState = SIMULATION_COMPLETED;
+        //SIM video.pause(); // ofwel video laten verder spelen tot video.ended == true
+        var point =  {};
+        point.speed = curSpeed*3.6; //m/s to km/h
+        //point.time = Date();
+        //SIM
+        point.time = simStartTime + simSeconds*1000; // point.time in msec JS date format
+        simSeconds++;
+        
+        point.power = curPower;
+        point.cadence = curCadence;
+        point.lat = trackData.TrackPoints[trackData.TrackPoints.length-1].lat;
+        point.lon = trackData.TrackPoints[trackData.TrackPoints.length-1].lon;
+        point.elevation = trackData.TrackPoints[trackData.TrackPoints.length-1].elevation;
+        ridelog.push(point);
+        // TODO : reset the trainer resistance!
+        return;
+      }
+
+      var gpxPartFilePos = 0.0;
+      if (curTrackFilePos != trackData.TrackPoints.length) {
+        curTrackFilePos = Math.max(curTrackFilePos-1,0);
+        var distanceMin = trackData.TrackPoints[curTrackFilePos].totalDistance;
+        var distanceMax = trackData.TrackPoints[Math.min(curTrackFilePos+1,trackData.TrackPoints.length-1)].totalDistance;
+        gpxPartFilePos = (curDistance - distanceMin) / (distanceMax - distanceMin);
+      }
+      
+      // find average gradient tussen 2 opeenvolgende trackpoints; eventueel is vooraf al smoothing uitgevoerd, maar niet hier!
+      // curTrackFilePos gaat hier hoogstens length-2 zijn, dus curTrackFilePos+1 wijst nog steeds in de TrackPoints array
+      curGradient = (trackData.TrackPoints[curTrackFilePos+1].elevation - trackData.TrackPoints[curTrackFilePos].elevation) / (trackData.TrackPoints[curTrackFilePos+1].totalDistance - trackData.TrackPoints[curTrackFilePos].totalDistance);
+      
+      prevElevation = curElevation;
+      curElevation = trackData.TrackPoints[curTrackFilePos].elevation + curGradient* (curDistance - trackData.TrackPoints[curTrackFilePos].totalDistance);
+      // ofwel curElevation = trackData.TrackPoints[curTrackFilePos].elevation + gpxPartFilePos* (trackData.TrackPoints[curTrackFilePos+1].elevation - trackData.TrackPoints[curTrackFilePos].elevation);
+      
+      // keep track of total ascent / descent
+      if (curElevation > prevElevation) totalAscent += (curElevation - prevElevation);
+      else if (curElevation < prevElevation) totalDescent += (prevElevation - curElevation);
+      
+      // update the gradient canvas
+      // gradient canvas represents the gradient for the next 30 seconds
+      var kmToDisplay = 30.0*curSpeed;
+      var tmpTrackFilePos = curTrackFilePos;
+      var kmPos = curDistance;
+      while ((kmPos < curDistance + kmToDisplay) && (tmpTrackFilePos < trackData.TrackPoints.length - 1)) {
+        var gradient = (trackData.TrackPoints[tmpTrackFilePos+1].elevation - trackData.TrackPoints[tmpTrackFilePos].elevation) / (trackData.TrackPoints[tmpTrackFilePos+1].totalDistance - trackData.TrackPoints[tmpTrackFilePos].totalDistance);
+        drawGradient(gradient, (kmPos - curDistance)/kmToDisplay, Math.min(1.0, (trackData.TrackPoints[tmpTrackFilePos+1].totalDistance - curDistance) / kmToDisplay ));
+        kmPos = trackData.TrackPoints[tmpTrackFilePos+1].totalDistance;
+        tmpTrackFilePos ++ ;
+      }
+      // clear the end of the canvas when nearing the end of the ride
+      if (tmpTrackFilePos == (trackData.TrackPoints.length - 1)) {
+        drawGradient(0,Math.min(1.0,(trackData.TrackPoints[tmpTrackFilePos].totalDistance - curDistance) / kmToDisplay), 1.0);
+      }
+
+      // video sync & playback speed tunen
+      // video.currentTime -> een double met de current video position
+//SIM       
+/*      
+      // 1. vind de curVideoFilePos & curVideoSeconds obv curDistance
+      while (trackData.VideoPoints[curVideoFilePos].totalDistance < curDistance){
+        curVideoFilePos++;
+        if (curVideoFilePos == trackData.VideoPoints.length) break;
+      }
+        
+      if (curVideoFilePos == 0) {
+        // we zitten vóór het eerste VideoPoint
+        if (trackData.VideoPoints[0].totalDistance)
+          curVideoSeconds = trackData.VideoPoints[0].videoTime*(curDistance / trackData.VideoPoints[0].totalDistance);
+      }
+      else if (curVideoFilePos == trackData.VideoPoints.length) {
+        // we zijn voorbij het laatste video ref point
+        // curVideoSeconds = interpolatie tussen [curVideoFilePos-1].videoTime en video.duration obv afgelegde afstand
+        const trackTotalDistance = trackData.TrackPoints[trackData.TrackPoints.length-1].totalDistance;
+        curVideoSeconds = trackData.VideoPoints[curVideoFilePos-1].videoTime + (curDistance - trackData.VideoPoints[curVideoFilePos-1].totalDistance)/(trackTotalDistance - trackData.VideoPoints[curVideoFilePos-1].totalDistance) * (video.duration - trackData.VideoPoints[curVideoFilePos-1].videoTime);
+      }
+      else {
+        // curVideoSeconds = interpolatie tussen [curVideoFilePos-1].videoTime en [curVideoFilePos].videoTime obv afgelegde afstand
+        curVideoSeconds = trackData.VideoPoints[curVideoFilePos-1].videoTime + (curDistance - trackData.VideoPoints[curVideoFilePos-1].totalDistance)/(trackData.VideoPoints[curVideoFilePos].totalDistance - trackData.VideoPoints[curVideoFilePos-1].totalDistance) * (trackData.VideoPoints[curVideoFilePos].videoTime - trackData.VideoPoints[curVideoFilePos-1].videoTime);
+      }
+      
+      // 2. bepaal een ref videoSpeed : gemiddelde snelheid over minstens 10 seconden video
+      if (curVideoFilePos != trackData.VideoPoints.length) {
+        var videoSpeedRefPosMin = Math.max(0,curVideoFilePos-1);
+        var videoSpeedRefPosMax = videoSpeedRefPosMin + 1;
+        while (trackData.VideoPoints[videoSpeedRefPosMax].videoTime < curVideoSeconds + 10.0) {
+          videoSpeedRefPosMax++;
+          if (videoSpeedRefPosMax == trackData.VideoPoints.length) break;
+        }
+        videoSpeedRefPosMax = Math.min(videoSpeedRefPosMax,trackData.VideoPoints.length-1);
+        videoSpeed = (trackData.VideoPoints[videoSpeedRefPosMax].totalDistance - trackData.VideoPoints[videoSpeedRefPosMin].totalDistance);
+        videoSpeed = videoSpeed / (trackData.VideoPoints[videoSpeedRefPosMax].videoTime - trackData.VideoPoints[videoSpeedRefPosMin].videoTime);
+      }
+      else {
+        // we zijn voorbij het laatste video ref point
+        // geen idee hoe lang de video nog duurt, maar de video speed gewoon aanhouden tot die stopt in de player
+        // TODO we hebben wel video.duration
+        videoSpeed = videoSpeed;
+      }
+      
+      // 3. set playbackRate
+      var playbackRate;
+      if (curPower < 1) {
+        // stop de video als je stopt met trappen; anders stopt de video nooit in een afdaling
+        playbackRate = 0.0;
+      }
+      else {
+        playbackRate = curSpeed / videoSpeed;
+      }
+      
+      if (Math.abs(curVideoSeconds - video.currentTime) > 5.0) {
+        // not trying to catch up; jump straight to the currentTime;
+        video.currentTime = curVideoSeconds;
+      }
+      else if (playbackRate) { // if curSpeed == 0 --> we want the video to stop immediately
+        playbackRate += 0.1*(curVideoSeconds - video.currentTime);
+        if (video.playbackRate) {
+          if (playbackRate > video.playbackRate*1.1)
+            playbackRate = video.playbackRate*1.1;
+          else if (playbackRate < video.playbackRate*0.9)
+            playbackRate = video.playbackRate*0.9;        
+        }
+      }
+      if (playbackRate < 0.1) playbackRate = 0;
+      if (video.playbackRate != playbackRate )
+        video.playbackRate = playbackRate;
+        
+      //console.log("delta : " + (video.currentTime - curVideoSeconds).toFixed(2) + "pbrate : " + playbackRate.toFixed(2) + "speed : " + (curSpeed*3.6).toFixed(2));
+*/
+//SIM       
+      // update ridelog
+      // TODO : als curSpeed 0 is, stoppen met loggen na x seconden
+      var point =  {};
+      point.speed = curSpeed*3.6; //m/s to km/h
+      //point.time = Date();
+      //SIM
+      point.time = simStartTime + simSeconds*1000; // point.time in msec JS date format
+      simSeconds++;
+      
+      point.power = curPower;
+      point.cadence = curCadence;
+      // TODO : curTrackFilePos+1 werkt niet als we al op het einde zitten van de gpx file !
+      // lat/lon via lineaire interpolatie ; niet 100% juist, maar allee
+      point.lat = trackData.TrackPoints[curTrackFilePos].lat + gpxPartFilePos* (trackData.TrackPoints[curTrackFilePos+1].lat - trackData.TrackPoints[curTrackFilePos].lat);
+      point.lon = trackData.TrackPoints[curTrackFilePos].lon + gpxPartFilePos* (trackData.TrackPoints[curTrackFilePos+1].lon - trackData.TrackPoints[curTrackFilePos].lon);
+      point.elevation = curElevation;
+      ridelog.push(point);
+      
+      // set resistance on trainer based on curGradient
+      // formula experimental for Elite Direto
+//SIM
+/*      
+      var resistance = Math.round (Math.min(1610*curGradient + 22,200));
+      resistance = Math.max (resistance, 0);
+      if (resistance != curResistance)
+        dongleCmdChangeResistance (resistance);
+      curResistance = resistance;
+*/      
+      
+      // update speed according to bike riding model
+      curSpeed = updateBikeModel(); // next 1 second we will be riding at curSpeed
+    } // simState == SIMULATION_RUNNING
+    
+    else if ((simState == SIMULATION_PAUSED) || (simState == SIMULATION_COMPLETED)){
+      // stopped running -> enable the download button and deliver the gpx ride data
+      var rouvyXmlFile = new RouvyXmlFile();
+      var newXML = rouvyXmlFile.formatXML(rouvyXmlFile.makeGPX(ridelog, trackData)); // TODO :trackData doorgeven voor de name & description; kan beter!!
+      var fileContents = encodeURIComponent(newXML);
+      buttonDownload.attr('href', 'data:text/plain;charset=utf-8,' + fileContents);
+      buttonDownload.attr('download', "mytestride.gpx");
+      if (simState == SIMULATION_PAUSED) buttonPlay.innerHTML = "Resume";
+      else if (simState == SIMULATION_COMPLETED) buttonPlay.innerHTML = "Restart";
+    } // simState == SIMULATION_PAUSED) || SIMULATION_COMPLETED
+
+    // update html page
+    curSpeedTxt.innerHTML = (curSpeed*3.6).toFixed(2) + "km/h";
+    curDistanceTxt.innerHTML = curDistance.toFixed(0) + "m"; // geen cijfers na de komma
+    curElevationTxt.innerHTML = curElevation.toFixed(0) + "m";
+    curGradientTxt.innerHTML = (curGradient*100.0).toFixed(1) + "%"
+    debugTxt.innerHTML = "";
+    debugTxt.innerHTML += " cad = " + curCadence + "rpm";
+    debugTxt.innerHTML += " pow = " + curPower + "W";
+    debugTxt.innerHTML += " resistance = " + curResistance;
+    debugTxt.innerHTML += " totalAscent = " + totalAscent.toFixed(0) + "m";
+    debugTxt.innerHTML += " totalDescent = " + totalDescent.toFixed(0) +"m";
+    debugTxt.innerHTML += " elapsedTime = " + totalTime +"s";
+
+    // this info can only be shown when simulation is at least ready
+    if ((simState != SIMULATION_IDLE) && (simState != SIMULATION_COMPLETED)) {
+      debugTxt.innerHTML += " totalDistance = " + trackData.TrackPoints[trackData.TrackPoints.length-1].totalDistance.toFixed(0) + "m";
+
+      // next summit
+      var i = 0;
+      var foundClimb = false;
+
+      for (i = 0; i< allClimbs.length; i++) {
+        if ((allClimbs[i].startPos <= curTrackFilePos) && (curTrackFilePos <=allClimbs[i].endPos)) {
+          foundClimb = true;
+          break;
+        }
+        if (allClimbs[i].startPos > curTrackFilePos) {
+          break;
+        } 
+      }
+      if (foundClimb) {
+        var startPos = allClimbs[i].startPos;
+        var endPos = allClimbs[i].endPos;
+        var eleDiff = trackData.TrackPoints[endPos].elevation - curElevation;
+        var climbLength = trackData.TrackPoints[endPos].totalDistance - curDistance;
+        debugTxt.innerHTML += " next summit @ " + allClimbs[i].climbSummitElevation +"m, " + eleDiff.toFixed(0) + "m over " + climbLength.toFixed(0) + 
+                        "m, avg gradient = " +(100*eleDiff / climbLength).toFixed(1) + "%";
+      }
+      else if (i < allClimbs.length) {
+        var startPos = allClimbs[i].startPos;
+        var endPos = allClimbs[i].endPos;
+        var distFromClimb = trackData.TrackPoints[startPos].totalDistance - curDistance;
+        var eleDiff = trackData.TrackPoints[endPos].elevation - trackData.TrackPoints[startPos].elevation;
+        var climbLength = trackData.TrackPoints[endPos].totalDistance - trackData.TrackPoints[startPos].totalDistance;
+        debugTxt.innerHTML += " next climb in " + distFromClimb.toFixed(0) + "m, with summit @ " + allClimbs[i].climbSummitElevation +"m, " + eleDiff.toFixed(0) + "m over " + climbLength.toFixed(0) + 
+                        "m, avg gradient = " +(100*eleDiff / climbLength).toFixed(1) + "%";
+      }
+
+      // show gradient over next km
+      var curPos = {};
+      curPos.distance = curDistance;
+      curPos.elevation = curElevation;
+      var avgGradient = calcGradientOverDistance (trackData, curPos, 1000.0);
+      debugTxt.innerHTML += " gradient over next km = " + (100*avgGradient).toFixed(2) + "%"
+    }
+    
+  } // secUpdate
+
+  // 1/s update of bike simulation
+  function updateBikeModel() {
+    var fResistance = g*Math.sin(Math.atan(curGradient))*W; // gravity
+    fResistance+= g*Math.cos(Math.atan(curGradient))*W*Crr; // rolling resistance
+    fResistance += 0.5*Cd*A*Rho*Math.pow(curSpeed,2);       // aerodynamic drag
+    var pResistance = fResistance*curSpeed;
+    var newKineticEnergy = 0.5*W*Math.pow(curSpeed,2) - pResistance*1.0 + curPower*1.0; // 1.0 = 1 second update of bikemodel
+    var newSpeed = 0.0;
+    if (newKineticEnergy >=0.0) {
+      newSpeed = Math.sqrt(2*newKineticEnergy/W);
+    }
+    return newSpeed;
+  } // updateBikeModel
+
+  // function to manually change trainer resistance from input field
+  // voorlopig, want de resistance moet door de simulator worden aangepast! 
+  function changeResistanceFunc  () {
+    // take input from resistanceValue input and send command to the dongle
+    dongleCmdChangeResistance (inputResistanceValue.value);
+  } // changeResistanceFunc
+
+  // <video autoplay muted loop id="myVideo" poster="" title="Video title">
+  </script>
+
+  <div id="container">
+    <video muted id="myVideo" poster="" title="Video title">
+      <source src="Rouvy_MountEvans.mp4" type="video/mp4">
+      Your browser does not support HTML5 video.
+    </video>
+
+    <div class="graphicsOverlay">
+      <p> simulator </p>
+      <canvas id="canvasGradient" width="500" height="15" style="border:1px solid #000000;">Your browser does not support the HTML5 canvas tag.
+      </canvas>
+      <p>speed = <span id="curSpeed"></span>, distance = <span id="curDistance"></span>, elevation = <span id="curElevation"></span>,
+      gradient = <span id="curGradient"> </span>, <span id="debugTxt"> </span></p>
+      <button id="buttonPlay" onclick="playFunction()">Start</button>
+      <input id="fileVideo" type="file" accept="video/*"/>
+      <input id="fileTrack" type="file" accept=".gpx,.xml"/>
+      
+      <button id="connect" onclick="dongleConnect()">Connect</button>
+      <button id="disconnect" onclick="dongleDisconnect()">Disconnect</button>
+      <input type="number" id="resistanceValue" value="50"> 
+      <button id="changeResistance" onclick="changeResistanceFunc()">Change Resistance</button>
+      
+      <button><a href="" id="buttonDownload">Download GPX</a></button>
+    </div>
+  </div>
+
+</body>
+</html>
