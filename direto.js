@@ -30,7 +30,7 @@
       this.connected = false;
     }
 
-    connect() {
+    async connect() {
       // met deze lijn krijg je nooit toegang tot de 0x1818 en 0x1816 services
       //return navigator.bluetooth.requestDevice({filters:[{services:['fitness_machine']}]})
       /* met deze lijn niet duidelijk : na de lijn eronder met optional services komen deze
@@ -47,13 +47,13 @@
         return device.gatt.connect();
       })
       .then (server => {
-        log("connected!");
+        log("connect: gatt server connected!");
         this.server = server;
         this.connected = true;
         return server.getPrimaryService('fitness_machine');
       })
       .then (service => {
-        log("found ftms service!");
+        log("connect : found ftms service!");
         return Promise.all ([
           this._cacheCharacteristic(service, 'fitness_machine_feature'),
           this._cacheCharacteristic(service, 'indoor_bike_data'),
@@ -82,14 +82,17 @@
         return this.server.getPrimaryService('cycling_power') // 0x1818
       })
       .then(service => {
-        log("found cycling power service!");
+        log("connect : found cycling power service!");
         return Promise.all ([
           this._cacheCharacteristic(service, 'cycling_power_feature'),
           this._cacheCharacteristic(service, 'cycling_power_measurement'),
         ]);
-      }, () => {
-        log("oops! cycling power service not found!");
-      })      
+      })
+      // come here in case a .then above fails
+      .catch(()=> {
+        log("connect : BLE error!");
+        return(Error("connect : BLE error"));
+      })   
     } // connect
 
     _onDisconnected(event) {
@@ -106,12 +109,20 @@
 
     } // _onDisconnected
 
-    disconnect() {
+    async disconnect() {
       if (this.server) {
         this._stopNotifications().then(()=> {
-          this.server.disconnect();
+          log("disconnect : OK!");
+          return this.server.disconnect();
         // this will trigger _onDisconnected
+        },()=> {
+          log("disconnect : error stopping notifications");
+          return (Error("disconnect : error stopping notifications"));
         })
+      }
+      else {
+        log("disconnect : internal error");
+        return 0;
       }
     } // disconnect
 
@@ -222,10 +233,15 @@
         let minimumResistanceLevel = value.getInt16(0, /*littleEndian=*/true);
         let maximumResistanceLevel = value.getInt16(2, /*littleEndian=*/true);
         let minimumIncrement = value.getUint16(4, /*littleEndian=*/true);
+        //2019.12.07 : waarom die /10 ??
+        // vermoedelijk is minimumResistanceLevel == 1, niet 0, want 0 setten lijkt niet te lukken
         log('Supported Resistance Level Range Info :');
-        log('> minimumResistanceLevel: ' + (minimumResistanceLevel / 10));
-        log('> maximumResistanceLevel: ' + (maximumResistanceLevel / 10));
-        log('> minimumIncrement: ' + (minimumIncrement / 10));
+        //log('> minimumResistanceLevel: ' + (minimumResistanceLevel / 10));
+        //log('> maximumResistanceLevel: ' + (maximumResistanceLevel / 10));
+        //log('> minimumIncrement: ' + (minimumIncrement / 10));
+        log('> minimumResistanceLevel: ' + minimumResistanceLevel);
+        log('> maximumResistanceLevel: ' + maximumResistanceLevel);
+        log('> minimumIncrement: ' + minimumIncrement);
       } catch(error)  {
         log('error reading characteristic : ' + error);
       }
@@ -274,7 +290,13 @@
         const ftmscp = this._characteristics.get('fitness_machine_control_point');
         // 1. send command
         log('ftms command : ' + view);
-        let dummy = await ftmscp.writeValue(buffer);
+        //let dummy = await ftmscp.writeValue(buffer);
+        //2019.12.07 remove await and wait only for the reply
+        // from the timings it looks that the reply notification comes very soon after the await
+        // if the _onFitnessMachineControlPoint notification is executed before the promise is set up here
+        //  the promise will never be resolved, because the replyPromiseResolveFunc is never called!
+        // does removing await help? then replyPromise (and replyPromiseResolveFunc ) is setup synchronously
+        ftmscp.writeValue(buffer);
         // 2. setup reply promise
         let replyPromise = new Promise((resolve,reject) => {
           /*
@@ -303,7 +325,9 @@
           }, 1000);
         });
         // 3. await reply
+        log("await reply..");
         const event = await replyPromise;
+        log("received reply!");
         replyPromiseResolveFunc = null;
         let evtData = event.target.value;
         // In Chrome 50+, a DataView is returned instead of an ArrayBuffer.
@@ -314,6 +338,7 @@
 
       } catch(error)  {
         log('error in ftmsCommand ' + view + ' : ' + error);
+        replyPromiseResolveFunc = null;//2019.12.7, is dit nodig, want gebeurt al in de timeout handler??
         return 0;
       }
 
@@ -454,12 +479,15 @@
       evtData = evtData.buffer ? evtData : new DataView(evtData);
       // parsing data : TODO
       var view8 = new Uint8Array(evtData.buffer);
-      log ("ftms reply : " + view8.toString());
+      log ("direto replies : " + view8.toString());
 
       // handle the replyPromise here -> works better than installing an event listener on each ftms command
       if (replyPromiseResolveFunc) {
         replyPromiseResolveFunc(event);
         clearTimeout(replyPromiseTimeoutId);
+      }
+      else {
+        log("error in replyPromise, cannot resolve!!"); // 2019.12.07, for debug
       }
     } // _onFitnessMachineStatus
     
@@ -483,7 +511,7 @@
         direto._bikeData.pedalPowerBalance = evtData.getUint8(idx) >> 1; // percentage with resolution 1/2
         idx += 1;
       }  
-      if (flags & 0x2) { // accumulated torque - skip
+      if (flags & 0x4) { // accumulated torque - skip
         idx += 2;
       }  
       if (flags & 0x10) { // wheel rev data

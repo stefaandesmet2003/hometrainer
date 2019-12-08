@@ -50,8 +50,6 @@
       color: black;
   }
   
-  #canvasGradient {
-  }
   </style>
 
 </head>
@@ -437,14 +435,16 @@
     curCadence = bikeDataCadence;
     curPedalPowerBalance = bikeDataPedalPowerBalance;
     // aangezien we niet weten wat links/rechts is, nemen we hier de afwijking tov 50%
-    curPedalPowerBalance = Math.max(curPedalPowerBalance, 100-curPedalPowerBalance);
+    //04/2019 test met cadence sensor
+    // curPedalPowerBalance lijkt rechts te zijn
+    //curPedalPowerBalance = Math.max(curPedalPowerBalance, 100-curPedalPowerBalance);
 
     if (simState == SIMULATION_RUNNING) {
       sumPower += curPower;
       sumCadence += curCadence;
       sumSpeed += curSpeed;
       // avgPower, avgCadence & avgSpeed = sum / totalTime
-      sumPedalPowerBalance += curPedalPowerBalance;
+      sumPedalPowerBalance += (curPedalPowerBalance*curPower)/100.0;
       
       totalTime++; // in seconds - alternatively use the bikeDataElapsedTime from the trainer
       curDistance+= curSpeed*1.0; // 1.0 = 1 second update interval
@@ -476,7 +476,8 @@
         direto.pause();
         return;
       }
-
+      // 2019.12.07 TODO!! dit werkt niet als er 2 identieke trackpoints na elkaar in
+      // de xml zitten -> distanceMin == distanceMax --> div/0!
       var gpxPartFilePos = 0.0;
       if (curTrackFilePos != trackData.TrackPoints.length) {
         curTrackFilePos = Math.max(curTrackFilePos-1,0);
@@ -604,10 +605,12 @@
       // formula experimental for Elite Direto
       var resistance = Math.round (Math.min(1610*curGradient + 22,200));
       resistance = Math.max (resistance, 0);
-      if (bikeDataResistanceLevel != resistance){
+      // 2019.12.07 bikeDataResistanceLevel gaat blijkbaar niet (altijd) tot 0, in afdaling
+      // dus vermijden dat voortdurend setResistance wordt herhaald voor een verschil van 0 (soll) en 1 (ist)
+      //if (bikeDataResistanceLevel != resistance){
+      if (Math.abs(bikeDataResistanceLevel - resistance) > 1){
         // dongleCmdChangeResistance (resistance);
         direto.setResistance(resistance);
-
       }
       
       // update speed according to bike riding model
@@ -635,22 +638,24 @@
       avgSpeed = (sumSpeed*3.6/totalTime);
       avgPower = (sumPower/totalTime);
       avgCadence = (sumCadence/totalTime);
-      avgPedalPowerBalance = (sumPedalPowerBalance/totalTime);
+      avgPedalPowerBalance = (sumPedalPowerBalance/sumPower)*100.0;
     }
     debugTxt.innerHTML = (curSpeed*3.6).toFixed(2) + "km/h (avg: " + avgSpeed.toFixed(1) + "km/h)" ;
     debugTxt.innerHTML += " - " + curPower + "W (avg: " + avgPower.toFixed(0) + "W)";
     debugTxt.innerHTML += " - " + curCadence + "rpm (avg:" + avgCadence.toFixed(0) + "rpm)";
-    debugTxt.innerHTML += " - " + curPedalPowerBalance + "/" + (100-curPedalPowerBalance) + " (avg:" + avgPedalPowerBalance.toFixed(0) + "/"+ (100-avgPedalPowerBalance).toFixed(0) +")";
-    debugTxt.innerHTML += " dist = " + curDistance.toFixed(0) + "m"; // geen cijfers na de komma
+    debugTxt.innerHTML += " - " + (100-curPedalPowerBalance) + "/" + curPedalPowerBalance + " (avg:" + (100-avgPedalPowerBalance).toFixed(0) + "/"+ avgPedalPowerBalance.toFixed(0) +")";
+    debugTxt.innerHTML += "<br>";
+    debugTxt.innerHTML += curDistance.toFixed(0) + "m"; // geen cijfers na de komma
     if (trackData) {
       var totalDistance = trackData.TrackPoints[trackData.TrackPoints.length-1].totalDistance;
-      debugTxt.innerHTML += ", " + (totalDistance - curDistance).toFixed(0) + "m left"; 
+      debugTxt.innerHTML += " (&rarr;" + (totalDistance - curDistance).toFixed(0) + "m)"; 
     }
-    debugTxt.innerHTML += " time = " + totalTime +"s";
-    debugTxt.innerHTML += " ele = " + curElevation.toFixed(0) + "m @ " + (curGradient*100.0).toFixed(1) + "%";
+    debugTxt.innerHTML += " - " + totalTime +"s";
+    debugTxt.innerHTML += " - alt: " + curElevation.toFixed(0) + "m @ " + (curGradient*100.0).toFixed(1) + "%";
     //debugTxt.innerHTML += " resistance = " + bikeDataResistanceLevel;
-    debugTxt.innerHTML += " totalAscent = " + totalAscent.toFixed(0) + "m";
-    debugTxt.innerHTML += " totalDescent = " + totalDescent.toFixed(0) +"m";
+    debugTxt.innerHTML += " - " + totalAscent.toFixed(0) + "m &uarr;";
+    debugTxt.innerHTML += " - " + totalDescent.toFixed(0) +"m &darr;";
+    debugTxt.innerHTML += "<br>";
 
     // this info can only be shown when simulation is at least ready
     if ((simState != SIMULATION_IDLE) && (simState != SIMULATION_COMPLETED)) {
@@ -763,10 +768,21 @@
   var bikeDataPower = 200; // for simulation
   var bikeDataCadence = 0;
   var bikeDataElapsedTime = 0;
-  var bikeDataPedalPowerBalance = 0;
+  var bikeDataPedalPowerBalance = 50;
   var bikeDataResistanceLevel = 0;
 
   function onBikeData (bikeData) {
+    // 15.08.2019 : there is a bug here
+    // if bikeData.instantaneousPower == 0, it is not used
+    // todo : howto discriminate between zero data and data not available ?
+    // for the moment, assumed data are available on onBikeData, and added inits
+    // TODO : correct this properly!
+    bikeDataPower = 0;
+    bikeDataCadence = 0;
+    bikeDataElapsedTime = 0;
+    bikeDataResistanceLevel = 0;
+    bikeDataPedalPowerBalance
+
     if (bikeData.instantaneousPower) bikeDataPower = bikeData.instantaneousPower;
     if (bikeData.instantaneousCadence) bikeDataCadence = bikeData.instantaneousCadence;
     if (bikeData.elapsedTime) bikeDataElapsedTime = bikeData.elapsedTime;
