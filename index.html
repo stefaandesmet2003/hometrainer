@@ -118,7 +118,7 @@
     trackFile = document.getElementById("fileTrack");
     trackFile.onchange = handleTrackFileSelect;
     buttonPlay = document.getElementById("buttonPlay");
-    buttonDownload = $("#buttonDownload");
+    buttonDownload = $("#buttonDownload"); // is dit hetzelfde als buttonDownload = document.getElementById("buttonDownload"); ??
     
     canvasGradient = document.getElementById("canvasGradient");
     ctx = canvasGradient.getContext("2d");
@@ -157,7 +157,7 @@
         buttonPlay.innerHTML = "Pause";
         simState = SIMULATION_RUNNING;
         //dongleCmdStart();
-        direto.start();
+        direto.start().catch(()=>{});
       }
     } 
     else if (simState == SIMULATION_RUNNING) {
@@ -165,7 +165,7 @@
       buttonPlay.innerHTML = "Start";
       simState = SIMULATION_PAUSED;      
       // dongleCmdStop();
-      direto.pause();
+      direto.pause().catch(()=>{});
     }
   } // playFunction
 
@@ -347,7 +347,7 @@
         if (trackData.TrackPoints[pos].elevation < (refElevation - minClimbElevation)) {
           // back in a descent; did we find a climb?
           if ( (trackData.TrackPoints[pos].elevation - trackData.TrackPoints[climbStartPos].elevation) > minClimbElevation ) {
-            // we need at least 10m of elevation difference to quality it as a 'climb'
+            // we need at least 10m of elevation difference to qualify it as a 'climb'
             var climb = {};
             climb.startPos = climbStartPos;
             climb.endPos = climbEndPos;
@@ -465,7 +465,7 @@
         video.pause(); // ofwel video laten verder spelen tot video.ended == true
         var point =  {};
         point.speed = curSpeed*3.6; //m/s to km/h
-        point.time = Date();
+        point.time = new Date().getTime();
         point.power = curPower;
         point.cadence = "70";  // TODO!!
         point.lat = trackData.TrackPoints[trackData.TrackPoints.length-1].lat;
@@ -473,7 +473,7 @@
         point.elevation = trackData.TrackPoints[trackData.TrackPoints.length-1].elevation;
         ridelog.push(point);
         // TODO : reset the trainer resistance!
-        direto.pause();
+        direto.pause().catch(()=>{});
         return;
       }
       // 2019.12.07 TODO!! dit werkt niet als er 2 identieke trackpoints na elkaar in
@@ -591,7 +591,11 @@
       // TODO : als curSpeed 0 is, stoppen met loggen na x seconden
       var point =  {};
       point.speed = curSpeed*3.6; //m/s to km/h
-      point.time = Date();
+      // Date() is een functie die een lange string returnt die de current date/time voorstelt
+      // new Date() creëert een object die de current date/time voorstelt -> heeft de .getTime() method
+      // zo is point.time een longint ipv een lange string
+      // en die longint kan je nadien opnieuw met new Date() gebruiken
+      point.time= new Date().getTime();
       point.power = curPower;
       point.cadence = curCadence;
       // TODO : curTrackFilePos+1 werkt niet als we al op het einde zitten van de gpx file !
@@ -610,7 +614,7 @@
       //if (bikeDataResistanceLevel != resistance){
       if (Math.abs(bikeDataResistanceLevel - resistance) > 1){
         // dongleCmdChangeResistance (resistance);
-        direto.setResistance(resistance);
+        direto.setResistance(resistance).catch(()=>{});
       }
       
       // update speed according to bike riding model
@@ -618,6 +622,7 @@
     } // simState == SIMULATION_RUNNING
     
     else if ((simState == SIMULATION_PAUSED) || (simState == SIMULATION_COMPLETED)){
+      /*
       // stopped running -> enable the download button and deliver the gpx ride data
       // TODO : dit staat hier niet goed, want dit wordt elke seconde herhaald tijdens pause en 1 keer is genoeg!!
       var rouvyXmlFile = new RouvyXmlFile();
@@ -627,6 +632,7 @@
       var fileContents = encodeURIComponent(newXML);
       buttonDownload.attr('href', 'data:text/plain;charset=utf-8,' + fileContents);
       buttonDownload.attr('download', "mytestride.gpx");
+      */
       if (simState == SIMULATION_PAUSED) buttonPlay.innerHTML = "Resume";
       else if (simState == SIMULATION_COMPLETED) buttonPlay.innerHTML = "Restart";
     } // simState == SIMULATION_PAUSED) || SIMULATION_COMPLETED
@@ -640,21 +646,21 @@
       avgCadence = (sumCadence/totalTime);
       avgPedalPowerBalance = (sumPedalPowerBalance/sumPower)*100.0;
     }
-    debugTxt.innerHTML = (curSpeed*3.6).toFixed(2) + "km/h (avg: " + avgSpeed.toFixed(1) + "km/h)" ;
-    debugTxt.innerHTML += " - " + curPower + "W (avg: " + avgPower.toFixed(0) + "W)";
-    debugTxt.innerHTML += " - " + curCadence + "rpm (avg:" + avgCadence.toFixed(0) + "rpm)";
-    debugTxt.innerHTML += " - " + (100-curPedalPowerBalance) + "/" + curPedalPowerBalance + " (avg:" + (100-avgPedalPowerBalance).toFixed(0) + "/"+ avgPedalPowerBalance.toFixed(0) +")";
+    debugTxt.innerHTML = `${(curSpeed*3.6).toFixed(2)} km/h (avg: ${avgSpeed.toFixed(1)} km/h)`;
+    debugTxt.innerHTML += ` &#x2726; ${curPower}W (avg: ${avgPower.toFixed(0)}W)`;
+    debugTxt.innerHTML += ` &#x2726; ${curCadence}rpm (avg:${avgCadence.toFixed(0)}rpm)`;
+    debugTxt.innerHTML += ` &#x2726; ${(100-curPedalPowerBalance)}/${curPedalPowerBalance} (avg:${(100-avgPedalPowerBalance).toFixed(0)}/${avgPedalPowerBalance.toFixed(0)})`
     debugTxt.innerHTML += "<br>";
-    debugTxt.innerHTML += curDistance.toFixed(0) + "m"; // geen cijfers na de komma
+    debugTxt.innerHTML += `${curDistance.toFixed(0)}m`; // geen cijfers na de komma
     if (trackData) {
       var totalDistance = trackData.TrackPoints[trackData.TrackPoints.length-1].totalDistance;
-      debugTxt.innerHTML += " (&rarr;" + (totalDistance - curDistance).toFixed(0) + "m)"; 
+      debugTxt.innerHTML += `(&rarr;${(totalDistance - curDistance).toFixed(0)}m)`; 
     }
-    debugTxt.innerHTML += " - " + totalTime +"s";
-    debugTxt.innerHTML += " - alt: " + curElevation.toFixed(0) + "m @ " + (curGradient*100.0).toFixed(1) + "%";
+    debugTxt.innerHTML += ` &#x2726; ${sec2string(totalTime)}`;
+    debugTxt.innerHTML += ` &#x2726; alt: ${curElevation.toFixed(0)}m @ ${(curGradient*100.0).toFixed(1)}%`;
     //debugTxt.innerHTML += " resistance = " + bikeDataResistanceLevel;
-    debugTxt.innerHTML += " - " + totalAscent.toFixed(0) + "m &uarr;";
-    debugTxt.innerHTML += " - " + totalDescent.toFixed(0) +"m &darr;";
+    debugTxt.innerHTML += ` &#x2726; ${totalAscent.toFixed(0)}m &uarr;`;
+    debugTxt.innerHTML += ` &#x2726; ${totalDescent.toFixed(0)}m &darr;`;
     debugTxt.innerHTML += "<br>";
 
     // this info can only be shown when simulation is at least ready
@@ -679,7 +685,7 @@
         var eleDiff = trackData.TrackPoints[endPos].elevation - curElevation;
         var climbLengthLeft = trackData.TrackPoints[endPos].totalDistance - curDistance;
         //debugTxt.innerHTML += " next summit @ " + allClimbs[i].climbSummitElevation.toFixed(0) +"m, " + eleDiff.toFixed(0) + "m over " + climbLength.toFixed(0) + "m, avg gradient = " +(100*eleDiff / climbLength).toFixed(1) + "%";
-        debugTxt.innerHTML += " this climb : " + climbLengthLeft.toFixed(0) + "m @" +(100*eleDiff / climbLengthLeft).toFixed(1) + "% to go";
+        debugTxt.innerHTML += `this climb (${i+1}/${allClimbs.length}): ${climbLengthLeft.toFixed(0)} m @ ${(100*eleDiff / climbLengthLeft).toFixed(1)}% to go`;
       }
       else if (i < allClimbs.length) {
         var startPos = allClimbs[i].startPos;
@@ -688,7 +694,7 @@
         var eleDiff = trackData.TrackPoints[endPos].elevation - trackData.TrackPoints[startPos].elevation;
         var climbLength = trackData.TrackPoints[endPos].totalDistance - trackData.TrackPoints[startPos].totalDistance;
         //debugTxt.innerHTML += " next climb in " + distFromClimb.toFixed(0) + "m, with summit @ " + allClimbs[i].climbSummitElevation.toFixed(0) +"m, " + eleDiff.toFixed(0) + "m over " + climbLength.toFixed(0) + "m, avg gradient = " +(100*eleDiff / climbLength).toFixed(1) + "%";
-        debugTxt.innerHTML += " next climb in " + distFromClimb.toFixed(0) + "m, "+ climbLength.toFixed(0) + "m @" +(100*eleDiff / climbLength).toFixed(1) + "%";
+        debugTxt.innerHTML += `next climb (${i+1}/${allClimbs.length}) in ${distFromClimb.toFixed(0)}m, ${climbLength.toFixed(0)}m @ ${(100*eleDiff / climbLength).toFixed(1)}%`;
       }
 
       // show gradient over next km
@@ -696,7 +702,7 @@
       curPos.distance = curDistance;
       curPos.elevation = curElevation;
       var avgGradient = calcGradientOverDistance (trackData, curPos, 1000.0);
-      debugTxt.innerHTML += " gradient over next km = " + (100*avgGradient).toFixed(2) + "%"
+      debugTxt.innerHTML += ` next km @ ${(100*avgGradient).toFixed(2)}%`
       
       // show ghost 1 position if a ghost 1 is selected
       if (tracks.length > 1) {
@@ -707,10 +713,10 @@
         var ghostTimeDiff = ghost.elapsedTime - curPos.elapsedTime;
         var ghostDistDiff = ghost.totalDistance - curPos.totalDistance;
         if ((ghostTimeDiff < 0) || (ghostDistDiff > 0))  {
-          debugTxt.innerHTML += " ghost is ahead by " + (-ghostTimeDiff).toFixed(1) + "s, " + ghostDistDiff.toFixed(0) + "m";
+          debugTxt.innerHTML += `ghost is ahead by ${sec2string((-ghostTimeDiff).toFixed(1))}, ${ghostDistDiff.toFixed(0)}m`;
         }
         else {
-          debugTxt.innerHTML += " ghost is behind by " + ghostTimeDiff.toFixed(1) + "s, " + (-ghostDistDiff).toFixed(0) + "m";
+          debugTxt.innerHTML += `ghost is behind by ${sec2string(ghostTimeDiff.toFixed(1))}, ${(-ghostDistDiff).toFixed(0)}m`;
         }
       }
     }
@@ -749,20 +755,24 @@
         bleConnected = true;
       } catch(error)  {
           log('error connecting direto : ' + error);
-        }
+      }
     }
     else {
-      // disconnect
-      await direto.stop().then(()=>{
-         direto.disconnect();
-      });
-      // change button color & text
-      connectButton.textContent = "Connect";
-      connectButton.style.backgroundColor = "black";
-      bleConnected = false;
+      try {
+        // disconnect
+        //await direto.stop(); // ofwel failt als je al gepaused of gestopped bent
+        // en dan gaat de disconnect() hierna ook niet door
+        await direto.disconnect();
+        // change button color & text
+        connectButton.textContent = "Connect";
+        connectButton.style.backgroundColor = "black";
+        bleConnected = false;
+      } catch (error) {
+        log (`error disconnecting direto : ${error}`);
+      }
     }
 
-  } // diretoInit
+  } // diretoConnectDisconnect
 
   // the actual values from BLE
   var bikeDataPower = 200; // for simulation
@@ -795,6 +805,69 @@
     console.log (`${n} - ${line}`);
   }
 
+  function onbuttonDownloadClick() {
+    // waarom zou dit niet tijdens simulatie kunnen ?
+    if ((simState == SIMULATION_PAUSED) || (simState == SIMULATION_COMPLETED)) {
+      // stopped running -> enable the download button and deliver the gpx ride data
+      /*
+      var rouvyXmlFile = new RouvyXmlFile();
+      var newXML = rouvyXmlFile.formatXML(rouvyXmlFile.makeGPX(ridelog, tracks[0])); // TODO :trackData doorgeven voor de name & description; kan beter!!
+      var fileContents = encodeURIComponent(newXML);
+      var fileName = "mytestride.gpx";
+      */
+      var xml = ridelog2ShortXML(ridelog,tracks[0]);
+      var fileContents = encodeURIComponent(xml);
+      var fileName = tracks[0].routeName.replace(/ /g,"_") + '.xml';
+      // werkt dit ook ? buttonDownload.href = uri; buttonDownload.download = 'mytestride.gpx'
+      buttonDownload.attr('href', 'data:text/plain;charset=utf-8,' + fileContents);
+      buttonDownload.attr('download', fileName);
+    }
+    else {
+      // heeft het zin om het download attribute te wissen?
+      buttonDownload.removeAttr('download');
+      buttonDownload.removeAttr('href');
+
+    }
+  } // onbuttonDownloadClick
+
+  // trackData enkel nodig voor trackData.routeName en trackData.routeDescription
+  function ridelog2ShortXML(ridelog, trackData) {
+    var doc = '<?xml version="1.0"?> \r\n <gpx>';
+    
+    doc += `<name>${trackData.routeName}</name>\r\n`;
+    for (i = 0; i < ridelog.length; i ++) {
+      point = ridelog[i];
+      doc += `<pt><time>${point.time}</time>`;
+      doc += `<pow>${point.power}</pow>`;
+      doc += `<cad>${point.cadence}</cad>`;
+      doc += `<lat>${point.lat}</lat>`;
+      doc += `<lon>${point.lon}</lon>`;
+      doc += `<ele>${point.elevation}</ele></pt>\r\n`;
+    }
+    doc += '</gpx>';
+    return doc;
+
+  } // ridelog2ShortXML
+
+  function sec2string (timeInSeconds) {
+    let retval = "";
+    let ltime = timeInSeconds;
+    let secs = ltime % 60;
+    ltime = (ltime - secs) / 60;
+    let mins = ltime % 60;
+    let hours = (ltime - mins) / 60;
+
+    if (hours != 0) {
+      retval += `${hours}h`;
+    }
+    if ((mins != 0) || (hours!= 0)) {
+      retval += `${("00" + mins).slice(-2)}m`; // truukske van internet
+    }
+    retval += `${("00" + secs).slice(-2)}s`; // truukske van internet
+
+    return retval;
+  } // sec2string
+
   // <video autoplay muted loop id="myVideo" poster="" title="Video title">
   </script>
 
@@ -805,7 +878,6 @@
     </video>
 
     <div class="graphicsOverlay">
-      <!--<h1>Heading</h1> -->
       <canvas id="canvasGradient" width="500" height="15" style="border:1px solid #FFFFFF;">Your browser does not support the HTML5 canvas tag.
       </canvas>
       <p><span id="debugTxt"> </span></p>
@@ -814,7 +886,7 @@
       <input id="fileTrack" type="file" accept=".gpx,.xml"/>
       
       <button id="connect" onclick="diretoConnectDisconnect()">Connect</button>
-      <button><a href="" id="buttonDownload">Download GPX</a></button>
+      <button><a href="" id="buttonDownload" onclick="onbuttonDownloadClick()">Download GPX</a></button>
     </div>
   </div>
 
