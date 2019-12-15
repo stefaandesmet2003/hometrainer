@@ -4,6 +4,7 @@
   const FTMS_CMD_REQUEST_CONTROL = 0;
   const FTMS_CMD_RESET = 1;
   const FTMS_CMD_SET_RESISTANCE = 4;
+  const FTMS_CMD_SET_TARGET_POWER = 5;
   const FTMS_CMD_START_RESUME = 7;
   const FTMS_CMD_STOP_PAUSE = 8;
   const FTMS_CMD_PARAM_STOP = 1;
@@ -25,13 +26,11 @@
       this.connected = false; // setting true only if all necessary services/characteristics are found
       this._replyPromiseResolveFunc = null;
       this._replyPromiseTimeoutId;
-    
     }
 
     // reimplementation with async/await
     // try/catch not required, without it a rejected ble promise will bubble up to the caller anyway
     async connect() {
-
       try {
         // 1. find BLE device
         // without specifying the optional services here, webble won't give us access to these services later on
@@ -96,7 +95,6 @@
         return Promise.reject(`direto.connect : BLE error : ${error}`);
       }
     } // connect
-
 
     _onDisconnected(event) {
       log("direto._onDisconnected : OK!");
@@ -204,7 +202,7 @@
         // request control is not strictly necessary
         respCode = await this._ftmsCommand(FTMS_CMD_REQUEST_CONTROL);
         if (respCode == FTMS_RESP_SUCCESS) {
-          respCode = await this._ftmsCommand(FTMS_CMD_STOP_PAUSE, FTMS_CMD_PARAM_PAUSE);
+          respCode = await this._ftmsCommand(FTMS_CMD_STOP_PAUSE, [{"type":"uint8", "val":FTMS_CMD_PARAM_PAUSE}]);
         }
       }
       catch (error) {
@@ -226,7 +224,7 @@
         // request control is not strictly necessary
         respCode = await this._ftmsCommand(FTMS_CMD_REQUEST_CONTROL);
         if (respCode == FTMS_RESP_SUCCESS) {
-          respCode = await this._ftmsCommand(FTMS_CMD_STOP_PAUSE, FTMS_CMD_PARAM_STOP);
+          respCode = await this._ftmsCommand(FTMS_CMD_STOP_PAUSE, [{"type":"uint8", "val":FTMS_CMD_PARAM_STOP}]);
         }
       }
       catch (error) {
@@ -253,7 +251,7 @@
         // only if a cmd returns FTMS_RESP_CONTROL_NOT_PERMITTED
         respCode = await this._ftmsCommand(FTMS_CMD_REQUEST_CONTROL);
         if (respCode == FTMS_RESP_SUCCESS) {
-          respCode = await this._ftmsCommand(FTMS_CMD_SET_RESISTANCE, resistanceLevel);
+          respCode = await this._ftmsCommand(FTMS_CMD_SET_RESISTANCE, [{"type":"uint8", "val":resistanceLevel}]);
         }
       }
       catch (error) {
@@ -265,6 +263,33 @@
       }
       return respCode; // implicit Promise.resolve(respCode)
     } // setResistance
+
+    async setTargetPower (targetPowerLevel) {
+      if (!this.connected) {
+        return Promise.reject("direto.setTargetPower error : not connected");
+      }
+      let respCode = FTMS_RESP_SUCCESS;
+      if (targetPowerLevel > 4000) targetPowerLevel = 4000;
+
+      try {
+        // request control is not strictly necessary
+        // only if a cmd returns FTMS_RESP_CONTROL_NOT_PERMITTED
+        respCode = await this._ftmsCommand(FTMS_CMD_REQUEST_CONTROL);
+        if (respCode == FTMS_RESP_SUCCESS) {
+          respCode = await this._ftmsCommand(
+            FTMS_CMD_SET_TARGET_POWER, 
+            [{"type":"int16", "val":targetPowerLevel}]);
+        }
+      }
+      catch (error) {
+        return Promise.reject(`direto.setTargetPower error : command failed (${error})`);
+      }
+
+      if (respCode != FTMS_RESP_SUCCESS) {
+        return Promise.reject(`direto.setTargetPower error : command failed (${respCode})`);
+      }
+      return respCode; // implicit Promise.resolve(respCode)
+    } // setTargetPower
 
     async getFitnessMachineFeatureInfo () {
       if (!this.connected) {
@@ -339,29 +364,54 @@
     } // getSupportedPowerRange
 
     /*
+      params [{"val":int,"type":str}]; type:"uint8","int16", others not yet needed
       returns : ftms response code or a rejected promise
       1 = SUCCESS, 3 = INVALID PARAMETER, 4 = FAILED, 5 = CONTROL NOT PERMITTED
     */
     
-    async _ftmsCommand (cmd, params=0) {
-      // voorlopig enkel 0 of 1 param bytes
-      let size = 1;
-      if (params) {
-        size = 2;
+    async _ftmsCommand (cmd, params=[]) {
+      // voorlopig enkel 0 of 1 param bytes - 2019.12.15, niet meer om target power level in te kunnen stellen
+      let cmdBufferSize = 1;
+
+      function addParam2View (view,offset, param) {
+        let newOffset = offset;
+        if (param.type == "uint8") {
+          view.setUint8(offset,param.val);
+          newOffset += 1;
+        }
+        else if (param.type == "int16") {
+          view.setInt16(offset,param.val, /* little endian */ true);
+          newOffset += 2;
+        }
+        return newOffset;
+      } // addParam2View
+
+      for (let i=0;i<params.length;i++) {
+        if ((params[i].type == 'int8') || (params[i].type == 'uint8')) {
+          cmdBufferSize += 1;
+        }
+        else if ((params[i].type == 'int16') || (params[i].type == 'uint16')) {
+          cmdBufferSize += 2;
+        }
       }
-      // create an ArrayBuffer with a size in bytes
-      let buffer = new ArrayBuffer(size);
+
+      // create an ArrayBuffer with a cmdBufferSize in bytes
+      let buffer = new ArrayBuffer(cmdBufferSize);
       // Create a view
-      let view = new Uint8Array(buffer);
-      view[0] = cmd;
-      if (params) {
-        view[1] = params;
+      //let view = new Uint8Array(buffer);
+      let view = new DataView(buffer);
+      // add cmd & params to the view/buffer
+      let offset = 0;
+      view.setUint8(offset, cmd);
+      offset += 1;
+      for (let i=0;i<params.length;i++) {
+        offset = addParam2View (view,offset, params[i]);
       }
 
       try {
         const ftmscp = this._characteristics.get('fitness_machine_control_point');
         // 1. send command
-        log(`_ftmsCommand : command = ${view}`);
+        log(`_ftmsCommand : command = ${view.toString()}`);
         // no await here!
         // we need to set up the reply promise synchronously, to be able to catch the reply notification in time
         // from the timings it looks that the reply notification comes very soon after the ftmscp.writeValue promise resolves
@@ -404,7 +454,7 @@
         return (view[2]); /* the ftms cp response code */
 
       } catch(error)  {
-        log(`_ftmsCommand : error ${error} in command ${view}`);
+        log(`_ftmsCommand : error ${error} in command ${view.toString()}`);
         this._replyPromiseResolveFunc = null;
         return Promise.reject(`direto._ftmsCommand error : command failed (${error})`);
       }
@@ -536,10 +586,7 @@
 
     } // _onFitnessMachineStatus    
 
-    /* a fixed listener for ftms replies instead of a listener per command
-       pro : the listener per command installed after writing the characteristic seemed less stable
-       con : need 2 globals to keep track of the promise & the timeout
-    */
+    // a fixed listener for ftms replies instead of a listener per command
     _onFitnessMachineControlPoint(event) {
       var evtData = event.target.value;
       // In Chrome 50+, a DataView is returned instead of an ArrayBuffer.

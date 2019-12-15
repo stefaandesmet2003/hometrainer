@@ -1,0 +1,175 @@
+<!doctype html>
+<html>
+<head>
+  <title>Fitness Test</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="direto.js"></script>
+</head>
+<body onload="onBodyLoad()">
+
+  <h1>Fitness Test!</h1>
+  <button id="connect">Connect</button>
+  <button id="start">Start</button>
+  <button id="stop">Stop</button>
+  <button id="skip_warmup">Skip warm-up</button>
+
+  <pre id="userinfo">Test info</pre>
+  <h2 id="bikedata">&#x1F6B2;</h2>
+  <pre id="log"></pre>
+  <pre id="rawbikedata">--</pre>
+
+  <script>
+    const WARMUP_DURATION_IN_SECONDS = 300;
+    const SLICE_DURATION_IN_SECONDS = 120;
+    const INIT_POWER_LEVEL = 100;
+    const POWER_LEVEL_INCREMENT = 20;
+    var warmup_done = false;
+    var bleConnected = false;
+    var secTimer;
+    var targetPower = 100; // initial power setting
+    var secondsLeftInSlice = SLICE_DURATION_IN_SECONDS;
+    var bikeDataCadence = 0;
+    var bikeDataPower = 0;
+    var testDuration = 0;
+
+    function onBodyLoad() {
+      log("start");
+      skip_warmup
+      document.querySelector('#connect').addEventListener('click', diretoConnectDisconnect);
+      document.querySelector('#start').addEventListener('click', startFitnessTest);
+      document.querySelector('#stop').addEventListener('click', stopFitnessTest);
+      document.querySelector('#skip_warmup').addEventListener('click', skipWarmup);
+
+    } // onBodyLoad
+
+    async function diretoConnectDisconnect() {
+      let connectButton = document.querySelector('#connect');
+      if (!bleConnected) {
+        // connect
+        try {
+          await direto.connect();
+          log("connect done");
+          await direto.init();
+          log("init done")
+          direto.addEventListener('onbikedata', onBikeData);
+          // change button color & text
+          connectButton.textContent = "Disconnect";
+          connectButton.style.backgroundColor = "green";
+          bleConnected = true;
+        } catch(error)  {
+            log('error connecting direto : ' + error);
+        }
+      }
+      else {
+        try {
+          // disconnect
+          //await direto.stop(); // ofwel failt als je al gepaused of gestopped bent
+          // en dan gaat de disconnect() hierna ook niet door
+          await direto.disconnect();
+          // change button color & text
+          connectButton.textContent = "Connect";
+          connectButton.style.backgroundColor = "white";
+          bleConnected = false;
+        } catch (error) {
+          log (`error disconnecting direto : ${error}`);
+        }
+      }
+    } // diretoConnectDisconnect
+
+    async function startFitnessTest() {
+      testDuration = 0;
+      await direto.start().catch(()=>{});
+      if (!warmup_done) {
+        userInfo("de test begint met een warmup!");
+        secondsLeftInSlice = WARMUP_DURATION_IN_SECONDS;
+        targetPower = 0;
+      }
+      else {
+        secondsLeftInSlice = SLICE_DURATION_IN_SECONDS;
+        targetPower = INIT_POWER_LEVEL;
+      }
+      await direto.setTargetPower(targetPower).catch(()=>{});
+      secTimer = setInterval(secUpdate, 1000);
+    } // startFitnessTest
+
+    async function stopFitnessTest() {
+      userInfo("einde test!");
+      await direto.stop().catch(()=>{});
+      await direto.setTargetPower(0).catch(()=>{});
+      clearInterval(secTimer);
+      warmup_done = false;
+    } // stopFitnessTest
+
+    async function skipWarmup () {
+      if (!warmup_done) {
+        warmup_done = true;
+        secondsLeftInSlice = SLICE_DURATION_IN_SECONDS;
+        targetPower = INIT_POWER_LEVEL;
+        await direto.setTargetPower(targetPower).catch(()=>{});
+      }
+    } // skipWarmup
+
+    function secUpdate () {
+      testDuration+= 1;
+      secondsLeftInSlice = secondsLeftInSlice - 1;
+      if (secondsLeftInSlice==0) {
+        secondsLeftInSlice = SLICE_DURATION_IN_SECONDS;
+        targetPower += POWER_LEVEL_INCREMENT;
+        direto.setTargetPower(targetPower).catch(()=>{});
+      }
+      userInfo(`${targetPower}W - ${secondsLeftInSlice} left`);
+      let bikeDataTxt = document.querySelector('#bikedata');
+      bikeDataTxt.innerHTML = `${bikeDataPower}W &#x1F6B2; ${bikeDataCadence} rpm &#x1F6B2; ${sec2string(testDuration)} `;
+
+    } // secUpdate
+
+    function onBikeData (bikeData) {
+      bikeDataCadence = bikeData.instantaneousCadence;
+      bikeDataPower = bikeData.instantaneousPower;
+
+      let bikeDataTxt = document.querySelector('#rawbikedata');
+      bikeDataTxt.textContent = "";
+      for (var prop in bikeData) {
+        bikeDataTxt.textContent += `${prop} = ${bikeData[prop]}\n`;
+      }
+    } // onBikeData
+  
+    function userInfo(line) {
+      document.querySelector('#userinfo').textContent = line + '\n';
+
+    } // userInfo
+
+    /*
+    function log(line) {
+      document.querySelector('#log').textContent += line + '\n';
+
+    }
+    */
+    function log(line) {
+      let n = Date.now() & 0xffff;
+      console.log (`${n} - ${line}`);
+    }
+
+    function sec2string (timeInSeconds) {
+      let retval = "";
+      let ltime = timeInSeconds;
+      let secs = ltime % 60;
+      ltime = (ltime - secs) / 60;
+      let mins = ltime % 60;
+      let hours = (ltime - mins) / 60;
+
+      if (hours != 0) {
+        retval += `${hours}h`;
+      }
+      if ((mins != 0) || (hours!= 0)) {
+        retval += `${("00" + mins).slice(-2)}m`; // truukske van internet
+      }
+      retval += `${("00" + secs).slice(-2)}s`; // truukske van internet
+      return retval;
+    } // sec2string    
+
+  </script>
+
+</body>
+</html>
