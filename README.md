@@ -21,5 +21,5 @@ The target power level starts at 100 watts, and increases by 20 watts every 2 mi
 No matter what gear your bike is in, the ERG mode will make you suffer. 
 The test works in any but the lowest gears, in ERG mode the trainer adjusts the resistance automatically
 It helps to use a rather high gear, to make the trainer's flywheel spin fast and provide some extra inertia.
-
+ 
 Enjoy!
