@@ -20,10 +20,10 @@
     constructor() {
       this.device = null;
       this.server = null;
+      this.connected = false; // setting true only if all necessary services/characteristics are found
+      this.bikeData = {};
       this._characteristics = new Map();
       this._eventListener = null;
-      this._bikeData = {};
-      this.connected = false; // setting true only if all necessary services/characteristics are found
       this._replyPromiseResolveFunc = null;
       this._replyPromiseTimeoutId;
     }
@@ -63,18 +63,6 @@
           this._cacheCharacteristic(service, 'fitness_machine_control_point'),
         ]);
 
-        // alternative : getCharacteristics() returns all characteristics in an array
-        // but then need to match uuid & feature for the map
-        /*
-        .then (service => {
-          return service.getCharacteristics();
-        })
-        .then(allchars => {
-          for (var i=0; i < allchars.length; i++) {
-            log(allchars[i].uuid);
-          }
-        });
-        */
         // 5. Cycling Power service
         service = await server.getPrimaryService('cycling_power'); // 0x1818
         log("direto.connect : found cycling power service!");
@@ -398,7 +386,6 @@
       // create an ArrayBuffer with a cmdBufferSize in bytes
       let buffer = new ArrayBuffer(cmdBufferSize);
       // Create a view
-      //let view = new Uint8Array(buffer);
       let view = new DataView(buffer);
       // add cmd & params to the view/buffer
       let offset = 0;
@@ -411,7 +398,8 @@
       try {
         const ftmscp = this._characteristics.get('fitness_machine_control_point');
         // 1. send command
-        log(`_ftmsCommand : command = ${view.toString()}`);
+        let cmdBytes = new Uint8Array(buffer);
+        log(`_ftmsCommand : command = ${cmdBytes.toString()}`);
         // no await here!
         // we need to set up the reply promise synchronously, to be able to catch the reply notification in time
         // from the timings it looks that the reply notification comes very soon after the ftmscp.writeValue promise resolves
@@ -514,14 +502,14 @@
     } // _stopNotifications
 
     // bind(this) forces 'this' to be the direto context, rather than remotegattcharacteristic context
-    // so we can access this._bikeData rather than direto._bikeData
+    // so we can access this.bikeData rather than direto.bikeData
     _onIndoorBikeData (event) {
-      var evtData = event.target.value;
+      let evtData = event.target.value;
       // In Chrome 50+, a DataView is returned instead of an ArrayBuffer.
       evtData = evtData.buffer ? evtData : new DataView(evtData);
       /*
       // log raw data
-      var view8 = new Uint8Array(evtData.buffer);
+      let view8 = new Uint8Array(evtData.buffer);
       log ("bikeData : " + view8.toString());
       */
       // parse the pData according to the spec
@@ -529,7 +517,7 @@
       let idx = 2;
       if ((flags & 0x1) == 0) { // C1 contains instantaneous speed
         // 16-bit field is km/h with 0.01 resolution
-        this._bikeData.instantaneousSpeed = evtData.getUint16(idx, /* littleEndian */ true) / 100.0;
+        this.bikeData.instantaneousSpeed = evtData.getUint16(idx, /* littleEndian */ true) / 100.0;
         idx += 2;
       }
       if (flags & 0x2){ // C2 average speed - skip
@@ -537,22 +525,22 @@
       }
       if (flags & 0x4) { // C3 instantaneous cadence
         // 16-bit field is cadence with 0.5 resolution
-        this._bikeData.instantaneousCadence = evtData.getUint16(idx, /* littleEndian */ true) >> 1;
+        this.bikeData.instantaneousCadence = evtData.getUint16(idx, /* littleEndian */ true) >> 1;
         idx += 2;
       }
       if (flags & 0x8) { // C4 average cadence -- skip
         idx += 2;
       }
       if (flags & 0x10) { // C5 total distance - 3 bytes
-        this._bikeData.totalDistance = evtData.getUint32(idx, /* littleEndian */ true) & 0xffffff; // 24-bits field
+        this.bikeData.totalDistance = evtData.getUint32(idx, /* littleEndian */ true) & 0xffffff; // 24-bits field
         idx += 3;
       }
       if (flags & 0x20) { // C6 resistance level
-        this._bikeData.resistanceLevel = evtData.getUint16(idx, /* littleEndian */ true);
+        this.bikeData.resistanceLevel = evtData.getUint16(idx, /* littleEndian */ true);
         idx += 2;
       }
       if (flags & 0x40) { // C7 instantaneous power
-        this._bikeData.instantaneousPower = evtData.getUint16(idx, /* littleEndian */ true);
+        this.bikeData.instantaneousPower = evtData.getUint16(idx, /* littleEndian */ true);
         idx += 2;
       }
       if (flags & 0x80) { // C8 average power - skip
@@ -568,31 +556,31 @@
         idx += 1;
       }
       if (flags & 0x800) { // C12 elapsed time
-        this._bikeData.elapsedTime = evtData.getUint16(idx, /* littleEndian */ true);
+        this.bikeData.elapsedTime = evtData.getUint16(idx, /* littleEndian */ true);
       }
 
       if (this._eventListener)
-        this._eventListener(this._bikeData);
+        this._eventListener(this.bikeData);
     } // _onIndoorBikeData
     
     // here ftms status changes are reported
     _onFitnessMachineStatus(event) { 
-      var evtData = event.target.value;
+      let evtData = event.target.value;
       // In Chrome 50+, a DataView is returned instead of an ArrayBuffer.
       evtData = evtData.buffer ? evtData : new DataView(evtData);
       // parsing data : TODO
-      var view8 = new Uint8Array(evtData.buffer);
+      let view8 = new Uint8Array(evtData.buffer);
       log ("ftms status : " + view8.toString());
 
     } // _onFitnessMachineStatus    
 
     // a fixed listener for ftms replies instead of a listener per command
     _onFitnessMachineControlPoint(event) {
-      var evtData = event.target.value;
+      let evtData = event.target.value;
       // In Chrome 50+, a DataView is returned instead of an ArrayBuffer.
       evtData = evtData.buffer ? evtData : new DataView(evtData);
       // parsing data : TODO
-      var view8 = new Uint8Array(evtData.buffer);
+      let view8 = new Uint8Array(evtData.buffer);
       log ("_onFitnessMachineControlPoint : direto replies : " + view8.toString());
 
       // handle the replyPromise here -> works better than installing an event listener on each ftms command
@@ -603,41 +591,41 @@
     } // _onFitnessMachineStatus
     
     _onCyclingPowerMeasurement(event) {
-      var evtData = event.target.value;
+      let evtData = event.target.value;
       // In Chrome 50+, a DataView is returned instead of an ArrayBuffer.
       evtData = evtData.buffer ? evtData : new DataView(evtData);
       /*
-      var view8 = new Uint8Array(evtData.buffer);
+      let view8 = new Uint8Array(evtData.buffer);
       log ("cps measurement : " + view8.toString());
       */
       // parse the pData according to the spec
       let flags = evtData.getUint16(0, /* littleEndian */ true);
       let idx = 2;
-      this._bikeData.instantaneousPowerCPM = evtData.getUint16(idx, /* littleEndian */ true);
+      this.bikeData.instantaneousPowerCPM = evtData.getUint16(idx, /* littleEndian */ true);
       idx += 2;
       
       if (flags & 0x1) {
-        this._bikeData.pedalPowerBalance = evtData.getUint8(idx) >> 1; // percentage with resolution 1/2
+        this.bikeData.pedalPowerBalance = evtData.getUint8(idx) >> 1; // percentage with resolution 1/2
         idx += 1;
       }  
       if (flags & 0x4) { // accumulated torque - skip
         idx += 2;
       }  
       if (flags & 0x10) { // wheel rev data
-        this._bikeData.cumulativeWheelRevolutions = evtData.getUint32(idx, /* littleEndian */ true);
+        this.bikeData.cumulativeWheelRevolutions = evtData.getUint32(idx, /* littleEndian */ true);
         idx+= 4;
-        this._bikeData.lastWheelEventTime = evtData.getUint16(idx, /* littleEndian */ true);
+        this.bikeData.lastWheelEventTime = evtData.getUint16(idx, /* littleEndian */ true);
         idx += 2;
       }  
       if (flags & 0x20) { // crank rev data
-        this._bikeData.cumulativeCrankRevolutions = evtData.getUint16(idx, /* littleEndian */ true);
+        this.bikeData.cumulativeCrankRevolutions = evtData.getUint16(idx, /* littleEndian */ true);
         idx+= 2;
-        this._bikeData.lastCrankEventTime = evtData.getUint16(idx, /* littleEndian */ true);
+        this.bikeData.lastCrankEventTime = evtData.getUint16(idx, /* littleEndian */ true);
         idx += 2;
       }
 
       if (this._eventListener)
-        this._eventListener(this._bikeData);
+        this._eventListener(this.bikeData);
 
     } // _onCyclingPowerMeasurement
 
