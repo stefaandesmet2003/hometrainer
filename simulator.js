@@ -16,43 +16,51 @@ video.duration vgl met videoPoints.videoTime
 class Track {
   // read the file and store data in this.trackData
   constructor (aFile) {
+    this._file = aFile;
     this.filename = aFile.name;
     this.trackData = [];
     //let self = this;
-
-    let fileExtension =  this.filename.split('.').pop();
-    let reader = new FileReader();
-    let gpxxml; // the raw xml from the gpx file
-    reader.onload = function() {
-      gpxxml = reader.result;
-      if (fileExtension == "xml") {
-        let rouvyXmlFile= new RouvyXmlFile();
-        this.trackData = rouvyXmlFile.parseXML(gpxxml);
-      }
-      else if (fileExtension == "gpx") {
-        let gpxFile= new GPXFile(); // global of niet? in smoother.js was dit global, maar hier hebben we die niet meer nodig nadat de trackData geparsed zijn, toch?
-        this.trackData = gpxFile.parseGPX(gpxxml);
-        this.trackData = gpxFile.smoothGPX(this.trackData);
-      }
-      else {
-        console.log ("unsupported file format");
-        return;
-      }
-      console.log(`Track distance = ${this.trackData.TrackPoints[this.trackData.TrackPoints.length-1].totalDistance}, Video distance = ${this.trackData.VideoPoints[this.trackData.VideoPoints.length-1].totalDistance}`);
-        
-      this.allClimbs = this._findAllClimbs(this.trackData);
-
-      for (let i = 0; i< this.allClimbs.length; i ++) {
-        let climbDistance = this.allClimbs[i].maxDistance - this.allClimbs[i].minDistance;
-        let climbElevation = this.allClimbs[i].maxElevation - this.allClimbs[i].minElevation;
-        console.log(`found summit @  ${this.allClimbs[i].maxElevation}m, ${climbElevation.toFixed(0)}m over ${climbDistance.toFixed(0)}m, avg gradient = ${(100*climbElevation / climbDistance).toFixed(1)} %` );
-      }
-      // todo : wat als er geen elevation data in de gpx zitten?
-    }.bind(this);
-
-    reader.readAsText(aFile);
-
   } // constructor
+
+  async open() {
+    return new Promise((resolve,reject) => {
+
+      let fileExtension =  this.filename.split('.').pop();
+      let reader = new FileReader();
+      let gpxxml; // the raw xml from the gpx file
+      reader.onload = function() {
+        gpxxml = reader.result;
+        if (fileExtension == "xml") {
+          let rouvyXmlFile= new RouvyXmlFile();
+          this.trackData = rouvyXmlFile.parseXML(gpxxml);
+        }
+        else if (fileExtension == "gpx") {
+          let gpxFile= new GPXFile();
+          this.trackData = gpxFile.parseGPX(gpxxml);
+          this.trackData = gpxFile.smoothGPX(this.trackData);
+        }
+        else {
+          console.log ("unknown file format");
+          reject(Error("unknown file format"));
+        }
+        console.log(`Track distance = ${this.trackData.TrackPoints[this.trackData.TrackPoints.length-1].totalDistance}, Video distance = ${this.trackData.VideoPoints[this.trackData.VideoPoints.length-1].totalDistance}`);
+          
+        this.allClimbs = this._findAllClimbs(this.trackData);
+  
+        for (let i = 0; i< this.allClimbs.length; i ++) {
+          let climbDistance = this.allClimbs[i].maxDistance - this.allClimbs[i].minDistance;
+          let climbElevation = this.allClimbs[i].maxElevation - this.allClimbs[i].minElevation;
+          console.log(`found summit @  ${this.allClimbs[i].maxElevation}m, ${climbElevation.toFixed(0)}m over ${climbDistance.toFixed(0)}m, avg gradient = ${(100*climbElevation / climbDistance).toFixed(1)} %` );
+        }
+        // todo : wat als er geen elevation data in de gpx zitten?
+        resolve(this);
+      }.bind(this);
+  
+      reader.readAsText(this._file);
+  
+    });
+
+  } // open
 
   /* returnInfo {
     .totalDistance
@@ -384,9 +392,8 @@ class Track {
 
 } // Track
 
-// toont de data van riders & ghosts (graphics overlay)
-// stuurt de trainer aan
-// stuurt de video aan
+// shows the graphics overlay
+// controls the trainer & the video playback
 class Simulator {
   constructor() {
     this.state = SIMULATION_IDLE;
@@ -399,11 +406,39 @@ class Simulator {
     this.video.pause();
 
     // html page info
+    this.cvsMapWidth = 100;
+    this.cvsMapHeight = 100;
+    this.cvsProfileWidth = 500;
+    this.cvsProfileHeight = 100;
+
     this.debugTxt = document.getElementById("debugTxt");
-    this.canvasGradient = document.getElementById("canvasGradient");
-    this.ctx = this.canvasGradient.getContext("2d");
+    this.cvsGradient = document.getElementById("cvsGradient");
+    this.ctxGradient = this.cvsGradient.getContext("2d");
+    this.cvsMap = document.getElementById("cvsMap");
+    this.ctxMap = this.cvsMap.getContext("2d");
+    this.ctxMap.strokeStyle = "#FFFFFF"; // draw white lines
+    this.cvsProfile = document.getElementById("cvsProfile");
+    this.ctxProfile = this.cvsProfile.getContext("2d");
+    this.ctxProfile.strokeStyle = "#FFFFFF"; // draw white lines
+
+    this.cvsMap.addEventListener('click',this.onClick.bind(this));
+    this.cvsMap.addEventListener('wheel',this.onWheel.bind(this));
+    this.cvsProfile.addEventListener('click',this.onClick.bind(this));
+    this.cvsProfile.addEventListener('wheel',this.onWheel.bind(this));
 
   } // constructor
+
+  // TODO : place holders to implement zoom in & out
+  onClick(event) {
+    log(`click on ${event.target.id} @ (${event.offsetX},${event.offsetY})`);
+  }
+  onWheel(event) {
+    if (event.wheelDelta > 0) {
+      log (`wheel UP on ${event.target.id}`);
+    } else {
+      log (`wheel DOWN on ${event.target.id}`);
+    }
+  }
 
   addRider (rider) {
     this.rider = rider;
@@ -416,6 +451,9 @@ class Simulator {
       this.rider.addTrack(track);
     }
     this.state = SIMULATION_READY;
+    this._initTrackImage();
+    this._initProfileImage();
+
   } // addTrack
 
   addGhost (ghost) {
@@ -485,10 +523,6 @@ class Simulator {
     if (this.rider) this.rider.secUpdate();
     if (this.ghost) this.ghost.secUpdate();
 
-    // if eof -> stop the trainer
-    // reset the trainer resistance? -> done by trainer during pause
-    // TODO : this.rider.trainer.pause().catch(()=>{});
-
     let r = this.rider.state; // abbreviation
     if (this.track) {
       curTrackPointData = this.track.getCurTrackPointData(r.curDistance);
@@ -517,6 +551,10 @@ class Simulator {
       if (canvasDistance > iDistance - startDistance) {
         this._drawGradient(0,(iDistance - startDistance) / canvasDistance, 1.0);
       }
+
+      // update the profile & map canvas
+      curTrackPointData.totalDistance = r.curDistance;
+      this._showPoint(curTrackPointData);
 
       if (this.video.readyState) { // video chosen
         // 3. set playbackRate
@@ -576,10 +614,10 @@ class Simulator {
       avgCadence = (r.totalCadence/r.totalTime);
       avgPedalPowerBalance = (r.totalPedalPowerBalance/r.totalPower)*100.0;
     }
-    this.debugTxt.innerHTML = `${(r.curSpeed*3.6).toFixed(2)} km/h (avg: ${avgSpeed.toFixed(1)} km/h)`;
+    this.debugTxt.innerHTML = `${(r.curSpeed*3.6).toFixed(2)}km/h (avg: ${avgSpeed.toFixed(1)}km/h)`;
     this.debugTxt.innerHTML += ` &#x2726; ${r.curPower}W (avg: ${avgPower.toFixed(0)}W)`;
-    this.debugTxt.innerHTML += ` &#x2726; ${r.curCadence}rpm (avg:${avgCadence.toFixed(0)}rpm)`;
-    this.debugTxt.innerHTML += ` &#x2726; ${(100-r.curPedalPowerBalance)}/${r.curPedalPowerBalance} (avg:${(100-avgPedalPowerBalance).toFixed(0)}/${avgPedalPowerBalance.toFixed(0)})`
+    this.debugTxt.innerHTML += ` &#x2726; ${r.curCadence}rpm (avg: ${avgCadence.toFixed(0)}rpm)`;
+    this.debugTxt.innerHTML += ` &#x2726; ${(100-r.curPedalPowerBalance)}/${r.curPedalPowerBalance} (avg: ${(100-avgPedalPowerBalance).toFixed(0)}/${avgPedalPowerBalance.toFixed(0)})`
 
     if (this.rider.track) {
       this.debugTxt.innerHTML += "<br>";
@@ -612,7 +650,6 @@ class Simulator {
 
       // show avg gradient over next km
       this.debugTxt.innerHTML += ` next km @ ${(100*curTrackPointData.avgGradient).toFixed(2)}%`
-    
     } // data shown when track active
 
     // TODO : show ghost data
@@ -630,7 +667,7 @@ class Simulator {
       else {
         this.debugTxt.innerHTML += `ghost is behind by ${sec2string(ghostTimeDiff.toFixed(1))}, ${(-ghostDistDiff).toFixed(0)}m`;
       }
-    }
+    } // ghost
 
   } // secUpdate
 
@@ -666,15 +703,85 @@ class Simulator {
     else if (gradient < 0.08) color = "#FF8C00"; // dark orange kinomap : 944c1d
     else color = "#941b1d"; // red #FF0000 // 941b1d : kinomap red
     
-    // do the filling
-    // empty the section first
-    //ctx.fillStyle = "#000000";
-    this.ctx.clearRect(xMin,0, xMax-xMin,canvasHeight);
-
-    this.ctx.fillStyle = color;
-    this.ctx.fillRect(xMin,yMin, xMax-xMin,yMax-yMin);
+    // do the filling - empty the section first
+    this.ctxGradient.clearRect(xMin,0, xMax-xMin,canvasHeight);
+    this.ctxGradient.fillStyle = color;
+    this.ctxGradient.fillRect(xMin,yMin, xMax-xMin,yMax-yMin);
     
-  } // _drawGradient  
+  } // _drawGradient
+
+  _lonlat2map (point) {
+    let xy = {};
+    xy.x = 3 + Math.round((this.cvsMapWidth-5) * (point.lon - this.MIN.lon) / (this.MAX.lon - this.MIN.lon));
+    xy.y = this.cvsMapHeight - 3 - Math.round((this.cvsMapHeight-5) * (point.lat - this.MIN.lat) / (this.MAX.lat - this.MIN.lat));
+    return xy;
+  } // lonlat2map
+
+  _eledist2profile (point) {
+    let profile = {};
+    profile.x = 3 +Math.round((this.cvsProfileWidth - 5)* point.totalDistance / this.PROFILE.totalDistance);
+    profile.y = (this.cvsProfileHeight - 3) - Math.round((this.cvsProfileHeight - 5) * (point.elevation - this.PROFILE.min) / (this.PROFILE.max - this.PROFILE.min));
+    return profile;
+  } // eledist2profile
+
+  _initTrackImage () {
+    // create the trackImage
+    let lats = this.track.trackData.TrackPoints.map(x=>x.lat);
+    let lons = this.track.trackData.TrackPoints.map(x=>x.lon);
+    this.MIN = {lat : Math.min(...lats), lon : Math.min(...lons)};
+    this.MAX = {lat : Math.max(...lats), lon : Math.max(...lons)};
+    this.ctxMap.beginPath();
+    for (let i=0; i < this.track.trackData.TrackPoints.length; i++) {
+      let xy = this._lonlat2map (this.track.trackData.TrackPoints[i]);
+      if (i==0) {
+        this.ctxMap.moveTo(xy.x, xy.y);
+      }
+      else {
+        this.ctxMap.lineTo(xy.x, xy.y);
+      }
+    }
+    this.ctxMap.stroke();
+    this.trackImage = this.ctxMap.getImageData(0, 0, this.cvsMapWidth, this.cvsMapHeight);
+
+  } // _initTrackImage
+
+  _initProfileImage () {
+    let eles = this.track.trackData.TrackPoints.map(x=>x.elevation);
+    this.PROFILE = {min : Math.min(...eles), max : Math.max(...eles)};
+    this.PROFILE.totalDistance = this.track.trackData.TrackPoints[this.track.trackData.TrackPoints.length-1].totalDistance;
+    this.ctxProfile.beginPath();
+    for (let i=0; i < this.track.trackData.TrackPoints.length; i++) {
+      let prof = this._eledist2profile (this.track.trackData.TrackPoints[i]);
+      if (i==0) {
+        this.ctxProfile.moveTo(prof.x, prof.y);
+      }
+      else {
+        this.ctxProfile.lineTo(prof.x, prof.y);
+      }
+    }
+    this.ctxProfile.stroke();
+    this.profileImage = this.ctxProfile.getImageData(0, 0, this.cvsProfileWidth, this.cvsProfileHeight);
+
+  } // _initProfileImage
+
+  _showPoint (point) {
+    this.ctxMap.clearRect(0,0,this.cvsMapWidth, this.cvsMapHeight);
+    this.ctxMap.putImageData(this.trackImage, 0, 0);
+    let xy = this._lonlat2map(point);
+    this.ctxMap.beginPath();
+    this.ctxMap.arc(xy.x,xy.y, 3, 0, 2*Math.PI);
+    this.ctxMap.fillStyle = "yellow";
+    this.ctxMap.fill();
+
+    this.ctxProfile.clearRect(0,0,this.cvsProfileWidth, this.cvsProfileHeight);
+    this.ctxProfile.putImageData(this.profileImage, 0, 0);
+    let prof = this._eledist2profile(point);
+    this.ctxProfile.beginPath();
+    this.ctxProfile.arc(prof.x,prof.y, 3, 0, 2*Math.PI);
+    this.ctxProfile.fillStyle = "yellow";
+    this.ctxProfile.fill();
+
+  } // _showPoint  
 
 } // Simulator
 
@@ -713,11 +820,10 @@ class Rider {
   } // constructor
 
   // track is a Track class object
+  // call this only after the track has been loaded from file!
   addTrack(track) {
     this.track = track;
-    // the trackData are not available yet, will be populated only after the reader returns!
-    // this doesn't work : 
-    //this.state.curElevation = this.track.trackData.TrackPoints[0].elevation; // rider starts at initial elevation
+    this.state.curElevation = this.track.trackData.TrackPoints[0].elevation; // rider starts at initial elevation
   } // addTrack
 
   // connect the direto and subscribe the bike data
@@ -772,11 +878,6 @@ class Rider {
       let curInfo = this.track.getCurTrackPointData(this.state.curDistance);
       this.state.curLat = curInfo.lat;
       this.state.curLon = curInfo.lon;
-  
-      // TODO : better way to init the elevation
-      if (this.state.curElevation < -999.9) {
-        this.state.curElevation = this.track.trackData.TrackPoints[0].elevation; 
-      }
   
       // keep track of total ascent / descent
       if (curInfo.elevation > this.state.curElevation) {

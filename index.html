@@ -33,22 +33,34 @@
       background: rgba(0, 0, 0, 0.5);
       color: #f1f1f1;
       width: 100%;
-      padding: 20px;
+      padding: 10px 20px;
+  }
+
+  .flex-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content:flex-end;
+  }
+  /* a trick to force next row in flex layout */
+  .break {
+    flex-basis: 100%;
+    height: 0;
   }
 
   button {
-      width: 100px;
+      /*width: 100px; */
+      width: auto;
       font-size: 12px;
       padding: 5px;
       border: none;
-      background: #000;
-      color: #fff;
+      background: #ddd;
+      color: black;
       cursor: pointer;
   }
 
   button:hover {
-      background: #ddd;
-      color: black;
+      background: blue;
   }
   
   </style>
@@ -94,7 +106,7 @@
     
   } // videoFileOnChange
 
-  function trackFileOnChange(evt) {
+  async function trackFileOnChange(evt) {
     let id = evt.target.id; // voor het geval we verschillende choose file buttons zouden gaan gebruiken die allemaal naar deze functie wijzen
     let files = evt.target.files; // FileList object
     
@@ -105,10 +117,11 @@
     // files[0] is the track file
     let aFile = files[0];
     let track = new Track(aFile);
+    await track.open();
     if (!simulator.track) {
       simulator.addTrack(track);
       // change button label "track!" -> "ghost!"
-      document.getElementById('buttonFileTrack').value = 'ghost!';
+      document.getElementById('buttonFileTrack').innerHTML = 'ghost!';
     }
     // TODO : check if track file contains valid timing data for a ghost, that it's the same track as the main track etc
     else if (!simulator.ghost) {
@@ -194,21 +207,31 @@
 
   <div id="container">
     <video muted id="myVideo" poster="" title="">
-      <source src="Rouvy_MountEvans.mp4" type="video/mp4">
+      <source src="" type="video/mp4"> <!-- src= "aVideoFile.mp4"-->
       Your browser does not support HTML5 video.
     </video>
 
     <div class="graphicsOverlay">
-      <canvas id="canvasGradient" width="500" height="15" style="border:1px solid #FFFFFF;">Your browser does not support the HTML5 canvas tag.
-      </canvas>
-      <p><span id="debugTxt"> </span></p>
-      <button id="buttonPlay">Start</button>
-      <input type="button" id="buttonFileVideo" value="video!" onclick="document.getElementById('fileVideo').click()"/>
-      <input type="file" id="fileVideo" style="display:none;" accept="video/*"/>
-      <input type="button" id="buttonFileTrack" value="track!" onclick="document.getElementById('fileTrack').click()"/>
-      <input type="file" id="fileTrack" style="display:none;" accept=".gpx,.xml" />
-      <button id="buttonConnect">Connect</button>
-      <button><a href="" id="buttonDownload"">Download GPX</a></button>
+      <div class="flex-container">
+        <div style="flex:1;">
+          <canvas id="cvsGradient" width="500" height="15" style="border:1px solid #FFFFFF;margin:5px;">Your browser does not support the HTML5 canvas tag.</canvas>
+          <div><span id="debugTxt"> </span></div>
+        </div>
+        <div>
+          <canvas id="cvsProfile" width="500" height="100" style="border:1px solid #FFFFFF;margin:5px;flex:0;"></canvas>
+          <canvas id="cvsMap" width="100" height="100" style="border:1px solid #FFFFFF; margin:5px;flex:0;"></canvas>
+        </div>
+        <div class="break"></div>
+        <div>
+          <button id="buttonPlay">Start</button>
+          <button id="buttonFileVideo" onclick="document.getElementById('fileVideo').click()">video!</button>
+          <input type="file" id="fileVideo" style="display:none;" accept="video/*"/>
+          <button id="buttonFileTrack" onclick="document.getElementById('fileTrack').click()">track!</button>
+          <input type="file" id="fileTrack" style="display:none;" accept=".gpx,.xml" />
+          <button id="buttonConnect">Connect</button>
+          <button><a href="" id="buttonDownload"">Download GPX</a></button>
+        </div>
+      </div>
     </div>
   </div>
 
