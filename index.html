@@ -169,7 +169,7 @@
 
   function buttonDownloadOnClick() {
     if (rider.rideLog.length) {
-      let xml = ridelog2ShortXML(rider.rideLog,simulator.track);
+      let xml = ridelog2ShortXML(rider.rideLog,simulator.track.trackData);
       let fileContents = encodeURIComponent(xml);
       let fileName = simulator.track.trackData.routeName.replace(/ /g,"_") + '.xml';
       buttonDownload.href = 'data:text/plain;charset=utf-8,' + fileContents;

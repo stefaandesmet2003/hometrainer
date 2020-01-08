@@ -252,8 +252,9 @@ class Track {
   } // getAvgGradient
 
   // helper functions
-    // find all climbs in the trackData
+  // find all climbs in the trackData
   // climb ends if elevation descreases by more than 10 VM
+  // TODO : cleanup duplicate code
   _findAllClimbs (trackData) {
 
     const state_findingStartOfClimb = 0;
@@ -294,12 +295,10 @@ class Track {
             climb.index = allClimbs.length;
             climb.startPos = climbStartPos;
             climb.endPos = climbEndPos;
-            // 2019.12.17 cleanup after check ok
             climb.minElevation = trackData.TrackPoints[climbStartPos].elevation;
             climb.maxElevation = trackData.TrackPoints[climbEndPos].elevation;
             climb.minDistance = trackData.TrackPoints[climbStartPos].totalDistance;
             climb.maxDistance = trackData.TrackPoints[climbEndPos].totalDistance;
-            // climb.maxElevation = refElevation;
             allClimbs.push(climb);
           }
           else {
@@ -316,12 +315,10 @@ class Track {
       climb.index = allClimbs.length;
       climb.startPos = climbStartPos;
       climb.endPos = climbEndPos;
-      // 2019.12.17 cleanup after check ok - TODO cleanup duplicate code!
       climb.minElevation = trackData.TrackPoints[climbStartPos].elevation;
       climb.maxElevation = trackData.TrackPoints[climbEndPos].elevation;
       climb.minDistance = trackData.TrackPoints[climbStartPos].totalDistance;
       climb.maxDistance = trackData.TrackPoints[climbEndPos].totalDistance;
-      // climb.maxElevation = refElevation;
       allClimbs.push(climb);
     }
     
@@ -654,18 +651,18 @@ class Simulator {
 
     // TODO : show ghost data
     if (this.ghost) {
-      this.debugTxt.innerHTML += "<br>";
+      this.debugTxt.innerHTML += "<br>ghost: ";
       let curPos = {};
       curPos.totalDistance = this.rider.state.curDistance;
       curPos.elapsedTime = this.rider.state.totalTime;
-      let ghostPos = this.ghost.compareGhost(curPos);
-      let ghostTimeDiff = ghostPos.elapsedTime - curPos.elapsedTime;
-      let ghostDistDiff = ghostPos.totalDistance - curPos.totalDistance;
+      let ghostData = this.ghost.compareGhost(curPos);
+      this.debugTxt.innerHTML += `${ghostData.curSpeed.toFixed(2)}km/h &#x2726; ${ghostData.curPower}W`;
+      let ghostTimeDiff = ghostData.elapsedTime - curPos.elapsedTime;
+      let ghostDistDiff = ghostData.totalDistance - curPos.totalDistance;
       if ((ghostTimeDiff < 0) || (ghostDistDiff > 0))  {
-        this.debugTxt.innerHTML += `ghost is ahead by ${sec2string((-ghostTimeDiff).toFixed(1))}, ${ghostDistDiff.toFixed(0)}m`;
-      }
-      else {
-        this.debugTxt.innerHTML += `ghost is behind by ${sec2string(ghostTimeDiff.toFixed(1))}, ${(-ghostDistDiff).toFixed(0)}m`;
+        this.debugTxt.innerHTML += ` &#x2726; ahead by ${sec2string((-ghostTimeDiff).toFixed(1))}, ${ghostDistDiff.toFixed(0)}m`;
+      } else {
+        this.debugTxt.innerHTML += ` &#x2726; behind by ${sec2string(ghostTimeDiff.toFixed(1))}, ${(-ghostDistDiff).toFixed(0)}m`;
       }
     } // ghost
 
@@ -943,34 +940,38 @@ class Ghost {
     this.track = track;
   } // constructor
 
-  // curPos.totalDistance, curPos.elapsedTime
+  // {curPos.totalDistance, curPos.elapsedTime}
   compareGhost (curPos) {
-    let ghostElapsedTime = curPos.elapsedTime; // any init
-    let ghostTotalDistance = 0;
+    let retval = {};
+    let t = this.track.trackData;
 
-    // for the moment only using the timing & totalDistance imported on the VideoPoints array
-    // TODO : lees bv. ook power/cadence data uit de ghost gpx
-    let TimingPoints = this.track.trackData.VideoPoints;
     let ghostPos = 0;
     
     // when did the ghost pass at curPos.totalDistance?
-    while ((TimingPoints[ghostPos].totalDistance < curPos.totalDistance) && (ghostPos < (TimingPoints.length - 1)))
+    while ((t.VideoPoints[ghostPos].totalDistance < curPos.totalDistance) && (ghostPos < (t.VideoPoints.length - 1)))
       ghostPos ++;
-    ghostElapsedTime = TimingPoints[ghostPos].videoTime; // ghostElapsedTime - curPos.elapsedTime = voorsprong van de ghost (negatief seconden)
+    retval.elapsedTime = t.VideoPoints[ghostPos].videoTime; // retval.elapsedTime - curPos.elapsedTime = voorsprong van de ghost (negatief seconden)
     
     // where did the ghost pass at curPos.elapsedTime?
     ghostPos = 0;
-    while ((TimingPoints[ghostPos].videoTime < curPos.elapsedTime) && (ghostPos < (TimingPoints.length - 1)))
+    while ((t.VideoPoints[ghostPos].videoTime < curPos.elapsedTime) && (ghostPos < (t.VideoPoints.length - 1)))
       ghostPos ++;
-    ghostTotalDistance = TimingPoints[ghostPos].totalDistance; // ghostTotalDistance - curPos.totalDistance = voorsprong van de ghost (positief meters)
+    retval.totalDistance = t.VideoPoints[ghostPos].totalDistance; // retval.totalDistance - curPos.totalDistance = voorsprong van de ghost (positief meters)
 
-    return {elapsedTime : ghostElapsedTime, totalDistance : ghostTotalDistance };
-  
+    // ghost performance data
+    retval.power = 0;
+    if (t.TrackPoints[ghostPos].power != null) {
+      retval.curPower = t.TrackPoints[ghostPos].power;
+    }
+    retval.curSpeed = 0.0;
+    if (ghostPos > 0) {
+      retval.curSpeed = 3.6 * (t.TrackPoints[ghostPos].totalDistance - t.TrackPoints[ghostPos-1].totalDistance);
+      retval.curSpeed = retval.curSpeed / (t.VideoPoints[ghostPos].videoTime - t.VideoPoints[ghostPos-1].videoTime);
+    }
+
+    return retval;
   } // compareGhost
 
-  secUpdate () {
-    // TODO, voorlopig niet nodig
-  }
 } // Ghost
 
   function log(line) {

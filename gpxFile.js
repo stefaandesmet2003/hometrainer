@@ -121,6 +121,17 @@ GPXFile = function() {
           trackPoint.totalDistance = totalDistance;
         }
       }
+
+      // ghost data ?
+      let trkptPower = $(this).find("power");
+      if (trkptPower.length > 0) {
+        trackPoint.power = Number(trkptPower[0].textContent);
+      }
+      let trkptCadence = $(this).find("gpxtpx\\:cad");
+      if (trkptCadence.length > 0) {
+        trackPoint.cadence = Number(trkptCadence[0].textContent);
+      }
+      
       TrackPoints.push(trackPoint);
       prevTrackPoint = trackPoint;
       
