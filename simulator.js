@@ -31,7 +31,7 @@ class Track {
       reader.onload = function() {
         gpxxml = reader.result;
         if (fileExtension == "xml") {
-          let rouvyXmlFile= new RouvyXmlFile();
+          let rouvyXmlFile = new RouvyXmlFile();
           this.trackData = rouvyXmlFile.parseXML(gpxxml);
         }
         else if (fileExtension == "gpx") {
@@ -45,13 +45,14 @@ class Track {
         }
         console.log(`Track distance = ${this.trackData.TrackPoints[this.trackData.TrackPoints.length-1].totalDistance}, Video distance = ${this.trackData.VideoPoints[this.trackData.VideoPoints.length-1].totalDistance}`);
           
-        this.allClimbs = this._findAllClimbs(this.trackData);
+        this.allClimbs = this._findAllClimbs();
   
         for (let i = 0; i< this.allClimbs.length; i ++) {
           let climbDistance = this.allClimbs[i].maxDistance - this.allClimbs[i].minDistance;
           let climbElevation = this.allClimbs[i].maxElevation - this.allClimbs[i].minElevation;
           console.log(`found summit @  ${this.allClimbs[i].maxElevation}m, ${climbElevation.toFixed(0)}m over ${climbDistance.toFixed(0)}m, avg gradient = ${(100*climbElevation / climbDistance).toFixed(1)} %` );
         }
+        this._initTrackInfo();
         // todo : wat als er geen elevation data in de gpx zitten?
         resolve(this);
       }.bind(this);
@@ -62,29 +63,67 @@ class Track {
 
   } // open
 
-  /* returnInfo {
+  // same as open() but from ajax
+  async load(url) {
+    return new Promise((resolve,reject) => {
+      let xmlhttp = new XMLHttpRequest();
+      let gpxxml; // the raw xml from the gpx/xml file
+      xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == 4) {
+          if (xmlhttp.status == 200) {
+            gpxxml = xmlhttp.responseText;
+            let rouvyXmlFile = new RouvyXmlFile();
+            this.trackData = rouvyXmlFile.parseXML(gpxxml);
+          }
+          else {
+            // TODO : dat is hier nog niet compleet; gaat fout 
+            console.log ("http error");
+            reject(Error("http error"));
+          }
+          // todo : support gpx links
+          console.log(`Track distance = ${this.trackData.TrackPoints[this.trackData.TrackPoints.length-1].totalDistance}, Video distance = ${this.trackData.VideoPoints[this.trackData.VideoPoints.length-1].totalDistance}`);
+              
+          this.allClimbs = this._findAllClimbs();
+    
+          for (let i = 0; i< this.allClimbs.length; i ++) {
+            let climbDistance = this.allClimbs[i].maxDistance - this.allClimbs[i].minDistance;
+            let climbElevation = this.allClimbs[i].maxElevation - this.allClimbs[i].minElevation;
+            console.log(`found summit @  ${this.allClimbs[i].maxElevation}m, ${climbElevation.toFixed(0)}m over ${climbDistance.toFixed(0)}m, avg gradient = ${(100*climbElevation / climbDistance).toFixed(1)} %` );
+          }
+          this._initTrackInfo();
+          // todo : wat als er geen elevation data in de gpx zitten?
+          resolve(this);
+        } 
+      }.bind(this);
+
+      xmlhttp.open("GET", url, true);
+      xmlhttp.send();
+
+    });
+
+  } // load
+
+  /* adds info members to the Track object
     .totalDistance
     .numClimbs, .totalAscent, .totalDescent
     .totalVideoTime
-  }
+    call after _findAllClimbs!
   */
-  getTrackInfo () {
-    let returnInfo = {};
+  _initTrackInfo () {
 
-    returnInfo.totalDistance = this.trackData.TrackPoints[this.trackData.TrackPoints.length-1].totalDistance;
+    this.totalDistance = this.trackData.TrackPoints[this.trackData.TrackPoints.length-1].totalDistance;
 
-    returnInfo.totalAscent = 0.0;
-    for (let i = 0; i < this.allClimbs.length; i++) {
-      let climbElevation = this.allClimbs[i].maxElevation - this.allClimbs[i].minElevation;
-      returnInfo.totalAscent += climbElevation;
+    this.totalAscent = 0.0;
+    this.totalDescent = 0.0;
+    for (let i = 0; i < this.trackData.TrackPoints.length - 1; i++) {
+      let eleDiff = this.trackData.TrackPoints[i+1].elevation - this.trackData.TrackPoints[i].elevation;
+      if (eleDiff > 0.0) this.totalAscent += eleDiff;
+      else this.totalDescent -= eleDiff;
     }
-    //returnInfo.totalDescent = 1000.0; // dit is nog niet berekend, enkel de climbs zijn getagged
-    returnInfo.totalVideoTime = this.trackData.VideoPoints[this.trackData.VideoPoints.length-1].videoTime;
-    returnInfo.numClimbs = this.allClimbs.length;
+    this.totalVideoTime = this.trackData.VideoPoints[this.trackData.VideoPoints.length-1].videoTime;
+    this.numClimbs = this.allClimbs.length;
 
-    return returnInfo;
-
-  } // getTrackInfo
+  } // _initTrackInfo
   
   // curDistance in m
   /* returnInfo {
@@ -255,70 +294,70 @@ class Track {
   // find all climbs in the trackData
   // climb ends if elevation descreases by more than 10 VM
   // TODO : cleanup duplicate code
-  _findAllClimbs (trackData) {
+  _findAllClimbs () {
 
     const state_findingStartOfClimb = 0;
     const state_findingEndOfClimb = 1;
     const minClimbElevation = 10.0; // parameter for the algorithm
     let allClimbs = [];
-    const length = trackData.TrackPoints.length;
+    const length = this.trackData.TrackPoints.length;
     
     let stateAlgo = state_findingStartOfClimb;
     let pos = 0;
     let climbStartPos = 0;
     let climbEndPos = 0;
-    let refElevation = trackData.TrackPoints[0].elevation;
+    let refElevation = this.trackData.TrackPoints[0].elevation;
     
-    while (pos < (trackData.TrackPoints.length - 1)) {
+    while (pos < (this.trackData.TrackPoints.length - 1)) {
       pos ++;
       if (stateAlgo == state_findingStartOfClimb) {
-        if (trackData.TrackPoints[pos].elevation > refElevation) {
+        if (this.trackData.TrackPoints[pos].elevation > refElevation) {
           // we are climbing -> let's now find the end of this climb
           stateAlgo = state_findingEndOfClimb;
           climbStartPos = pos - 1;
         }
-        else if (trackData.TrackPoints[pos].elevation < refElevation) {
+        else if (this.trackData.TrackPoints[pos].elevation < refElevation) {
           // we are not climbing, keep searching
         }
-        refElevation = trackData.TrackPoints[pos].elevation;
+        refElevation = this.trackData.TrackPoints[pos].elevation;
       }
       else if (stateAlgo == state_findingEndOfClimb) {
-        if (trackData.TrackPoints[pos].elevation > refElevation) {
-          refElevation = trackData.TrackPoints[pos].elevation;
+        if (this.trackData.TrackPoints[pos].elevation > refElevation) {
+          refElevation = this.trackData.TrackPoints[pos].elevation;
           climbEndPos = pos;
         }
-        if (trackData.TrackPoints[pos].elevation < (refElevation - minClimbElevation)) {
+        if (this.trackData.TrackPoints[pos].elevation < (refElevation - minClimbElevation)) {
           // back in a descent; did we find a climb?
-          if ( (trackData.TrackPoints[pos].elevation - trackData.TrackPoints[climbStartPos].elevation) > minClimbElevation ) {
+          if ( (this.trackData.TrackPoints[pos].elevation - this.trackData.TrackPoints[climbStartPos].elevation) > minClimbElevation ) {
             // we need at least 10m of elevation difference to qualify it as a 'climb'
             var climb = {};
             climb.index = allClimbs.length;
             climb.startPos = climbStartPos;
             climb.endPos = climbEndPos;
-            climb.minElevation = trackData.TrackPoints[climbStartPos].elevation;
-            climb.maxElevation = trackData.TrackPoints[climbEndPos].elevation;
-            climb.minDistance = trackData.TrackPoints[climbStartPos].totalDistance;
-            climb.maxDistance = trackData.TrackPoints[climbEndPos].totalDistance;
+            climb.minElevation = this.trackData.TrackPoints[climbStartPos].elevation;
+            climb.maxElevation = this.trackData.TrackPoints[climbEndPos].elevation;
+            climb.minDistance = this.trackData.TrackPoints[climbStartPos].totalDistance;
+            climb.maxDistance = this.trackData.TrackPoints[climbEndPos].totalDistance;
             allClimbs.push(climb);
           }
           else {
             // startPos is just a hump in the road; let's restart the search for a climb
           }
           stateAlgo = state_findingStartOfClimb; // start finding next climb
-          refElevation = trackData.TrackPoints[pos].elevation;
+          refElevation = this.trackData.TrackPoints[pos].elevation;
         }
       }
     }
     // did we leave the loop in the middle of a climb -> let's count it in
-    if ((stateAlgo == state_findingEndOfClimb) && ((trackData.TrackPoints[climbEndPos].elevation - trackData.TrackPoints[climbStartPos].elevation) > minClimbElevation)) {
+    if ((stateAlgo == state_findingEndOfClimb) && ((this.trackData.TrackPoints[climbEndPos].elevation - this.trackData.TrackPoints[climbStartPos].elevation) > minClimbElevation)) {
       var climb = {};
       climb.index = allClimbs.length;
       climb.startPos = climbStartPos;
       climb.endPos = climbEndPos;
-      climb.minElevation = trackData.TrackPoints[climbStartPos].elevation;
-      climb.maxElevation = trackData.TrackPoints[climbEndPos].elevation;
-      climb.minDistance = trackData.TrackPoints[climbStartPos].totalDistance;
-      climb.maxDistance = trackData.TrackPoints[climbEndPos].totalDistance;
+      climb.minElevation = this.trackData.TrackPoints[climbStartPos].elevation;
+      climb.maxElevation = this.trackData.TrackPoints[climbEndPos].elevation;
+      climb.minDistance = this.trackData.TrackPoints[climbStartPos].totalDistance;
+      climb.maxDistance = this.trackData.TrackPoints[climbEndPos].totalDistance;
       allClimbs.push(climb);
     }
     
@@ -418,6 +457,21 @@ class Simulator {
     this.ctxProfile = this.cvsProfile.getContext("2d");
     this.ctxProfile.strokeStyle = "#FFFFFF"; // draw white lines
 
+    this.dataElapsedTime = document.getElementById("data-time");
+    this.dataDistance = document.getElementById("data-dist");
+    this.dataSpeed = document.getElementById("data-spd");
+    this.dataAvgSpeed = document.getElementById("data-avspd");
+    this.dataPower = document.getElementById("data-pow");
+    this.dataAvgPower = document.getElementById("data-avpow");
+    this.dataCadence = document.getElementById("data-rpm");
+    this.dataAvgCadence = document.getElementById("data-avrpm");
+    this.dataPowerBalance = document.getElementById("data-balance");
+    this.dataAvgPowerBalance = document.getElementById("data-avbalance");
+    this.dataGradient = document.getElementById("data-grad");
+    this.dataAvgGradient = document.getElementById("data-avgrad");
+    this.dataClimbInfo = document.getElementById("data-climb");
+    this.dataAscentInfo = document.getElementById("data-ascent");
+
     this.cvsMap.addEventListener('click',this.onClick.bind(this));
     this.cvsMap.addEventListener('wheel',this.onWheel.bind(this));
     this.cvsProfile.addEventListener('click',this.onClick.bind(this));
@@ -427,7 +481,15 @@ class Simulator {
 
   // TODO : place holders to implement zoom in & out
   onClick(event) {
-    log(`click on ${event.target.id} @ (${event.offsetX},${event.offsetY})`);
+    //log(`click on ${event.target.id} @ (${event.offsetX},${event.offsetY})`);
+    // translate offsetX to curDistance
+    if (event.target.id == "cvsProfile") {
+      let curDistance = event.offsetX / this.cvsProfileWidth * this.track.totalDistance;
+      log(`setting curDistance =  ${curDistance}`);
+      this.rider.state.curDistance = curDistance;
+
+    }
+
   }
   onWheel(event) {
     if (event.wheelDelta > 0) {
@@ -450,6 +512,11 @@ class Simulator {
     this.state = SIMULATION_READY;
     this._initTrackImage();
     this._initProfileImage();
+    this._drawData();
+    let curTrackPointData = this.track.getCurTrackPointData(0);
+    // show initial location yellow dots
+    curTrackPointData.totalDistance = 0;
+    this._showPoint(curTrackPointData);
 
   } // addTrack
 
@@ -512,24 +579,24 @@ class Simulator {
   } // pause
 
   secUpdate () {
-    let trackInfo;
     let curTrackPointData;
     let curVideoPointData;
 
-    // call rider.secUpdate & ghost.secUpdate
     if (this.rider) this.rider.secUpdate();
-    if (this.ghost) this.ghost.secUpdate();
+    //if (this.ghost) this.ghost.secUpdate();
 
     let r = this.rider.state; // abbreviation
     if (this.track) {
       curTrackPointData = this.track.getCurTrackPointData(r.curDistance);
-      trackInfo = this.track.getTrackInfo(); // TODO : eigenlijk hoeft dit maar 1 keer, of elke keer als de track wijzigt
 
       if (curTrackPointData.eof) {
         // pause the simulation
         this.pause();
         return;
       }
+
+      // update data
+      this._drawData();
 
       // update the gradient canvas
       // gradient canvas represents the gradient for the next 30 seconds
@@ -602,30 +669,51 @@ class Simulator {
   
     } // active track
 
-    // update html page
-    let avgSpeed = r.curSpeed, avgCadence = r.curCadence, avgPower = r.curPower;
-    let avgPedalPowerBalance=r.curPedalPowerBalance;
-    if (r.totalTime) {
-      avgSpeed = (r.totalSpeed*3.6/r.totalTime);
-      avgPower = (r.totalPower/r.totalTime);
-      avgCadence = (r.totalCadence/r.totalTime);
-      avgPedalPowerBalance = (r.totalPedalPowerBalance/r.totalPower)*100.0;
-    }
-    this.debugTxt.innerHTML = `${(r.curSpeed*3.6).toFixed(2)}km/h (avg: ${avgSpeed.toFixed(1)}km/h)`;
-    this.debugTxt.innerHTML += ` &#x2726; ${r.curPower}W (avg: ${avgPower.toFixed(0)}W)`;
-    this.debugTxt.innerHTML += ` &#x2726; ${r.curCadence}rpm (avg: ${avgCadence.toFixed(0)}rpm)`;
-    this.debugTxt.innerHTML += ` &#x2726; ${(100-r.curPedalPowerBalance)}/${r.curPedalPowerBalance} (avg: ${(100-avgPedalPowerBalance).toFixed(0)}/${avgPedalPowerBalance.toFixed(0)})`
+  } // secUpdate
 
+  // draw data (currently text format)
+  _drawData() {
+
+    //show live rider data
+    let r = this.rider.state; // abbreviation
+    if (r) {
+      let avgSpeed = r.curSpeed, avgCadence = r.curCadence, avgPower = r.curPower;
+      let avgPedalPowerBalance=r.curPedalPowerBalance;
+      if (r.totalTime) {
+        avgSpeed = (r.totalSpeed*3.6/r.totalTime);
+        avgPower = (r.totalPower/r.totalTime);
+        avgCadence = (r.totalCadence/r.totalTime);
+        avgPedalPowerBalance = (r.totalPedalPowerBalance/r.totalPower)*100.0;
+      }
+      this.dataSpeed.innerHTML = `${(r.curSpeed*3.6).toFixed(2)}`;
+      this.dataAvgSpeed.innerHTML = `${avgSpeed.toFixed(1)}`;
+
+      this.dataPower.innerHTML = `${r.curPower}`;
+      this.dataAvgPower.innerHTML = `${avgPower.toFixed(0)}`;
+      this.dataCadence.innerHTML = `${r.curCadence}`;
+      this.dataAvgCadence.innerHTML = `${avgCadence.toFixed(0)}`;
+      this.dataPowerBalance.innerHTML = `${(100-r.curPedalPowerBalance)}/${r.curPedalPowerBalance}`;
+      this.dataAvgPowerBalance.innerHTML = `${(100-avgPedalPowerBalance).toFixed(0)}/${avgPedalPowerBalance.toFixed(0)}`;
+
+      this.debugTxt.innerHTML = "";
+    }
+
+    // show track data
     if (this.rider.track) {
-      this.debugTxt.innerHTML += "<br>";
-      this.debugTxt.innerHTML += `${r.curDistance.toFixed(0)}m`; // geen cijfers na de komma
-      this.debugTxt.innerHTML += `(&rarr;${(trackInfo.totalDistance - r.curDistance).toFixed(0)}m)`; 
-      this.debugTxt.innerHTML += ` &#x2726; ${sec2string(r.totalTime)}`;
-      this.debugTxt.innerHTML += ` &#x2726; alt: ${r.curElevation.toFixed(0)}m @ ${(curTrackPointData.gradient*100.0).toFixed(1)}%`;
+      let t = this.rider.track;
+      let curTrackPointData = this.track.getCurTrackPointData(r.curDistance);
+
+      this.dataElapsedTime.innerHTML = `${sec2string(r.totalTime)}`;
+      this.dataDistance.innerHTML = `${r.curDistance.toFixed(0)}m`;
+      this.dataDistance.innerHTML += ` &rarr; ${(t.totalDistance - r.curDistance).toFixed(0)}m`
+  
+      //this.debugTxt.innerHTML += ` &#x2726; alt: ${r.curElevation.toFixed(0)}m @ ${(curTrackPointData.gradient*100.0).toFixed(1)}%`;
+      this.dataGradient.innerHTML = `${(curTrackPointData.gradient*100.0).toFixed(1)}`;
       //this.debugTxt.innerHTML += " resistance = " + this.rider.trainer.bikeData.resistanceLevel;
-      this.debugTxt.innerHTML += ` &#x2726; ${r.totalAscent.toFixed(0)}m &uarr; (&rarr; ${trackInfo.totalAscent.toFixed(0)}m)`;
-      this.debugTxt.innerHTML += ` &#x2726; ${r.totalDescent.toFixed(0)}m &darr;`;
-      this.debugTxt.innerHTML += "<br>";
+      this.dataAscentInfo.innerHTML = `&uarr; ${(t.totalAscent - r.totalAscent).toFixed(0)}m`;
+      this.dataAscentInfo.innerHTML += ` &darr; ${(t.totalDescent - r.totalDescent).toFixed(0)}m`;
+
+      this.debugTxt.innerHTML += "<br> ";
 
       // show climbs
       // curTrackPointData.climb
@@ -633,7 +721,8 @@ class Simulator {
         let curClimb = curTrackPointData.climb.curClimb;
         let climbDistanceLeft = curClimb.maxDistance - r.curDistance;
         let climbElevationLeft = curClimb.maxElevation - r.curElevation;
-        this.debugTxt.innerHTML += `this climb (${curClimb.index+1}/${trackInfo.numClimbs}): ${climbDistanceLeft.toFixed(0)} m @ ${(100*climbElevationLeft / climbDistanceLeft).toFixed(1)}% to go`;
+        // this.debugTxt.innerHTML += `this climb (${curClimb.index+1}/${t.numClimbs}): ${climbDistanceLeft.toFixed(0)} m @ ${(100*climbElevationLeft / climbDistanceLeft).toFixed(1)}%`;
+        this.dataClimbInfo.innerHTML = `(${curClimb.index+1}/${t.numClimbs}) ${climbDistanceLeft.toFixed(0)} m @ ${(100*climbElevationLeft / climbDistanceLeft).toFixed(1)}%`;
       }
       else {
         let nextClimb = curTrackPointData.climb.nextClimb;
@@ -641,15 +730,19 @@ class Simulator {
           let distFromClimb = nextClimb.minDistance - r.curDistance;
           let climbElevation = nextClimb.maxElevation - nextClimb.minElevation;
           let climbDistance = nextClimb.maxDistance - nextClimb.minDistance;
-          this.debugTxt.innerHTML += `next climb (${nextClimb.index+1}/${trackInfo.numClimbs}) in ${distFromClimb.toFixed(0)}m, ${climbDistance.toFixed(0)}m @ ${(100*climbElevation / climbDistance).toFixed(1)}%`;
+          //this.debugTxt.innerHTML += `next climb (${nextClimb.index+1}/${t.numClimbs}) in ${distFromClimb.toFixed(0)}m, ${climbDistance.toFixed(0)}m @ ${(100*climbElevation / climbDistance).toFixed(1)}%`;
+          this.dataClimbInfo.innerHTML = `(${nextClimb.index+1}/${t.numClimbs}) ${climbDistance.toFixed(0)}m @ ${(100*climbElevation / climbDistance).toFixed(1)}%`;
+          this.dataClimbInfo.innerHTML += "<br>";
+          this.dataClimbInfo.innerHTML += `in ${distFromClimb.toFixed(0)}m`;
         }
       }
 
       // show avg gradient over next km
-      this.debugTxt.innerHTML += ` next km @ ${(100*curTrackPointData.avgGradient).toFixed(2)}%`
+      // this.debugTxt.innerHTML += ` &#x2726; next km @ ${(100*curTrackPointData.avgGradient).toFixed(2)}%`
+      this.dataAvgGradient.innerHTML = `1km @ ${(100*curTrackPointData.avgGradient).toFixed(1)}%`;
     } // data shown when track active
 
-    // TODO : show ghost data
+    // show ghost data
     if (this.ghost) {
       this.debugTxt.innerHTML += "<br>ghost: ";
       let curPos = {};
@@ -666,7 +759,7 @@ class Simulator {
       }
     } // ghost
 
-  } // secUpdate
+  } // _drawData
 
   // draws a section of the gradient canvas with gradient (color); the section runs from startPercent (0..1) to endPercent (0..1) 
   _drawGradient (gradient, startPercent, endPercent) {
@@ -675,15 +768,13 @@ class Simulator {
     const canvasHeight = 15;
     if (gradient > 0) {
       // filling the upper part of the canvas section
-      yMax = 10;
-      yMin = Math.max(Math.floor(11-gradient*100),0);
+      yMax = 12;
+      yMin = Math.max(Math.floor(12-gradient*100.0),0);
     }
     else if (gradient < 0) {
       // filling the lower part of the canvas section
-      yMin = 10;
-      if (gradient > -0.01) yMax = 11;
-      if (gradient > -0.02) yMax = 12;
-      if (gradient > -0.05) yMax = 13;
+      yMin = 12;
+      if (gradient > -0.02) yMax = 13;
       else yMax = 14;
     }
     
@@ -698,7 +789,8 @@ class Simulator {
     else if (gradient < 0.02) color = "#17711d"; // kinomap green
     else if (gradient < 0.04) color = "#94981d"; // yellow :  #FFFF00, kinomap yellow : 94981d
     else if (gradient < 0.08) color = "#FF8C00"; // dark orange kinomap : 944c1d
-    else color = "#941b1d"; // red #FF0000 // 941b1d : kinomap red
+    else if (gradient < 0.1) color = "#941b1d"; // red #FF0000 // 941b1d : kinomap red
+    else color = 'purple'; // your face color when riding this gradient
     
     // do the filling - empty the section first
     this.ctxGradient.clearRect(xMin,0, xMax-xMin,canvasHeight);
@@ -722,6 +814,8 @@ class Simulator {
   } // eledist2profile
 
   _initTrackImage () {
+    // clear canvas
+    this.ctxMap.clearRect(0,0,this.cvsMap.width, this.cvsMap.height);
     // create the trackImage
     let lats = this.track.trackData.TrackPoints.map(x=>x.lat);
     let lons = this.track.trackData.TrackPoints.map(x=>x.lon);
@@ -743,6 +837,9 @@ class Simulator {
   } // _initTrackImage
 
   _initProfileImage () {
+    // clear canvas
+    this.ctxProfile.clearRect(0,0,this.cvsProfile.width, this.cvsProfile.height);
+    // create the profileImage
     let eles = this.track.trackData.TrackPoints.map(x=>x.elevation);
     this.PROFILE = {min : Math.min(...eles), max : Math.max(...eles)};
     this.PROFILE.totalDistance = this.track.trackData.TrackPoints[this.track.trackData.TrackPoints.length-1].totalDistance;
@@ -791,7 +888,7 @@ class Rider {
       curPedalPowerBalance : 0,
       curSpeed : 0.0,
       curDistance : 0.0,
-      curElevation : -1000.0, // used to keep track of totalAscent / totalDescent; negative default value to trigger init
+      curElevation : 0.0, // used to keep track of totalAscent / totalDescent
       totalTime : 0, // seconds
       totalPower : 0, // watts
       totalCadence : 0, // rpm
@@ -877,11 +974,9 @@ class Rider {
       this.state.curLon = curInfo.lon;
   
       // keep track of total ascent / descent
-      if (curInfo.elevation > this.state.curElevation) {
-        this.state.totalAscent += (curInfo.elevation - this.state.curElevation);
-      } else if (curInfo.elevation < this.state.curElevation) {
-        this.state.totalDescent += (this.state.curElevation - curInfo.elevation);
-      }
+      let eleDiff = curInfo.elevation - this.state.curElevation;
+      if (eleDiff > 0.0) this.state.totalAscent += eleDiff;
+      else this.state.totalDescent -= eleDiff;
       this.state.curElevation = curInfo.elevation;
   
       // update rideLog

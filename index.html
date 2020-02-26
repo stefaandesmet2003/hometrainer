@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="jquery-2.0.3.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   <script src="gpxFile.js"></script>
   <script src="rouvyXmlFile.js"></script>
   <script src="VincentyFormula.js"></script>
@@ -13,10 +13,11 @@
   * {
       box-sizing: border-box;
   }
+  
   body {
       margin: 0;
       font-family: Arial;
-      font-size: 17px;
+      font-size: 15px;
   }
 
   #myVideo {
@@ -27,13 +28,19 @@
       min-height: 100%;
   }
 
+  #cvsProfile, #cvsMap, #cvsGradient {
+    border:1px solid #FFFFFF;
+    border-radius:5px;
+    margin:5px;
+    flex:0;
+  }
+
   .graphicsOverlay {
-      position: fixed;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      color: #f1f1f1;
-      width: 100%;
-      padding: 10px 20px;
+    position: fixed;
+    bottom: 0;
+    color: #f1f1f1;
+    width: 100%;
+    padding: 0px 20px;
   }
 
   .flex-container {
@@ -42,10 +49,50 @@
     align-items: flex-start;
     justify-content:flex-end;
   }
+
   /* a trick to force next row in flex layout */
   .break {
     flex-basis: 100%;
     height: 0;
+  }
+
+  .grid-container {
+    display: grid;
+    gap: 20px 0px;
+    grid-template-columns: minmax(auto,150px) auto minmax(auto,200px);
+    grid-template-rows: auto minmax(110px,auto);
+    grid-template-areas: "data-left . data-right"
+                         "footer footer footer";
+  }
+  .footer {
+    grid-area: footer;
+    /* border: 1px solid #FFFFFF; */ /* for test */
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .data-left {
+    grid-area: data-left;
+    align-self: end;
+  }
+  .data-right {
+    grid-area: data-right;
+    align-self: end;
+  }
+
+  p.dataitem {
+    border-radius: 10px;
+    border: 2px solid #FFFFFF;
+    margin : 5px;
+    padding: 5px;
+    background: rgba(0, 0, 0, 0.5);
+    text-align: center;
+  }
+  .datavalue {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  span.averagevalue {
+    font-size: 0.75rem;
   }
 
   button {
@@ -62,6 +109,11 @@
   button:hover {
       background: blue;
   }
+
+  /* change the BLE connect button bg color */
+  button.connected {
+      background: green;
+  }
   
   </style>
 </head>
@@ -77,7 +129,7 @@
   let rider;
   let ghost;
 
-  function onBodyLoad() {
+  async function onBodyLoad() {
     document.getElementById("fileVideo").onchange = videoFileOnChange;
     document.getElementById("fileTrack").onchange = trackFileOnChange;
     buttonPlay = document.getElementById("buttonPlay");
@@ -90,6 +142,12 @@
     simulator = new Simulator();
     rider = new Rider();
     simulator.addRider(rider);
+
+    // for test load a track url
+    let aFile = {name : "Mount Evans"};
+    let track = new Track(aFile);
+    await track.load("https://cdn.virtualtraining.eu/routes/2675/track.xml");
+    simulator.addTrack(track);
     
   } // onBodyLoad
 
@@ -118,7 +176,8 @@
     let aFile = files[0];
     let track = new Track(aFile);
     await track.open();
-    if (!simulator.track) {
+    // TODO : clean-up this logic
+    if (document.getElementById('buttonFileTrack').innerHTML != 'ghost!') {
       simulator.addTrack(track);
       // change button label "track!" -> "ghost!"
       document.getElementById('buttonFileTrack').innerHTML = 'ghost!';
@@ -150,7 +209,7 @@
         await simulator.rider.connect();
         // change button color & text
         buttonConnect.textContent = "Disconnect";
-        buttonConnect.style.backgroundColor = "green";
+        buttonConnect.classList.add("connected");
       } catch (error) {
         log('error connecting direto : ' + error);
       }
@@ -160,7 +219,7 @@
         await simulator.rider.disconnect();
         // change button color & text
         buttonConnect.textContent = "Connect";
-        buttonConnect.style.backgroundColor = "black";
+        buttonConnect.classList.remove("connected");
       } catch (error) {
         log (`error disconnecting direto : ${error}`);
       }
@@ -207,29 +266,65 @@
 
   <div id="container">
     <video muted id="myVideo" poster="" title="">
-      <source src="" type="video/mp4"> <!-- src= "aVideoFile.mp4"-->
+      <source src="https://cdn.virtualtraining.eu/routes/2675/video/2675_desktop.mp4" type="video/mp4"> <!-- src= "aVideoFile.mp4"-->
       Your browser does not support HTML5 video.
     </video>
 
     <div class="graphicsOverlay">
-      <div class="flex-container">
-        <div style="flex:1;">
-          <canvas id="cvsGradient" width="500" height="15" style="border:1px solid #FFFFFF;margin:5px;">Your browser does not support the HTML5 canvas tag.</canvas>
-          <div><span id="debugTxt"> </span></div>
+      <!--- <div class="flex-container"> -->
+      <div class="grid-container">
+        <!-- <div style="flex:1;"> -->
+          <!-- style="display:none" -->
+        <div class="data-left">
+          <p class="dataitem">
+            <span id="data-spd" class="datavalue">0.00 </span> km/h<br>
+            <span id="data-avspd" class="averagevalue">0.00</span><span class="averagevalue"> km/h</span>
+          </p>
+          <p class="dataitem">
+            <span id="data-pow" class="datavalue">-</span><span> W</span>
+            <span id="data-balance">--/--</span><br>
+            <span id="data-avpow" class="averagevalue">-</span><span class="averagevalue"> W</span>
+            <span id="data-avbalance" class="averagevalue">--/--</span>
+          </p>
+          <p class="dataitem">
+            <span id="data-rpm" class="datavalue">-</span><span> rpm </span><br>
+            <span id="data-avrpm" class="averagevalue">-</span><span class="averagevalue"> rpm</span>
+          </p>
         </div>
-        <div>
-          <canvas id="cvsProfile" width="500" height="100" style="border:1px solid #FFFFFF;margin:5px;flex:0;"></canvas>
-          <canvas id="cvsMap" width="100" height="100" style="border:1px solid #FFFFFF; margin:5px;flex:0;"></canvas>
+        <div class="data-right">
+          <p class="dataitem">
+            <span id="data-time" class="datavalue">--</span><br>
+            <span id="data-dist">--</span>
+          </p>
+          <p class="dataitem">
+            <span class="datavalue">&#x25b2; </span>
+            <span id="data-grad" class="datavalue">-</span> % 
+            <span id="data-avgrad" class="averagevalue"></span><br>
+            <span id="data-ascent"></span> <br>
+            <span id="data-climb"></span>
+          </p>
         </div>
-        <div class="break"></div>
-        <div>
-          <button id="buttonPlay">Start</button>
-          <button id="buttonFileVideo" onclick="document.getElementById('fileVideo').click()">video!</button>
-          <input type="file" id="fileVideo" style="display:none;" accept="video/*"/>
-          <button id="buttonFileTrack" onclick="document.getElementById('fileTrack').click()">track!</button>
-          <input type="file" id="fileTrack" style="display:none;" accept=".gpx,.xml" />
-          <button id="buttonConnect">Connect</button>
-          <button><a href="" id="buttonDownload"">Download GPX</a></button>
+        <div class="footer">
+          <div class="flex-container">
+            <div style="flex:1;">
+              <canvas id="cvsGradient" width="500" height="15">Your browser does not support the HTML5 canvas tag.</canvas>   
+              <div><span id="debugTxt"> </span></div>
+              <div class="break"></div>
+              <div style="padding:5px">
+                <button id="buttonPlay">Start</button>
+                <button id="buttonFileVideo" onclick="document.getElementById('fileVideo').click()">video!</button>
+                <input type="file" id="fileVideo" style="display:none;" accept="video/*"/>
+                <button id="buttonFileTrack" onclick="document.getElementById('fileTrack').click()">track!</button>
+                <input type="file" id="fileTrack" style="display:none;" accept=".gpx,.xml" />
+                <button id="buttonConnect">Connect</button>
+                <button><a href="" id="buttonDownload"">Download GPX</a></button>
+              </div>
+            </div>
+            <div>
+              <canvas id="cvsProfile" width="500" height="100"></canvas>
+              <canvas id="cvsMap" width="100" height="100"></canvas>
+            </div>
+          </div>
         </div>
       </div>
     </div>
