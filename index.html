@@ -114,7 +114,68 @@
   button.connected {
       background: green;
   }
-  
+
+  /* The Modal (background) */
+  .modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  }
+
+  /* Modal Content */
+  .modal-content {
+    position: relative;
+    background-color: #fefefe;
+    margin: auto;
+    padding: 0;
+    border: 1px solid #888;
+    width: 450px; /* 80%; */
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+    /*border-radius: 10px;
+    border: 2px solid #FFFFFF; */
+  }
+
+  /* Modal Header */
+  .modal-header {
+    padding: 2px 16px;
+    background-color: rgba(0,0,0,0.4);
+    color: white;
+    font-size: 1.5rem;
+  }
+
+  /* Modal Body */
+  .modal-body {
+    padding: 2px 16px;
+  }
+
+  /* Modal Footer */
+  .modal-footer {
+    padding: 2px 16px;
+    background-color: rgba(0,0,0,0.4);
+    color: white;
+  }
+
+  /* The Close Button */
+  .close {
+    color: white;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+  }
+
+  .close:hover, .close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+  }
+    
   </style>
 </head>
 
@@ -129,6 +190,12 @@
   let rider;
   let ghost;
 
+  // modal menu
+  let menu;
+  let menuButton;
+  let closeMenu;
+  let buttonSaveRiderWeight;
+
   async function onBodyLoad() {
     document.getElementById("fileVideo").onchange = videoFileOnChange;
     document.getElementById("fileTrack").onchange = trackFileOnChange;
@@ -141,6 +208,9 @@
     
     simulator = new Simulator();
     rider = new Rider();
+    let riderWeight = getStoredRiderWeight();
+    document.getElementById("settingRiderWeight").value = String(riderWeight);
+    rider = new Rider(riderWeight);
     simulator.addRider(rider);
 
     // for test load a track url
@@ -148,8 +218,66 @@
     let track = new Track(aFile);
     await track.load("https://cdn.virtualtraining.eu/routes/2675/track.xml");
     simulator.addTrack(track);
-    
+    // modal menu
+    menu = document.getElementById("menu");
+    menuButton = document.getElementById("buttonMenu");
+    closeMenu = document.getElementsByClassName("close")[0];
+    buttonSaveRiderWeight = document.getElementById("buttonSaveRiderWeight");
+    buttonSaveRiderWeight.onclick = buttonSaveRiderWeightOnClick;
+
+    // When the user clicks on the button, open the modal
+    menuButton.onclick = function() {
+      menu.style.display = "block";
+    }
+
+    // When the user clicks on <span> (x), close the modal
+    closeMenu.onclick = function() {
+      menu.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+      if (event.target == menu) {
+        menu.style.display = "none";
+      }
+    }    
   } // onBodyLoad
+
+  function buttonSaveRiderWeightOnClick() {
+    let riderWeight = parseFloat(document.getElementById("settingRiderWeight").value);
+    // store rider weight in a cookie
+    document.cookie = `riderWeight=${riderWeight};path=/;expires=Fri, 31 Dec 9999 23:59:59 GMT`;
+    // create a new Rider object or restart the page
+    rider.setRiderWeight(riderWeight);
+    log(`new rider weight stored : ${riderWeight}`)
+  } // buttonSaveRiderWeightOnClick
+
+  function getStoredRiderWeight() {
+    let riderWeight;
+    cookieRiderWeight = getCookie("riderWeight");
+    if (cookieRiderWeight != "") {
+      riderWeight = parseFloat(cookieRiderWeight);
+    }
+    else {
+      // can't find the cookie -> use default weight and set cookie
+      riderWeight = 75.1;
+      document.cookie = `riderWeight=${riderWeight};path=/;expires=Fri, 31 Dec 9999 23:59:59 GMT`;
+    }
+    return riderWeight;
+  } // getStoredRiderWeight
+
+  function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i <ca.length; i++) {
+      var c = ca[i].trim();
+      if (c.indexOf(name) == 0) {
+        return c.substring(name.length, c.length);
+      }
+    }
+    return "";
+  } // getCookie
 
   function videoFileOnChange(evt) {
     let id = evt.target.id; // 
@@ -311,13 +439,9 @@
               <div><span id="debugTxt"> </span></div>
               <div class="break"></div>
               <div style="padding:5px">
+                <!-- Trigger/Open The Modal -->
+                <button id="buttonMenu">Menu</button>
                 <button id="buttonPlay">Start</button>
-                <button id="buttonFileVideo" onclick="document.getElementById('fileVideo').click()">video!</button>
-                <input type="file" id="fileVideo" style="display:none;" accept="video/*"/>
-                <button id="buttonFileTrack" onclick="document.getElementById('fileTrack').click()">track!</button>
-                <input type="file" id="fileTrack" style="display:none;" accept=".gpx,.xml" />
-                <button id="buttonConnect">Connect</button>
-                <button><a href="" id="buttonDownload"">Download GPX</a></button>
               </div>
             </div>
             <div>
@@ -328,6 +452,35 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div id="menu" class="modal">
+    <!-- Modal content -->
+  <div class="modal-content">
+    <div class="modal-header">
+      <span class="close">&times;</span>
+      Setup Menu
+    </div>
+    <div class="modal-body">
+      <h2>Ride Setup</h2>
+      <div>
+        <button id="buttonFileVideo" onclick="document.getElementById('fileVideo').click()">video!</button>
+        <input type="file" id="fileVideo" style="display:none;" accept="video/*"/>
+        <button id="buttonFileTrack" onclick="document.getElementById('fileTrack').click()">track!</button>
+        <input type="file" id="fileTrack" style="display:none;" accept=".gpx,.xml" />
+        <button id="buttonConnect">Connect</button>
+        <button><a href="" id="buttonDownload"">Download GPX</a></button>
+      </div>
+      <h2>User Settings</h2>
+      <div>
+        <p>Rider Weight : 
+          <input type="number" step= "0.1" id="settingRiderWeight" value="75" maxlength="5">
+          <button id="buttonSaveRiderWeight">Save</button>
+        </p>
+      </div>
+    </div>
+    <!-- <div class="modal-footer">
+    </div> -->
   </div>
 
 </body>

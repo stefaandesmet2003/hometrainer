@@ -913,6 +913,10 @@ class Rider {
 
   } // constructor
 
+  setRiderWeight(riderWeight) {
+    this.riderWeight = riderWeight;
+  }
+
   // track is a Track class object
   // call this only after the track has been loaded from file!
   addTrack(track) {
