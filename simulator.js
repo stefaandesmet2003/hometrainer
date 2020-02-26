@@ -914,7 +914,7 @@ class Rider {
   } // constructor
 
   setRiderWeight(riderWeight) {
-    this.riderWeight = riderWeight;
+    this.bikeModelParams.riderWeight = riderWeight;
   }
 
   // track is a Track class object

@@ -207,7 +207,6 @@
     buttonConnect.onclick = buttonConnectOnClick;
     
     simulator = new Simulator();
-    rider = new Rider();
     let riderWeight = getStoredRiderWeight();
     document.getElementById("settingRiderWeight").value = String(riderWeight);
     rider = new Rider(riderWeight);
