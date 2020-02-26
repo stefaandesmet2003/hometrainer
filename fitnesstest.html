@@ -5,6 +5,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="direto.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs"></script>  
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+
 </head>
 <body onload="onBodyLoad()">
 
@@ -13,33 +17,53 @@
   <button id="start">Start</button>
   <button id="stop">Stop</button>
   <button id="skip_warmup">Skip warm-up</button>
+  <button><a href="" id="buttonDownload">Download</a></button> 
 
   <pre id="userinfo">Test info</pre>
   <h2 id="bikedata">&#x1F6B2;</h2>
   <pre id="log"></pre>
   <pre id="rawbikedata">--</pre>
+  <div id="chart_div">
+    <!-- canvas zonder fixed W/H-->
+    <canvas id="myChart"></canvas>
+    <!-- <canvas id="myChart" width="400" height="400"></canvas> -->
+  </div>
 
   <script>
-    const WARMUP_DURATION_IN_SECONDS = 300;
-    const SLICE_DURATION_IN_SECONDS = 120;
-    const INIT_POWER_LEVEL = 100;
-    const POWER_LEVEL_INCREMENT = 20;
-    var warmup_done = false;
-    var bleConnected = false;
-    var secTimer;
-    var targetPower = 100; // initial power setting
-    var secondsLeftInSlice = SLICE_DURATION_IN_SECONDS;
-    var bikeDataCadence = 0;
-    var bikeDataPower = 0;
-    var testDuration = 0;
+    'use strict';
+    // test definition - fixed for now
+    let slices = [
+      {type : 'warmup', duration: 30, targetPower : 0},
+      {type : 'fixed', duration : 10, targetPower : 100},
+      {type : 'auto', duration : 15, targetPower : 20}, // auto-increment by 20W
+    ]
+    let bleConnected = false;
+    let secTimer = null;
+
+    // current status
+    let testDuration;
+    let sliceIdx;
+    let targetPower;
+    let sliceSecondsLeft;
+
+    let rideLog = [];
+    let chartPowerData = [];
+    let chartTargetPowerData = [];
+    let chartCadenceData = [];
+
+    // chart stuff
+    let chart;
+    let ctx, cfg;
 
     function onBodyLoad() {
       log("start");
-      skip_warmup
       document.querySelector('#connect').addEventListener('click', diretoConnectDisconnect);
       document.querySelector('#start').addEventListener('click', startFitnessTest);
       document.querySelector('#stop').addEventListener('click', stopFitnessTest);
       document.querySelector('#skip_warmup').addEventListener('click', skipWarmup);
+      document.querySelector('#buttonDownload').addEventListener('click', buttonDownloadOnClick);
+
+      //initChart();
 
     } // onBodyLoad
 
@@ -52,7 +76,6 @@
           log("connect done");
           await direto.init();
           log("init done")
-          direto.addEventListener('onbikedata', onBikeData);
           // change button color & text
           connectButton.textContent = "Disconnect";
           connectButton.style.backgroundColor = "green";
@@ -78,18 +101,25 @@
     } // diretoConnectDisconnect
 
     async function startFitnessTest() {
+      if (secTimer) {
+        // already started
+        return;
+      }
+      rideLog = [];
+      chartPowerData = [];
+      chartTargetPowerData = [];
+      chartCadenceData = [];      
       testDuration = 0;
+      sliceIdx = 0;
+      sliceSecondsLeft = slices[0].duration;
+      targetPower = slices[0].targetPower;
       await direto.start().catch(()=>{});
-      if (!warmup_done) {
+      if (slices[0].type == 'warmup') {
         userInfo("de test begint met een warmup!");
-        secondsLeftInSlice = WARMUP_DURATION_IN_SECONDS;
-        targetPower = 0;
       }
-      else {
-        secondsLeftInSlice = SLICE_DURATION_IN_SECONDS;
-        targetPower = INIT_POWER_LEVEL;
-      }
+
       await direto.setTargetPower(targetPower).catch(()=>{});
+      initChart();
       secTimer = setInterval(secUpdate, 1000);
     } // startFitnessTest
 
@@ -98,43 +128,73 @@
       await direto.stop().catch(()=>{});
       await direto.setTargetPower(0).catch(()=>{});
       clearInterval(secTimer);
-      warmup_done = false;
+      secTimer = null;
     } // stopFitnessTest
 
     async function skipWarmup () {
-      if (!warmup_done) {
-        warmup_done = true;
-        secondsLeftInSlice = SLICE_DURATION_IN_SECONDS;
-        targetPower = INIT_POWER_LEVEL;
-        await direto.setTargetPower(targetPower).catch(()=>{});
+      if (slices[sliceIdx].type == 'warmup') {
+        sliceSecondsLeft = 1; // hit 0 at next secUpdate()
       }
     } // skipWarmup
 
     function secUpdate () {
+      let bikeDataPower;
+      let bikeDataCadence;
+      if (!bleConnected) {
+        //simulation data
+        bikeDataPower = 200 + Math.floor(50*Math.random());
+        bikeDataCadence = 75 + Math.floor(-10 + 20*Math.random());
+      } else {
+        bikeDataPower = direto.bikeData.instantaneousPower;
+        bikeDataCadence = direto.bikeData.instantaneousCadence;
+
+      }
       testDuration+= 1;
-      secondsLeftInSlice = secondsLeftInSlice - 1;
-      if (secondsLeftInSlice==0) {
-        secondsLeftInSlice = SLICE_DURATION_IN_SECONDS;
-        targetPower += POWER_LEVEL_INCREMENT;
+      sliceSecondsLeft = sliceSecondsLeft - 1;
+      if (sliceSecondsLeft==0) {
+        if (slices[sliceIdx].type != "auto") {
+          sliceIdx += 1;
+        }
+        sliceSecondsLeft = slices[sliceIdx].duration;
+        if (slices[sliceIdx].type == "fixed") {
+          targetPower = slices[sliceIdx].targetPower;
+        } 
+        else {
+          targetPower += slices[sliceIdx].targetPower;  // auto-increment
+        }
         direto.setTargetPower(targetPower).catch(()=>{});
       }
-      userInfo(`${targetPower}W - ${secondsLeftInSlice} left`);
+      userInfo(`${targetPower}W - ${sliceSecondsLeft} left`);
       let bikeDataTxt = document.querySelector('#bikedata');
       bikeDataTxt.innerHTML = `${bikeDataPower}W &#x1F6B2; ${bikeDataCadence} rpm &#x1F6B2; ${sec2string(testDuration)} `;
 
+      // update rideLog
+      let logRecord =  {};
+      // Date() is een functie die een lange string returnt die de current date/time voorstelt
+      // new Date() creëert een object die de current date/time voorstelt -> heeft de .getTime() method
+      // zo is point.time een longint ipv een lange string
+      // en die longint kan je nadien opnieuw met new Date() gebruiken
+      logRecord.time = new Date().getTime();
+      logRecord.power = bikeDataPower;
+      logRecord.cadence = bikeDataCadence;
+      rideLog.push(logRecord);
+      
+      // update chart
+      chartPowerData.push({t: new Date(), y: bikeDataPower});
+      chartTargetPowerData.push({t: new Date(), y: targetPower});
+      chartCadenceData.push({t: new Date(), y: bikeDataCadence});
+
+      if (cfg.options.scales.xAxes[0].ticks.max < new Date().getTime()) {
+        cfg.options.scales.xAxes[0].ticks.max = new Date().getTime();
+        cfg.options.scales.xAxes[0].ticks.min = cfg.options.scales.xAxes[0].ticks.max - 300000;
+      }
+
+      //cfg.data.datasets[0].data = chartPowerData;
+      //cfg.data.datasets[1].data = chartTargetPowerData;
+      chart.update();
+
     } // secUpdate
 
-    function onBikeData (bikeData) {
-      bikeDataCadence = bikeData.instantaneousCadence;
-      bikeDataPower = bikeData.instantaneousPower;
-
-      let bikeDataTxt = document.querySelector('#rawbikedata');
-      bikeDataTxt.textContent = "";
-      for (var prop in bikeData) {
-        bikeDataTxt.textContent += `${prop} = ${bikeData[prop]}\n`;
-      }
-    } // onBikeData
-  
     function userInfo(line) {
       document.querySelector('#userinfo').textContent = line + '\n';
 
@@ -167,7 +227,224 @@
       }
       retval += `${("00" + secs).slice(-2)}s`; // truukske van internet
       return retval;
-    } // sec2string    
+    } // sec2string
+    
+    function initChart() {
+      ctx = document.getElementById('myChart').getContext('2d');
+      ctx.canvas.width = window.innerWidth;
+      ctx.canvas.height = 450;
+
+      cfg = {
+        data: {
+          datasets: [{
+            label: 'Rider Power',
+            yAxisID: 'power-axis',
+            backgroundColor: 'rgb(0, 99, 132)',
+            borderColor: 'rgb(0, 99, 132)',
+            data: chartPowerData,
+            type: 'line',
+            pointRadius: 0,
+            fill: false,
+            lineTension: 0,
+            borderWidth: 2,
+            showLine : true, // true, false
+          }, 
+          {
+            label: 'Target Power',
+            yAxisID: 'power-axis',
+            backgroundColor: 'lightblue',
+            borderColor: 'lightblue',
+            data: chartTargetPowerData,
+            type: 'line',
+            pointRadius: 0,
+            fill: false,
+            lineTension: 0,
+            borderWidth: 2,
+            showLine : true, // true, false
+          },
+          {
+            label: 'Rider Cadence',
+            yAxisID: 'cadence-axis',
+            backgroundColor: 'green',
+            borderColor: 'green',
+            data: chartCadenceData,
+            type: 'line',
+            pointRadius: 0,
+            fill: false,
+            lineTension: 0,
+            borderWidth: 2,
+            showLine : true, // true, false
+          },
+          ]
+        },
+        options: {
+          animation: {
+            duration: 0
+          },
+          scales: {
+            xAxes: [{
+              type: 'time',
+              distribution: 'linear', // 'series'
+              gridLines : {
+                display : false, // default = true
+              },
+              time : {
+                unit: 'second',
+                displayFormats : {
+                  second: ' ', // default 'am/pm' wegdoen
+                  minute: 'HH:mm:ss'
+                }
+              },
+              offset: true,
+              ticks: {
+                min: new Date().getTime(),
+                max: new Date().getTime() + 60000, // ms epoch
+                major: {
+                  enabled: true,
+                  fontStyle: 'bold'
+                },
+                source: 'auto', // 'auto', 'data', 'labels'
+                //autoSkip: true,
+                //autoSkipPadding: 75,
+                //maxRotation: 0,
+                //sampleSize: 100
+              },
+            }],
+            yAxes: [{
+              id: 'power-axis',
+              type: 'linear', // default wss
+              position : 'left', // 'right','left' = default
+              ticks : {
+                min : 0,
+              },
+              gridLines: {
+                drawBorder: false // false : wat doet dat?
+              },
+              scaleLabel: {
+                display: true,
+                labelString: 'power (Watt)',
+                fontColor: 'rgb(0, 99, 132)',
+              }
+            },
+            {
+              id: 'cadence-axis',
+              type: 'linear', // default wss
+              position : 'left', // 'right','left' = default
+              ticks : {
+                min : 0,
+              },
+              gridLines: {
+                drawBorder: false // false : wat doet dat?
+              },
+              scaleLabel: {
+                display: true,
+                labelString: 'cadence (rpm)',
+                fontColor : 'green',
+              }
+            }]
+          },
+          plugins: {
+            zoom: {
+              // Container for pan options
+              pan: {
+                // Boolean to enable panning
+                enabled: true,
+                // Panning directions. Remove the appropriate direction to disable
+                // Eg. 'y' would only allow panning in the y direction
+                // A function that is called as the user is panning and returns the
+                // available directions can also be used:
+                //   mode: function({ chart }) {
+                //     return 'xy';
+                //   },
+                mode: 'x',
+
+                rangeMin: {
+                  // Format of min pan range depends on scale type
+                  x: null,
+                  y: null
+                },
+                rangeMax: {
+                  // Format of max pan range depends on scale type
+                  x: null,
+                  y: null
+                },
+              },
+
+              // Container for zoom options
+              zoom: {
+                // Boolean to enable zooming
+                enabled: true,
+
+                // Enable drag-to-zoom behavior
+                drag: false,
+
+                // Drag-to-zoom effect can be customized
+                // drag: {
+                // 	 borderColor: 'rgba(225,225,225,0.3)'
+                // 	 borderWidth: 5,
+                // 	 backgroundColor: 'rgb(225,225,225)',
+                // 	 animationDuration: 0
+                // },
+
+                // Zooming directions. Remove the appropriate direction to disable
+                // Eg. 'y' would only allow zooming in the y direction
+                // A function that is called as the user is zooming and returns the
+                // available directions can also be used:
+                //   mode: function({ chart }) {
+                //     return 'xy';
+                //   },
+                mode: 'x',
+
+                rangeMin: {
+                  // Format of min zoom range depends on scale type
+                  x: null,
+                  y: null
+                },
+                rangeMax: {
+                  // Format of max zoom range depends on scale type
+                  x: null,
+                  y: null
+                },
+
+                // Speed of zoom via mouse wheel
+                // (percentage of zoom on a wheel event)
+                speed: 0.5,
+              } // zoom
+            } // plugin-zoom
+          } // plugin
+        } // options
+      };
+
+      chart = new Chart(ctx, cfg);
+    } // initChart
+
+    function buttonDownloadOnClick() {
+    if (rideLog.length) {
+      let xml = ridelog2ShortXML(rideLog);
+      let fileContents = encodeURIComponent(xml);
+      buttonDownload.href = 'data:text/plain;charset=utf-8,' + fileContents;
+      buttonDownload.download = "FitnessTest.xml";
+    }
+  } // buttonDownloadOnClick
+
+  // trackData enkel nodig voor trackData.routeName en trackData.routeDescription
+  function ridelog2ShortXML(ridelog) {
+    let doc = '<?xml version="1.0"?> \r\n <gpx>';
+    
+    doc += `<name>Fitness Test</name>\r\n`;
+    for (let i = 0; i < ridelog.length; i ++) {
+      let point = ridelog[i];
+      doc += `<pt><time>${point.time}</time>`;
+      doc += `<pow>${point.power}</pow>`;
+      doc += `<cad>${point.cadence}</cad>`;
+      doc += `<lat>0.0</lat>`;
+      doc += `<lon>0.0</lon>`;
+      doc += `<ele>0</ele></pt>\r\n`;
+    }
+    doc += '</gpx>';
+    return doc;
+
+  } // ridelog2ShortXML    
 
   </script>
 
