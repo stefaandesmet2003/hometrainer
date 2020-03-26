@@ -152,14 +152,14 @@ RouvyXmlFile = function() {
         power.appendChild(gpxDoc.createTextNode(ridelog[idx].power.toString()));
         extensions.appendChild(power);
       }
-      // file compact test
-/*
+      // compacter .gpx format also supported by strava
+
       if (ridelog[idx].cadence) {
-        var cadence = gpxDoc.createElement("cad");
+        var cadence = gpxDoc.createElement("cadence");
         cadence.appendChild(gpxDoc.createTextNode(ridelog[idx].cadence.toString()));
         extensions.appendChild(cadence);
       }
-*/
+/*
       if (ridelog[idx].cadence) {
         gpxtpx = gpxDoc.createElement("gpxtpx\:TrackPointExtension");
         var cadence = gpxDoc.createElement("gpxtpx\:cad");
@@ -167,8 +167,7 @@ RouvyXmlFile = function() {
         gpxtpx.appendChild(cadence);
         extensions.appendChild(gpxtpx);
       }
-
-
+*/
       trkpt.appendChild(elevation);
       trkpt.appendChild(extensions);      
       trkseg[0].appendChild(trkpt); 

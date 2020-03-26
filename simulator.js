@@ -7,10 +7,10 @@ const SIMULATION_PAUSED    = 3; // pause clicked
 const SIMULATION_COMPLETED = 4; // end of track reached
 
 /*
-TODO : secUpdate vanaf het begin, ook als de simulatie nog geen track heeft, of gestart is
-zodat de rider data al kunnen getoond worden, en dan start doorgeven aan de rider waardoor die de time begint op te nemen
-of de chronometer pas starten als er != OW of != 0 rpm wordt gezien
+TODO : 
 video.duration vgl met videoPoints.videoTime
+auto-start? als track gekozen starten van zodra power!=0 || cadence!=0, 
+auto-pause ? power!= 0 & cadence!=0 is nok, want dan kan je nooit coasten
 */
 
 class Track {
@@ -432,7 +432,7 @@ class Track {
 // controls the trainer & the video playback
 class Simulator {
   constructor() {
-    this.state = SIMULATION_IDLE;
+    this.isRiding = false;
     this.secUpdateTimer = null;
     this.rider = undefined;
 
@@ -479,7 +479,6 @@ class Simulator {
 
   } // constructor
 
-  // TODO : place holders to implement zoom in & out
   onClick(event) {
     //log(`click on ${event.target.id} @ (${event.offsetX},${event.offsetY})`);
     // translate offsetX to curDistance
@@ -487,10 +486,10 @@ class Simulator {
       let curDistance = event.offsetX / this.cvsProfileWidth * this.track.totalDistance;
       log(`setting curDistance =  ${curDistance}`);
       this.rider.state.curDistance = curDistance;
-
     }
-
   }
+
+  // TODO : place holders to implement zoom in & out
   onWheel(event) {
     if (event.wheelDelta > 0) {
       log (`wheel UP on ${event.target.id}`);
@@ -501,15 +500,19 @@ class Simulator {
 
   addRider (rider) {
     this.rider = rider;
+    // start the secUpdate interval, so we can see live rider data
+    if (!this.secUpdateTimer) {
+      this.secUpdateTimer = setInterval(() => {
+        this.secUpdate();
+      }, 1000);
+    }
   } // addRider
 
-  // TODO : check if a track connected to the simulator is needed
-  addTrack (track) {
+  setTrack (track) {
     this.track = track;
     if (this.rider) {
-      this.rider.addTrack(track);
+      this.rider.setTrack(track);
     }
-    this.state = SIMULATION_READY;
     this._initTrackImage();
     this._initProfileImage();
     this._drawData();
@@ -517,68 +520,52 @@ class Simulator {
     // show initial location yellow dots
     curTrackPointData.totalDistance = 0;
     this._showPoint(curTrackPointData);
-
-  } // addTrack
+  } // setTrack
 
   addGhost (ghost) {
     this.ghost = ghost;
   } // addGhost
 
   // load the video file in the this.video element
-  loadVideo(videoFile) {
+  loadVideoFromFile(videoFile) {
     this.video.setAttribute("src",URL.createObjectURL(videoFile));
-   
     this.video.load();
     this.video.playbackRate = 0.0; // de playback rate wordt door de secondUpdate bijgestuurd
     this.video.loop = false;
     this.video.pause();
-  } // loadVideo
+  } // loadVideoFromFile
 
-  // return true = OK, false = NOK
-  // TODO : should we implement rider.start() to control the trainer?
+  // load the video file in the this.video element
+  loadVideoFromUrl(videoUrl) {
+    this.video.setAttribute("src",videoUrl);
+    this.video.load();
+    this.video.playbackRate = 0.0; // de playback rate wordt door de secondUpdate bijgestuurd
+    this.video.loop = false;
+    this.video.pause();
+  } // loadVideoFromUrl
+  
   async start () {
-    let retvalOK = false;
+    this.rider.start();
 
-    if ((this.state == SIMULATION_READY) || (this.state == SIMULATION_PAUSED)) {
+    if (!this.isRiding) {
       if (this.video.readyState) { // video selected
         this.video.play();
       }
-      this.state = SIMULATION_RUNNING;
-      if (this.rider.trainer.connected) {
-        await this.rider.trainer.start().catch(()=>{
-          return retvalOK;
-        });
-      }
-      // start the secUpdate interval
-      this.secUpdateTimer = setInterval(() => {
-        this.secUpdate();
-      }, 1000);
-      retvalOK = true;
+      this.isRiding = true;
     }
-    return retvalOK;
   } // start
 
-  // return true = OK, false = NOK
   async pause () {
-    let retvalOK = false;
-
-    if (this.state == SIMULATION_RUNNING) {
+    this.rider.pause();
+    if (this.isRiding) {
       if (this.video.readyState) {
         this.video.pause();
       }
-      this.state = SIMULATION_PAUSED;
-      if (this.rider.trainer.connected) {
-        await this.rider.trainer.pause().catch(()=>{
-          return retvalOK;
-        });
-      }
-      clearInterval(this.secUpdateTimer);
-      retvalOK = true;
+      this.isRiding = false;
     }
-    return retvalOK;
   } // pause
 
-  secUpdate () {
+  async secUpdate () {
     let curTrackPointData;
     let curVideoPointData;
 
@@ -652,23 +639,7 @@ class Simulator {
         //console.log("delta : " + (video.currentTime - curVideoSeconds).toFixed(2) + "pbrate : " + playbackRate.toFixed(2) + "speed : " + (curSpeed*3.6).toFixed(2));
   
       } // video chosen
-
-      // set resistance on trainer based on curTrackPointData.gradient
-      // formula experimental for Elite Direto
-      let newResistanceLevel = Math.round (Math.min(1610*curTrackPointData.gradient + 22,200));
-      // direto won't set resistance to 0
-      newResistanceLevel = Math.max (newResistanceLevel, 1); 
-      // we will tolerate a difference of 1 resistance unit before resending the command
-      // anyway it might take several seconds for big changes in resistance to take effect
-      // || 0 is needed, because the trainer doesn't report resistanceLevel if it has never been set before
-      let trainerResistanceLevel = this.rider.trainer.bikeData.resistanceLevel || 0;
-      if (Math.abs(trainerResistanceLevel - newResistanceLevel) > 1){
-        // dongleCmdChangeResistance (resistance);
-        this.rider.trainer.setResistance(newResistanceLevel).catch(()=>{});
-      }
-  
     } // active track
-
   } // secUpdate
 
   // draw data (currently text format)
@@ -758,7 +729,6 @@ class Simulator {
         this.debugTxt.innerHTML += ` &#x2726; behind by ${sec2string(ghostTimeDiff.toFixed(1))}, ${(-ghostDistDiff).toFixed(0)}m`;
       }
     } // ghost
-
   } // _drawData
 
   // draws a section of the gradient canvas with gradient (color); the section runs from startPercent (0..1) to endPercent (0..1) 
@@ -796,7 +766,6 @@ class Simulator {
     this.ctxGradient.clearRect(xMin,0, xMax-xMin,canvasHeight);
     this.ctxGradient.fillStyle = color;
     this.ctxGradient.fillRect(xMin,yMin, xMax-xMin,yMax-yMin);
-    
   } // _drawGradient
 
   _lonlat2map (point) {
@@ -833,7 +802,6 @@ class Simulator {
     }
     this.ctxMap.stroke();
     this.trackImage = this.ctxMap.getImageData(0, 0, this.cvsMapWidth, this.cvsMapHeight);
-
   } // _initTrackImage
 
   _initProfileImage () {
@@ -855,7 +823,6 @@ class Simulator {
     }
     this.ctxProfile.stroke();
     this.profileImage = this.ctxProfile.getImageData(0, 0, this.cvsProfileWidth, this.cvsProfileHeight);
-
   } // _initProfileImage
 
   _showPoint (point) {
@@ -874,31 +841,13 @@ class Simulator {
     this.ctxProfile.arc(prof.x,prof.y, 3, 0, 2*Math.PI);
     this.ctxProfile.fillStyle = "yellow";
     this.ctxProfile.fill();
-
   } // _showPoint  
 
 } // Simulator
 
 class Rider {
   constructor(riderWeight = 83.0) {
-    this.state = {
-      // don't keep data here that are linked to the Track object
-      curPower : 0,
-      curCadence : 0,
-      curPedalPowerBalance : 0,
-      curSpeed : 0.0,
-      curDistance : 0.0,
-      curElevation : 0.0, // used to keep track of totalAscent / totalDescent
-      totalTime : 0, // seconds
-      totalPower : 0, // watts
-      totalCadence : 0, // rpm
-      totalPedalPowerBalance : 0, // %
-      totalSpeed : 0.0, // km/h
-      totalAscent : 0.0, // m
-      totalDescent : 0.0, // m
-    };
-    this.track = null; // CHECK : is dit nodig voor init? (de simulator wil checken of er een track geassocieerd is)
-    this.rideLog = [];
+    this._init();
     this.trainer = window.direto; // this.trainer.bikeData has the latest data reported by the trainer
     this.simPower = 200; // for simulation, 200W constant power
     this.bikeModelParams = { // bike simulation parameters
@@ -910,7 +859,6 @@ class Rider {
       riderWeight : riderWeight, // kg
       bikeWeight : 8.0, // kg
     };
-
   } // constructor
 
   setRiderWeight(riderWeight) {
@@ -919,10 +867,11 @@ class Rider {
 
   // track is a Track class object
   // call this only after the track has been loaded from file!
-  addTrack(track) {
+  setTrack(track) {
+    this._init();
     this.track = track;
     this.state.curElevation = this.track.trackData.TrackPoints[0].elevation; // rider starts at initial elevation
-  } // addTrack
+  } // setTrack
 
   // connect the direto and subscribe the bike data
   // caller try-catches errors
@@ -947,8 +896,26 @@ class Rider {
     }
   } // disconnect
 
+  async start() {
+    this.isRiding = true;
+    if (this.trainer.connected) {
+      await this.trainer.start().catch(()=>{
+        return retvalOK;
+      });
+    }
+  } // start
+
+  async pause() {
+    this.isRiding = false;
+    if (this.trainer.connected) {
+      await this.trainer.pause().catch(()=>{
+        return retvalOK;
+      });
+    }
+  } // pause
+
   // function is called every second
-  secUpdate() {
+  async secUpdate() {
     if (this.trainer.connected) {
       if (this.trainer.bikeData.instantaneousPower != undefined) {
         this.state.curPower = this.trainer.bikeData.instantaneousPower;
@@ -959,11 +926,19 @@ class Rider {
       } else { 
         this.state.curPower = 0;
       }
-    } else {
-      this.state.curPower = this.simPower; // use simulation power data
-    }
+    } 
+    else { // no trainer connected -> use simulation data
+      if (this.isRiding) {
+        this.state.curPower = this.simPower; 
+        this.state.curCadence = 75;
+      }
+      else {
+        this.state.curPower = 0;
+        this.state.curCadence = 0;
+      }
+    }  
 
-    if (this.track) {
+    if ((this.isRiding) && (this.track)) {
       this.state.curDistance += this.state.curSpeed*1.0; // 1.0 = 1 second update interval
 
       // avgX = totalX / totalTime; (avgPower, avgCadence, avgSpeed, avgPedalPowerBalance)
@@ -998,9 +973,18 @@ class Rider {
       point.lon = curInfo.lon;
       point.elevation = curInfo.elevation;
       this.rideLog.push(point);
-  
-      if (curInfo.eof) {
-        // TODO : we should stop logging at some point because we reached the end of the track!!
+
+      // update bike resistance based on current gradient (curInfo.gradient)
+      // experimental formula for Elite Direto based on my 80kg -> TODO adapt following rider weight
+      let newResistanceLevel = Math.round (Math.min(1610*curInfo.gradient + 22,200));
+      // direto won't set resistance to 0
+      newResistanceLevel = Math.max (newResistanceLevel, 1); 
+      // we will tolerate a difference of 1 resistance unit before resending the command
+      // anyway it might take several seconds for big changes in resistance to take effect
+      // || 0 is needed, because the trainer doesn't report resistanceLevel if it has never been set before
+      let trainerResistanceLevel = this.trainer.bikeData.resistanceLevel || 0;
+      if (Math.abs(trainerResistanceLevel - newResistanceLevel) > 1) {
+        this.trainer.setResistance(newResistanceLevel).catch(()=>{});
       }
       
       // update speed according to bike riding model
@@ -1011,7 +995,31 @@ class Rider {
       };
       this.state.curSpeed = this._runBikeModel(bikeModelData); // next 1 second we will be riding at curSpeed
     }
+    else {
+      this.state.curSpeed = 0.0;
+    }
   } // secUpdate
+
+  _init() {
+    this.state = {
+      curPower : 0,
+      curCadence : 0,
+      curPedalPowerBalance : 0,
+      curSpeed : 0.0,
+      curDistance : 0.0,
+      curElevation : 0.0, // used to keep track of totalAscent / totalDescent
+      totalTime : 0, // seconds
+      totalPower : 0, // watts
+      totalCadence : 0, // rpm
+      totalPedalPowerBalance : 0, // %
+      totalSpeed : 0.0, // km/h
+      totalAscent : 0.0, // m
+      totalDescent : 0.0, // m
+    };
+    this.track = null;
+    this.rideLog = [];
+    this.isRiding = false;
+  } // _init
 
   // 1/s update of bike simulation
   /* input : { .gradient, .power, .speed}

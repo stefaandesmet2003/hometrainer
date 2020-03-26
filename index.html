@@ -136,7 +136,7 @@
     margin: auto;
     padding: 0;
     border: 1px solid #888;
-    width: 450px; /* 80%; */
+    width: 750px; /* 80%; */
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
     /*border-radius: 10px;
     border: 2px solid #FFFFFF; */
@@ -174,6 +174,16 @@
     color: black;
     text-decoration: none;
     cursor: pointer;
+  }
+
+  /* moet nog preciezer, want is enkel voor de table in de modal */
+  table {
+    width: 80%;
+    margin-top : 10px;
+  }
+  table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
   }
     
   </style>
@@ -216,7 +226,8 @@
     let aFile = {name : "Mount Evans"};
     let track = new Track(aFile);
     await track.load("https://cdn.virtualtraining.eu/routes/2675/track.xml");
-    simulator.addTrack(track);
+    simulator.setTrack(track);
+
     // modal menu
     menu = document.getElementById("menu");
     menuButton = document.getElementById("buttonMenu");
@@ -239,7 +250,9 @@
       if (event.target == menu) {
         menu.style.display = "none";
       }
-    }    
+    }
+    // load rides in the choosing table
+    initRidesTable();
   } // onBodyLoad
 
   function buttonSaveRiderWeightOnClick() {
@@ -284,7 +297,7 @@
     if (files.length == 0)
       return;
     // files[0] is the video file
-    simulator.loadVideo(files[0]);
+    simulator.loadVideoFromFile(files[0]);
 
     // for test : remove the 'video!' button after chosen a video
     document.getElementById('buttonFileVideo').style = "display:none";
@@ -305,7 +318,7 @@
     await track.open();
     // TODO : clean-up this logic
     if (document.getElementById('buttonFileTrack').innerHTML != 'ghost!') {
-      simulator.addTrack(track);
+      simulator.setTrack(track);
       // change button label "track!" -> "ghost!"
       document.getElementById('buttonFileTrack').innerHTML = 'ghost!';
     }
@@ -354,10 +367,19 @@
   } // buttonConnectOnClick
 
   function buttonDownloadOnClick() {
+    let saveFileFormat = "gpx"; // "xml" or "gpx"
+    let xml, fileName;
     if (rider.rideLog.length) {
-      let xml = ridelog2ShortXML(rider.rideLog,simulator.track.trackData);
+      if (saveFileFormat == "xml") {
+        xml = ridelog2ShortXML(rider.rideLog,simulator.track.trackData);
+        fileName = simulator.track.trackData.routeName.replace(/ /g,"_") + '.xml';
+      }
+      else if (saveFileFormat == "gpx") {
+        let rouvyXmlFile = new RouvyXmlFile();
+        xml = rouvyXmlFile.makeGPX(rider.rideLog,simulator.track.trackData);
+        fileName = simulator.track.trackData.routeName.replace(/ /g,"_") + '.gpx';
+      }
       let fileContents = encodeURIComponent(xml);
-      let fileName = simulator.track.trackData.routeName.replace(/ /g,"_") + '.xml';
       buttonDownload.href = 'data:text/plain;charset=utf-8,' + fileContents;
       buttonDownload.download = fileName;
     }
@@ -389,6 +411,62 @@
 
 
   // <video autoplay muted loop id="myVideo" poster="" title="Video title">
+  let theRides = [
+    {
+      name: "Mount Evans",
+      description: "a veeery long climb, with beautiful scenery, lots of rocks, views and altitude to get dizzy, 23km, 1000m ascent",
+      video_url : "https://cdn.virtualtraining.eu/routes/2675/video/2675_desktop.mp4",
+      track_url : "https://cdn.virtualtraining.eu/routes/2675/track.xml",
+    },
+    {
+      name: "Alcudia to Cap Formentor",
+      description: "Great Ride in the north of Mallorca, 18km, 1000m ascent",
+      video_url : "https://cdn.virtualtraining.eu/routes/13238/video/13238_desktop.mp4",
+      track_url : "http://cdn.virtualtraining.eu/routes/13238/track.xml",
+    },
+    {
+      name: "Red Rocks Amphitheater",
+      description: "This route takes you on a tour of the Red Rocks Amphitheatre park. Red Rocks is one of the most famous open air entertainment venues in the country for good reason. It is built within a rock structure near Morrison, Colorado, 10 miles west of Denver. There is a large, tilted, disc-shaped rock behind the stage, a huge vertical rock angled outwards from stage right, several large outcrops angled outwards from stage left and a seating area for up to 9,450 people in between. The amphitheatre is owned and operated by the City and County of Denver, Colorado and is located in Red Rocks Park, part of the Denver Mountain Parks system.",
+      video_url : "https://cdn.virtualtraining.eu/routes/4476/video/4476_desktop.mp4",
+      track_url : "http://cdn.virtualtraining.eu/routes/4476/track.xml",
+    },
+    {
+      name: "Costa Brava Coast Ride",
+      description: "The Full Route of Canyalles - Tossa de Mar - St Feliu de Guixols and back to Tossa de Mar. This is a realy beauty coast route with a lot of up and down. Have fun!",
+      video_url : "https://cdn.virtualtraining.eu/routes/32590/video/32590_desktop.mp4",
+      track_url : "http://cdn.virtualtraining.eu/routes/32590/track.xml",
+    },
+
+  ];
+  function initRidesTable() {
+    let ridesTable = document.getElementById("tableTheRides");
+    for (let i=0; i < theRides.length; i++) {
+      let r, c;
+      r = ridesTable.insertRow();
+      c = r.insertCell(); c.innerHTML = theRides[i].name;
+      c = r.insertCell(); c.innerHTML = theRides[i].description;
+      c = r.insertCell(); c.innerHTML = `<button class= "aRideButton" id= "ride_${i}">GO!</button>`;
+    }
+    let aRideButtons = document.getElementsByClassName("aRideButton");
+    for (let i=0; i<aRideButtons.length;i++) {
+      aRideButtons[i].onclick = startRideOnClick;
+    }
+
+  } // initRidesTable
+  async function startRideOnClick(event) {
+    let rideId = parseInt(event.target.id.substr(5)); // button id= ride_%i
+    // quick sanity check
+    if ( isNaN(rideId) || (rideId < 0) || (rideId >= theRides.length) ) {
+      return;
+    }
+
+    let track = new Track(theRides[rideId]);
+    await track.load(theRides[rideId].track_url);
+    simulator.setTrack(track);
+    
+    simulator.loadVideoFromUrl(theRides[rideId].video_url);
+
+  } // startRideOnClick
   </script>
 
   <div id="container">
@@ -463,12 +541,21 @@
     <div class="modal-body">
       <h2>Ride Setup</h2>
       <div>
+        <button id="buttonConnect">Connect</button>
+        <button><a href="" id="buttonDownload"">Download GPX</a></button>
         <button id="buttonFileVideo" onclick="document.getElementById('fileVideo').click()">video!</button>
         <input type="file" id="fileVideo" style="display:none;" accept="video/*"/>
         <button id="buttonFileTrack" onclick="document.getElementById('fileTrack').click()">track!</button>
         <input type="file" id="fileTrack" style="display:none;" accept=".gpx,.xml" />
-        <button id="buttonConnect">Connect</button>
-        <button><a href="" id="buttonDownload"">Download GPX</a></button>
+      </div>
+      <div style="height:250px;overflow:auto;margin:5px">
+        <table id="tableTheRides">
+          <tr>
+            <th>The Ride</th>
+            <th>What to expect!</th>
+            <th></th>
+          </tr>
+        </table>
       </div>
       <h2>User Settings</h2>
       <div>
