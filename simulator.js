@@ -1,11 +1,5 @@
 'use strict';
 
-const SIMULATION_IDLE      = 0; // init state
-const SIMULATION_READY     = 1; // track loaded (irrespective of video)
-const SIMULATION_RUNNING   = 2; // start clicked
-const SIMULATION_PAUSED    = 3; // pause clicked
-const SIMULATION_COMPLETED = 4; // end of track reached
-
 /*
 TODO : 
 video.duration vgl met videoPoints.videoTime
@@ -650,12 +644,14 @@ class Simulator {
     let r = this.rider.state; // abbreviation
     if (r) {
       let avgSpeed = r.curSpeed, avgCadence = r.curCadence, avgPower = r.curPower;
-      let avgPedalPowerBalance=r.curPedalPowerBalance;
+      let avgPedalPowerBalance =r.curPedalPowerBalance;
       if (r.totalTime) {
         avgSpeed = (r.totalSpeed*3.6/r.totalTime);
         avgPower = (r.totalPower/r.totalTime);
         avgCadence = (r.totalCadence/r.totalTime);
-        avgPedalPowerBalance = (r.totalPedalPowerBalance/r.totalPower)*100.0;
+        if (r.totalPower) {
+          avgPedalPowerBalance = (r.totalPedalPowerBalance/r.totalPower)*100.0;
+        }
       }
       this.dataSpeed.innerHTML = `${(r.curSpeed*3.6).toFixed(2)}`;
       this.dataAvgSpeed.innerHTML = `${avgSpeed.toFixed(1)}`;
@@ -1035,7 +1031,7 @@ class Rider {
     this.state = {
       curPower : 0,
       curCadence : 0,
-      curPedalPowerBalance : 0,
+      curPedalPowerBalance : 50.0,
       curHeartRate : 0,
       curSpeed : 0.0,
       curDistance : 0.0,

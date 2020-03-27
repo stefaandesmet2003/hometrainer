@@ -19,7 +19,6 @@
   class Direto {
     constructor() {
       this.device = null;
-      this.server = null;
       this.connected = false; // setting true only if all necessary services/characteristics are found
       this.bikeData = {};
       this._characteristics = new Map();
@@ -40,12 +39,13 @@
           optionalServices: [0x180A,0x1818,0x1816]
         });
         this.device = device;
-        device.addEventListener('gattserverdisconnected', this._onDisconnected.bind(this));
+        this._onDisconnectFunc = this._onDisconnected.bind(this);
+        // device.addEventListener('gattserverdisconnected', this._onDisconnected.bind(this));
+        device.addEventListener('gattserverdisconnected', this._onDisconnectFunc);
         
         // 2. connect to its GATT server
         let server = await device.gatt.connect();
         log("direto.connect: gatt server connected!");
-        this.server = server;
 
         // 3. Fitness Machine service
         let service = await server.getPrimaryService('fitness_machine');
@@ -86,8 +86,7 @@
 
     _onDisconnected(event) {
       log("direto._onDisconnected : OK!");
-      this.server = null;
-      this.device = null;
+      this.device.removeEventListener('gattserverdisconnected', this._onDisconnectFunc);
       this.connected = false;
       this._characteristics.clear(); // clear all key:value pairs in the map
       this._eventListener = null;
@@ -97,12 +96,13 @@
     // reimplementation with async/await
     // try/catch not required, without it a rejected ble promise will bubble up to the caller anyway
     async disconnect() {
-      if (this.server) {
+      let server = this.device.gatt;
+      if (server.connected) {
         try {
           await this._stopNotifications();
-          log("direto.disconnect : OK!");
-          await this.server.disconnect();
+          await server.disconnect();
           // this will trigger _onDisconnected
+          log("direto.disconnect : OK!");
         }
         catch(error) {
           log(`direto.disconnect error : ${error}`);
@@ -406,22 +406,6 @@
         ftmscp.writeValue(buffer);
         // 2. setup reply promise
         let replyPromise = new Promise((resolve,reject) => {
-          /*
-          function ftmsReply(event) {
-            // todo : add timeout reject
-            ftmscp.removeEventListener('characteristicvaluechanged', ftmsReply);
-            clearTimeout(idTimer);
-            resolve(event);
-          }
-          ftmscp.addEventListener('characteristicvaluechanged', ftmsReply);
-          // set 1s reject timeout on the reply
-          let idTimer = setTimeout(() => {
-            ftmscp.removeEventListener('characteristicvaluechanged', ftmsReply);
-            log("ftms reply timeout!");
-            reject(Error("timeout"));
-
-          }, 1000);
-          */
           this._replyPromiseResolveFunc = resolve; // and from here the installed listener will handle the promise
           // set 1s reject timeout on the reply
           // bind(this) not needed here because of the arrow function
@@ -477,6 +461,7 @@
         fitnessMachineStatus.addEventListener('characteristicvaluechanged', this._onFitnessMachineStatus.bind(this));
         fitnessMachineControlPoint.addEventListener('characteristicvaluechanged', this._onFitnessMachineControlPoint.bind(this));
         cyclingPowerMeasurement.addEventListener('characteristicvaluechanged', this._onCyclingPowerMeasurement.bind(this));
+
         log ("direto._startNotifications : OK!");
       } 
       catch(error) {
@@ -491,16 +476,25 @@
         let fitnessMachineControlPoint = this._characteristics.get('fitness_machine_control_point');
         let fitnessMachineStatus = this._characteristics.get('fitness_machine_status');
         let cyclingPowerMeasurement = this._characteristics.get('cycling_power_measurement');
+        /* android doesn't support simultaneous GATT actions .. */
+        /*
         await Promise.all([
           indoorBikeData.stopNotifications(),
           fitnessMachineControlPoint.stopNotifications(),
           fitnessMachineStatus.stopNotifications(),
           cyclingPowerMeasurement.stopNotifications(),
         ]);
+        */
+        await indoorBikeData.stopNotifications();
+        await fitnessMachineControlPoint.stopNotifications();
+        await fitnessMachineStatus.stopNotifications();
+        await cyclingPowerMeasurement.stopNotifications();
+
         indoorBikeData.removeEventListener('characteristicvaluechanged', this._onIndoorBikeData);
         fitnessMachineStatus.removeEventListener('characteristicvaluechanged', this._onFitnessMachineStatus);
         fitnessMachineControlPoint.removeEventListener('characteristicvaluechanged', this._onFitnessMachineControlPoint);
         cyclingPowerMeasurement.removeEventListener('characteristicvaluechanged', this._onCyclingPowerMeasurement);
+        
         log ("direto._stopNotifications : OK!");
 
       } 
@@ -651,58 +645,3 @@
   window.direto = new Direto();
 
 })();
-
-
-// old implementation based on promise.then chain
-/*
-
-async connect() {
-  return navigator.bluetooth.requestDevice({
-    filters:[{services:['fitness_machine']}],
-    optionalServices: [0x180A,0x1818,0x1816]
-  })
-  .then(device => {
-    this.device = device;
-    device.addEventListener('gattserverdisconnected', this._onDisconnected);
-    return device.gatt.connect();
-  })
-  .then (server => {
-    log("connect: gatt server connected!");
-    this.server = server;
-    return server.getPrimaryService('fitness_machine');
-  })
-  .then (service => {
-    log("connect : found ftms service!");
-    return Promise.all ([
-      this._cacheCharacteristic(service, 'fitness_machine_feature'),
-      this._cacheCharacteristic(service, 'indoor_bike_data'),
-      this._cacheCharacteristic(service, 'training_status'),
-      this._cacheCharacteristic(service, 'supported_resistance_level_range'),
-      this._cacheCharacteristic(service, 'supported_power_range'),
-      this._cacheCharacteristic(service, 'fitness_machine_status'),
-      this._cacheCharacteristic(service, 'fitness_machine_control_point'),
-    ]);
-  })
- 
-  .then(() => {
-    return this.server.getPrimaryService('cycling_power') // 0x1818
-  })
-  .then(service => {
-    log("connect : found cycling power service!");
-    return Promise.all ([
-      this._cacheCharacteristic(service, 'cycling_power_feature'),
-      this._cacheCharacteristic(service, 'cycling_power_measurement'),
-    ]);
-  })
-  .then (()=> {
-    this.connected = true;
-  })
-  // come here in case a .then above fails
-  .catch(()=> {
-    log("connect : BLE error!");
-    // beide statements zouden hetzelfde moeten doen; klopta?
-    //throw new Error("connect : BLE error");
-    return Promise.reject("direto.connect : BLE error");
-  })   
-} // connect
-*/

@@ -350,8 +350,7 @@
     if (!simulator.rider.trainer.connected) {
       try {
         await simulator.rider.connectTrainer();
-        // change button color & text
-        buttonConnectTrainer.textContent = "Disconnect";
+        // change button color
         buttonConnectTrainer.classList.add("connected");
       } catch (error) {
         log('error connecting direto : ' + error);
@@ -360,8 +359,7 @@
     else { // disconnect
       try {
         await simulator.rider.disconnectTrainer();
-        // change button color & text
-        buttonConnectTrainer.textContent = "Connect";
+        // change button color
         buttonConnectTrainer.classList.remove("connected");
       } catch (error) {
         log (`error disconnecting direto : ${error}`);
