@@ -950,7 +950,7 @@ class Rider {
     else { // no trainer connected -> use simulation data
       if (this.isRiding) {
         this.state.curPower = this.simPower; 
-        this.state.curCadence = 75;
+        this.state.curCadence = 0;
       }
       else {
         this.state.curPower = 0;
@@ -965,7 +965,7 @@ class Rider {
       }
     }
     else { // no hrm connected -> use simulation data
-      this.state.curHeartRate = 135;
+      this.state.curHeartRate = 0;
     }
 
     if ((this.isRiding) && (this.track)) {

@@ -194,7 +194,7 @@
 
   <script>
   // html interface
-  let buttonPlay;
+  let buttonRide;
   let buttonDownload;
   let buttonConnectTrainer, buttonConnectHrm;
   let simulator;
@@ -210,8 +210,8 @@
   async function onBodyLoad() {
     document.getElementById("fileVideo").onchange = videoFileOnChange;
     document.getElementById("fileTrack").onchange = trackFileOnChange;
-    buttonPlay = document.getElementById("buttonPlay");
-    buttonPlay.onclick = buttonPlayOnClick;
+    buttonRide = document.getElementById("buttonRide");
+    buttonRide.onclick = buttonRideOnClick;
     buttonDownload = document.getElementById("buttonDownload");
     buttonDownload.onclick = buttonDownloadOnClick;
     buttonConnectTrainer = document.getElementById("buttonConnectTrainer");
@@ -333,18 +333,18 @@
 
   }  // trackFileOnChange
 
-  function buttonPlayOnClick() {
-    if (buttonPlay.innerHTML == "Start") {
+  function buttonRideOnClick() {
+    if (buttonRide.innerHTML == "Start") {
       if (simulator.start()) {
-        buttonPlay.innerHTML = "Pause";
+        buttonRide.innerHTML = "Pause";
       }
     }
     else {
       if (simulator.pause()) {
-        buttonPlay.innerHTML = "Start";
+        buttonRide.innerHTML = "Start";
       }
     }
-  } // buttonPlayOnClick
+  } // buttonRideOnClick
 
   async function buttonConnectTrainerOnClick() {
     if (!simulator.rider.trainer.connected) {
@@ -545,8 +545,8 @@
               <div class="break"></div>
               <div style="padding:5px">
                 <!-- Trigger/Open The Modal -->
-                <button id="buttonMenu">Menu</button>
-                <button id="buttonPlay">Start</button>
+                <button id="buttonMenu" title="choose your ride">Menu</button>
+                <button id="buttonRide" title="start recording your session">Start</button>
               </div>
             </div>
             <div>
@@ -569,12 +569,12 @@
     <div class="modal-body">
       <h2>Ride Setup</h2>
       <div>
-        <button id="buttonConnectTrainer">Trainer</button>
-        <button id="buttonConnectHrm">&#x2665;</button>
-        <button><a href="" id="buttonDownload"">Download GPX</a></button>
-        <button id="buttonFileVideo" onclick="document.getElementById('fileVideo').click()">video!</button>
+        <button id="buttonConnectTrainer" title="connect BLE trainer">Trainer</button>
+        <button id="buttonConnectHrm" title="connect BLE hear rate monitor">&#x2665;</button>
+        <button><a href="" id="buttonDownload" title="download your ride data">Download GPX</a></button>
+        <button id="buttonFileVideo" title="choose a video file from your PC" onclick="document.getElementById('fileVideo').click()">video!</button>
         <input type="file" id="fileVideo" style="display:none;" accept="video/*"/>
-        <button id="buttonFileTrack" onclick="document.getElementById('fileTrack').click()">track!</button>
+        <button id="buttonFileTrack" title= "choose a track file from your PC" onclick="document.getElementById('fileTrack').click()">track!</button>
         <input type="file" id="fileTrack" style="display:none;" accept=".gpx,.xml" />
       </div>
       <div style="height:250px;overflow:auto;margin:5px">
@@ -589,8 +589,8 @@
       <h2>User Settings</h2>
       <div>
         <p>Rider Weight : 
-          <input type="number" step= "0.1" id="settingRiderWeight" value="75" maxlength="5">
-          <button id="buttonSaveRiderWeight">Save</button>
+          <input type="number" step= "0.1" id="settingRiderWeight" value="75" maxlength="5" title="no cheating!">
+          <button id="buttonSaveRiderWeight" title="Save your weight in a client cookie">Save</button>
         </p>
       </div>
     </div>
