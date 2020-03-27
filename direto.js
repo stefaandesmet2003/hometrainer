@@ -41,7 +41,7 @@
         this.device = device;
         this._onDisconnectFunc = this._onDisconnected.bind(this);
         // device.addEventListener('gattserverdisconnected', this._onDisconnected.bind(this));
-        device.addEventListener('gattserverdisconnected', this._onDisconnectFunc);
+        device.addEventListener('gattserverdisconnected', this._onDisconnectFunc, {once:true});
         
         // 2. connect to its GATT server
         let server = await device.gatt.connect();
@@ -113,6 +113,9 @@
         // internal error or already disconnected
         log("direto.disconnect : already disconnected??");
       }
+      // why do we keep receiving double onDisconnected logs after a few connect/disconnects ??
+      this.device.removeEventListener('gattserverdisconnected', this._onDisconnectFunc);
+
       return;
     } // disconnect
 
