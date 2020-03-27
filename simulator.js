@@ -471,6 +471,7 @@ class Simulator {
     this.dataAvgGradient = document.getElementById("data-avgrad");
     this.dataClimbInfo = document.getElementById("data-climb");
     this.dataAscentInfo = document.getElementById("data-ascent");
+    this.dataHeartRate = document.getElementById("data-bpm");
 
     this.cvsMap.addEventListener('click',this.onClick.bind(this));
     this.cvsMap.addEventListener('wheel',this.onWheel.bind(this));
@@ -665,6 +666,7 @@ class Simulator {
       this.dataAvgCadence.innerHTML = `${avgCadence.toFixed(0)}`;
       this.dataPowerBalance.innerHTML = `${(100-r.curPedalPowerBalance)}/${r.curPedalPowerBalance}`;
       this.dataAvgPowerBalance.innerHTML = `${(100-avgPedalPowerBalance).toFixed(0)}/${avgPedalPowerBalance.toFixed(0)}`;
+      this.dataHeartRate.innerHTML = `${r.curHeartRate}`;
 
       this.debugTxt.innerHTML = "";
     }
@@ -849,6 +851,7 @@ class Rider {
   constructor(riderWeight = 83.0) {
     this._init();
     this.trainer = window.direto; // this.trainer.bikeData has the latest data reported by the trainer
+    this.hrm = window.hrm; // this.hrm.heartData has the latest data reported by the hrm
     this.simPower = 200; // for simulation, 200W constant power
     this.bikeModelParams = { // bike simulation parameters
       Cd : 0.63,
@@ -875,26 +878,43 @@ class Rider {
 
   // connect the direto and subscribe the bike data
   // caller try-catches errors
-  async connect() {
+  async connectTrainer() {
     if (!this.trainer.connected) {
       await this.trainer.connect();
-      log("connect done");
       await this.trainer.init();
-      log("init done");
+      log("connectTrainer done");
       // 2019.12.18 - won't use a listener, the bikeData are available on the trainer
       //this.trainer.addEventListener('onbikedata', this._onBikeData.bind(this));
     }
-  } // connect
+  } // connectTrainer
 
   // disconnect the direto -unsubscribe is automatic
   // caller try-catches errors
-  async disconnect () {
+  async disconnectTrainer () {
     if (this.trainer.connected) {
       //await direto.stop(); // ofwel failt als je al gepaused of gestopped bent
       // en dan gaat de disconnect() hierna ook niet door
       await this.trainer.disconnect();
     }
-  } // disconnect
+  } // disconnectTrainer
+
+  // connect the hrm and subscribe the heart data
+  // caller try-catches errors
+  async connectHrm() {
+    if (!this.hrm.connected) {
+      await this.hrm.connect();
+      await this.hrm.init();
+      log("connectHrm done");
+    }
+  } // connectHrm
+
+  // disconnect the hrm -unsubscribe is automatic
+  // caller try-catches errors
+  async disconnectHrm () {
+    if (this.hrm.connected) {
+      await this.hrm.disconnect();
+    }
+  } // disconnectHrm
 
   async start() {
     this.isRiding = true;
@@ -936,7 +956,17 @@ class Rider {
         this.state.curPower = 0;
         this.state.curCadence = 0;
       }
-    }  
+    }
+    if (this.hrm.connected) {
+      if (this.hrm.heartData.heartRate != undefined) {
+        this.state.curHeartRate = this.hrm.heartData.heartRate;
+      } else {
+        this.state.curHeartRate = 0;
+      }
+    }
+    else { // no hrm connected -> use simulation data
+      this.state.curHeartRate = 135;
+    }
 
     if ((this.isRiding) && (this.track)) {
       this.state.curDistance += this.state.curSpeed*1.0; // 1.0 = 1 second update interval
@@ -972,6 +1002,7 @@ class Rider {
       point.lat = curInfo.lat;
       point.lon = curInfo.lon;
       point.elevation = curInfo.elevation;
+      point.bpm = this.state.curHeartRate;
       this.rideLog.push(point);
 
       // update bike resistance based on current gradient (curInfo.gradient)
@@ -1005,6 +1036,7 @@ class Rider {
       curPower : 0,
       curCadence : 0,
       curPedalPowerBalance : 0,
+      curHeartRate : 0,
       curSpeed : 0.0,
       curDistance : 0.0,
       curElevation : 0.0, // used to keep track of totalAscent / totalDescent

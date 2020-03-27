@@ -153,11 +153,15 @@ RouvyXmlFile = function() {
         extensions.appendChild(power);
       }
       // compacter .gpx format also supported by strava
-
       if (ridelog[idx].cadence) {
         var cadence = gpxDoc.createElement("cadence");
         cadence.appendChild(gpxDoc.createTextNode(ridelog[idx].cadence.toString()));
         extensions.appendChild(cadence);
+      }
+      if (ridelog[idx].bpm) {
+        var bpm = gpxDoc.createElement("heartrate");
+        bpm.appendChild(gpxDoc.createTextNode(ridelog[idx].bpm.toString()));
+        extensions.appendChild(bpm);
       }
 /*
       if (ridelog[idx].cadence) {

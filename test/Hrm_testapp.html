@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+<head>
+  <title>Hrm Test App</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+</head>
+<body onload="onBodyLoad()">
+
+<h1 id="connect">HRM Test App - Click to connect!</h1>
+
+<pre id="log"></pre>
+<pre id="heartdata">--</pre>
+<button id="testbutton"> start test</button>
+
+<script src="../hrm.js"></script>
+
+<script>
+  var hrmConnected = false;
+  function onBodyLoad() {
+    log("start");
+
+    document.querySelector('#connect').addEventListener('click', hrmConnectDisconnect);
+
+    document.querySelector('#log').addEventListener('dblclick', function () {
+      document.querySelector('#log').textContent = "";
+    });
+
+  } // onBodyLoad
+
+  async function hrmConnectDisconnect() {
+    let clickConnect = document.querySelector('#connect');
+    if (!hrmConnected) {
+      try {
+        await hrm.connect();
+        log("connect done");
+        clickConnect.textContent = "Connected!";
+        hrmConnected = true;
+
+        await hrm.init();
+        hrm.addEventListener('heartdata', onHeartData);
+
+      } 
+      catch(error)  {
+        log('error in hrmConnectDisconnect : ' + error);
+      }
+
+    } 
+    else {
+      await hrm.disconnect();
+      log("hrm disconnected!");
+      clickConnect.textContent = "Hrm Test app - click to connect!";
+      hrmConnected = false;
+    }
+
+  } // hrmConnectDisconnect
+
+  function onHeartData (heartData) {
+    let bikeDataTxt = document.querySelector('#heartdata');
+    bikeDataTxt.textContent = "";
+    for (var prop in heartData) {
+      bikeDataTxt.textContent += `${prop} = ${heartData[prop]}\n`;
+    }
+    // bikeData.textContent = `${bikeDataPower} W - ${bikeDataCadence} rpm - ${bikeDataElapsedTime} s`;
+  } // onBikeData
+  
+  /*
+  function log(line) {
+    document.querySelector('#log').textContent += line + '\n';
+
+  }
+  */
+  function log(line) {
+    let n = Date.now() & 0xffff;
+    console.log (`${n} - ${line}`);
+  }
+</script>
+
+</body>
+</html>

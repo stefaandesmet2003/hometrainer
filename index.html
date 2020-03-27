@@ -7,6 +7,7 @@
   <script src="rouvyXmlFile.js"></script>
   <script src="VincentyFormula.js"></script>
   <script src="direto.js"></script>
+  <script src="hrm.js"></script>
   <script src="simulator.js"></script>
   
   <style>
@@ -195,7 +196,7 @@
   // html interface
   let buttonPlay;
   let buttonDownload;
-  let buttonConnect;
+  let buttonConnectTrainer, buttonConnectHrm;
   let simulator;
   let rider;
   let ghost;
@@ -213,8 +214,10 @@
     buttonPlay.onclick = buttonPlayOnClick;
     buttonDownload = document.getElementById("buttonDownload");
     buttonDownload.onclick = buttonDownloadOnClick;
-    buttonConnect = document.getElementById("buttonConnect");
-    buttonConnect.onclick = buttonConnectOnClick;
+    buttonConnectTrainer = document.getElementById("buttonConnectTrainer");
+    buttonConnectTrainer.onclick = buttonConnectTrainerOnClick;
+    buttonConnectHrm = document.getElementById("buttonConnectHrm");
+    buttonConnectHrm.onclick = buttonConnectHrmOnClick;
     
     simulator = new Simulator();
     let riderWeight = getStoredRiderWeight();
@@ -343,28 +346,49 @@
     }
   } // buttonPlayOnClick
 
-  async function buttonConnectOnClick() {
+  async function buttonConnectTrainerOnClick() {
     if (!simulator.rider.trainer.connected) {
       try {
-        await simulator.rider.connect();
+        await simulator.rider.connectTrainer();
         // change button color & text
-        buttonConnect.textContent = "Disconnect";
-        buttonConnect.classList.add("connected");
+        buttonConnectTrainer.textContent = "Disconnect";
+        buttonConnectTrainer.classList.add("connected");
       } catch (error) {
         log('error connecting direto : ' + error);
       }
     }
     else { // disconnect
       try {
-        await simulator.rider.disconnect();
+        await simulator.rider.disconnectTrainer();
         // change button color & text
-        buttonConnect.textContent = "Connect";
-        buttonConnect.classList.remove("connected");
+        buttonConnectTrainer.textContent = "Connect";
+        buttonConnectTrainer.classList.remove("connected");
       } catch (error) {
         log (`error disconnecting direto : ${error}`);
       }
     }
-  } // buttonConnectOnClick
+  } // buttonConnectTrainerOnClick
+
+  async function buttonConnectHrmOnClick() {
+    if (!simulator.rider.hrm.connected) {
+      try {
+        await simulator.rider.connectHrm();
+        // change button color
+        buttonConnectHrm.classList.add("connected");
+      } catch (error) {
+        log('error connecting hrm : ' + error);
+      }
+    }
+    else { // disconnect
+      try {
+        await simulator.rider.disconnectHrm();
+        // change button color
+        buttonConnectHrm.classList.remove("connected");
+      } catch (error) {
+        log (`error disconnecting hrm : ${error}`);
+      }
+    }
+  } // buttonConnectHrmOnClick
 
   function buttonDownloadOnClick() {
     let saveFileFormat = "gpx"; // "xml" or "gpx"
@@ -394,6 +418,7 @@
       point = ridelog[i];
       doc += `<pt><time>${point.time}</time>`;
       doc += `<pow>${point.power}</pow>`;
+      doc += `<bpm>${point.bpm}</bpm>`;
       doc += `<cad>${point.cadence}</cad>`;
       doc += `<lat>${point.lat}</lat>`;
       doc += `<lon>${point.lon}</lon>`;
@@ -495,6 +520,9 @@
             <span id="data-rpm" class="datavalue">-</span><span> rpm </span><br>
             <span id="data-avrpm" class="averagevalue">-</span><span class="averagevalue"> rpm</span>
           </p>
+          <p class="dataitem">
+            <span id="data-bpm" class="datavalue">-</span><span> &#x2665;</span><br>
+          </p>
         </div>
         <div class="data-right">
           <p class="dataitem">
@@ -541,7 +569,8 @@
     <div class="modal-body">
       <h2>Ride Setup</h2>
       <div>
-        <button id="buttonConnect">Connect</button>
+        <button id="buttonConnectTrainer">Trainer</button>
+        <button id="buttonConnectHrm">&#x2665;</button>
         <button><a href="" id="buttonDownload"">Download GPX</a></button>
         <button id="buttonFileVideo" onclick="document.getElementById('fileVideo').click()">video!</button>
         <input type="file" id="fileVideo" style="display:none;" accept="video/*"/>
