@@ -455,12 +455,21 @@
         let fitnessMachineControlPoint = this._characteristics.get('fitness_machine_control_point');
         let fitnessMachineStatus = this._characteristics.get('fitness_machine_status');
         let cyclingPowerMeasurement = this._characteristics.get('cycling_power_measurement');
+
+        /* android doesn't support simultaneous GATT actions .. */
+        /*
         await Promise.all([
           indoorBikeData.startNotifications(),
           fitnessMachineControlPoint.startNotifications(),
           fitnessMachineStatus.startNotifications(),
           cyclingPowerMeasurement.startNotifications(),
         ]);
+        */
+        await indoorBikeData.startNotifications();
+        await fitnessMachineControlPoint.startNotifications();
+        await fitnessMachineStatus.startNotifications();
+        await cyclingPowerMeasurement.startNotifications();
+
         // todo : find a way to limit the scope of these listeners
         // can't be local to startNotifications, otherwise can't call removeEventListener later
         // bind(this) makes sure that in the callback 'this' refers to the direto context, rather than the caller's context
