@@ -3,6 +3,7 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="gpxFile.js"></script>
   <script src="rouvyXmlFile.js"></script>
   <script src="VincentyFormula.js"></script>
@@ -195,7 +196,7 @@
   <script>
   // html interface
   let buttonRide;
-  let buttonDownload;
+  let buttonDownload, buttonUpload;
   let buttonConnectTrainer, buttonConnectHrm;
   let simulator;
   let rider;
@@ -207,6 +208,9 @@
   let closeMenu;
   let buttonSaveRiderWeight;
 
+  // strava stuff
+  let stravaUploadPollTimer, stravaAccessToken;
+
   async function onBodyLoad() {
     document.getElementById("fileVideo").onchange = videoFileOnChange;
     document.getElementById("fileTrack").onchange = trackFileOnChange;
@@ -214,6 +218,8 @@
     buttonRide.onclick = buttonRideOnClick;
     buttonDownload = document.getElementById("buttonDownload");
     buttonDownload.onclick = buttonDownloadOnClick;
+    buttonUpload = document.getElementById("buttonUpload");
+    buttonUpload.onclick = buttonUploadOnClick;
     buttonConnectTrainer = document.getElementById("buttonConnectTrainer");
     buttonConnectTrainer.onclick = buttonConnectTrainerOnClick;
     buttonConnectHrm = document.getElementById("buttonConnectHrm");
@@ -256,6 +262,14 @@
     }
     // load rides in the choosing table
     initRidesTable();
+
+    // strava auth stuff
+    // server stuurt het token terug met de return-page op token_exchange, en client voert de localStorage.setItem('token') javascript uit
+    window.addEventListener('storage', () => {
+      stravaAccessToken = localStorage.getItem('token');
+    });
+    localStorage.clear(); // clear token from previous 'session'
+
   } // onBodyLoad
 
   function buttonSaveRiderWeightOnClick() {
@@ -406,6 +420,74 @@
       buttonDownload.download = fileName;
     }
   } // buttonDownloadOnClick
+
+  function doStravaUploadPoll(uploadId) {
+    axios.get(`https://www.strava.com/api/v3/uploads/${uploadId}`, {
+      headers : {
+        'Authorization': `Bearer ${stravaAccessToken}`
+      },
+    })
+    .then((res) => {
+      if (res.status >= 200 && res.status < 300) {
+        if (res.status == 200) {
+          // activity is ready at https://www.strava.com/activities/${res.data.activity_id}
+          clearInterval(stravaUploadPollTimer);
+        }
+      }
+      else {
+        clearInterval(stravaUploadPollTimer);
+      }
+    },(err) => {
+      console.log(err);
+      clearInterval(stravaUploadPollTimer);
+    });
+  } // doStravaUploadPoll
+
+  function buttonUploadOnClick() {
+    let saveFileFormat = "gpx"; // "xml" or "gpx"
+    let xml, fileName;
+    if (!rider.rideLog.length) {
+      return;
+    }
+    if (!stravaAccessToken)
+    {
+      log('need accessToken before upload. Authorize first!');
+      return;
+    }
+
+    let rouvyXmlFile = new RouvyXmlFile();
+    xml = rouvyXmlFile.makeGPX(rider.rideLog,simulator.track.trackData);
+    fileName = simulator.track.trackData.routeName.replace(/ /g,"_") + '.gpx';
+
+    const formData = new FormData();
+    var blob = new Blob([xml], {type:"text/xml"});
+    //formData.append('file', xml); // werkt nie
+    formData.append('file', blob);
+
+    // post upload with axios
+    let params = {
+      name : "HomeTrainer !",
+      description : "zweetfeest!",
+      data_type : "gpx",
+      external_id : `${fileName}`,
+      activity_type : "virtualride"
+    };
+    axios.post('https://www.strava.com/api/v3/uploads', formData, {
+      headers : {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${stravaAccessToken}`
+      },
+      params : params
+    })
+    .then((res) => {
+      if (res.status == 201) {
+        // success! Strava is processing the upload
+        log(`got uploadId = ${res.data.id}, strava-status = ${ res.data.status}`);
+        stravaUploadPollTimer = setInterval(doStravaUploadPoll,2000,res.data.id);
+      }
+    }, (err) => console.log(err));
+      
+  } // buttonUploadOnClick
 
   // trackData enkel nodig voor trackData.routeName en trackData.routeDescription
   function ridelog2ShortXML(ridelog, trackData) {
@@ -570,6 +652,8 @@
         <button id="buttonConnectTrainer" title="connect BLE trainer">Trainer</button>
         <button id="buttonConnectHrm" title="connect BLE hear rate monitor">&#x2665;</button>
         <button><a href="" id="buttonDownload" title="download your ride data">Download GPX</a></button>
+        <button><a href="/strava/authorize" target='_blank' title="authorize this app to upload your data to your strava account">Strava Login</a></button>
+        <button id="buttonUpload" title="upload your ride data to Strava">Upload to Strava</button>
         <button id="buttonFileVideo" title="choose a video file from your PC" onclick="document.getElementById('fileVideo').click()">video!</button>
         <input type="file" id="fileVideo" style="display:none;" accept="video/*"/>
         <button id="buttonFileTrack" title= "choose a track file from your PC" onclick="document.getElementById('fileTrack').click()">track!</button>
