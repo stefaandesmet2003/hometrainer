@@ -361,7 +361,11 @@
     */
     
     async _ftmsCommand (cmd, params=[]) {
-      // voorlopig enkel 0 of 1 param bytes - 2019.12.15, niet meer om target power level in te kunnen stellen
+      // 2020.10.28 - quickfix to solve reentrancy issue when called from a setInterval.
+      if (this._replyPromiseResolveFunc)
+        // ftms in progress, simply ignore and pretend all is ok.
+        return FTMS_RESP_SUCCESS;
+
       let cmdBufferSize = 1;
 
       function addParam2View (view,offset, param) {
@@ -576,7 +580,7 @@
       evtData = evtData.buffer ? evtData : new DataView(evtData);
       // parsing data : TODO
       let view8 = new Uint8Array(evtData.buffer);
-      log ("ftms status : " + view8.toString());
+      log ("_onFitnessMachineStatus : " + view8.toString());
 
     } // _onFitnessMachineStatus    
 

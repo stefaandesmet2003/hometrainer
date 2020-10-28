@@ -22,4 +22,8 @@ No matter what gear your bike is in, the ERG mode will make you suffer.
 The test works in any but the lowest gears, in ERG mode the trainer adjusts the resistance automatically
 It helps to use a rather high gear, to make the trainer's flywheel spin fast and provide some extra inertia.
  
+
+## Ah, and before I forget, you need chrome://flags/#enable-experimental-web-platform-features
+
+
 Enjoy!

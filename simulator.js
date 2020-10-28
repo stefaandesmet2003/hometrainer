@@ -915,18 +915,14 @@ class Rider {
   async start() {
     this.isRiding = true;
     if (this.trainer.connected) {
-      await this.trainer.start().catch(()=>{
-        return retvalOK;
-      });
+      await this.trainer.start().catch(()=>{});
     }
   } // start
 
   async pause() {
     this.isRiding = false;
     if (this.trainer.connected) {
-      await this.trainer.pause().catch(()=>{
-        return retvalOK;
-      });
+      await this.trainer.pause().catch(()=>{});
     }
   } // pause
 
