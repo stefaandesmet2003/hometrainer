@@ -131,7 +131,7 @@
         return Promise.reject("direto.init error : not connected");
       }
       let respCode = FTMS_RESP_SUCCESS;
-      /* something strange here :
+      /* TODO : something strange here :
         after a disconnect with notifications left on, _startNotifications() reactivates the notifications and
         installs the eventlisteners, but the notifications don't arrive
         maybe web bluetooth caches the request, because it assumes direto still has the notifications on??
@@ -300,7 +300,6 @@
         log(`direto.getFitnessMachineFeatureInfo error : failed reading characteristic : ${error}`);
         return Promise.reject(`direto.getFitnessMachineFeatureInfo error : failed reading characteristic : ${error}`);
       }
-
     } // getFitnessMachineFeatureInfo    
 
     async getSupportedResistanceLevelRange () {
@@ -328,7 +327,6 @@
         log(`direto.getSupportedResistanceLevelRange error : failed reading characteristic : ${error}`);
         return Promise.reject(`direto.getSupportedResistanceLevelRange error : failed reading characteristic : ${error}`);
       }
-
     } // getSupportedResistanceLevelRange    
 
     async getSupportedPowerRange () {
@@ -351,7 +349,6 @@
         log(`direto.getSupportedPowerRange error : failed reading characteristic : ${error}`);
         return Promise.reject(`direto.getSupportedPowerRange error : failed reading characteristic : ${error}`);
       }
-
     } // getSupportedPowerRange
 
     /*
@@ -389,11 +386,8 @@
           cmdBufferSize += 2;
         }
       }
-
-      // create an ArrayBuffer with a cmdBufferSize in bytes
-      let buffer = new ArrayBuffer(cmdBufferSize);
-      // Create a view
-      let view = new DataView(buffer);
+      let buffer = new ArrayBuffer(cmdBufferSize); // create an ArrayBuffer with a cmdBufferSize in bytes
+      let view = new DataView(buffer); // Create a view
       // add cmd & params to the view/buffer
       let offset = 0;
       view.setUint8(offset, cmd);
@@ -406,7 +400,7 @@
         const ftmscp = this._characteristics.get('fitness_machine_control_point');
         // 1. send command
         let cmdBytes = new Uint8Array(buffer);
-        log(`_ftmsCommand : command = ${cmdBytes.toString()}`);
+        log(`_ftmsCommand : ${cmdBytes.toString()}`);
         // no await here!
         // we need to set up the reply promise synchronously, to be able to catch the reply notification in time
         // from the timings it looks that the reply notification comes very soon after the ftmscp.writeValue promise resolves
@@ -430,6 +424,7 @@
         evtData = evtData.buffer ? evtData : new DataView(evtData);
         // parsing data : TODO
         view = new Uint8Array(evtData.buffer);
+        log(`ftmsCommand response code : ${view[2]}`)
         return (view[2]); /* the ftms cp response code */
 
       } catch(error)  {
@@ -437,7 +432,6 @@
         this._replyPromiseResolveFunc = null;
         return Promise.reject(`direto._ftmsCommand error : command failed (${error})`);
       }
-
     } // _ftmsCommand
 
     async _startNotifications() {
@@ -503,7 +497,6 @@
         cyclingPowerMeasurement.removeEventListener('characteristicvaluechanged', this._onCyclingPowerMeasurement);
         
         log ("direto._stopNotifications : OK!");
-
       } 
       catch(error) {
         log(`direto._stopNotifications error : ${error}`);
@@ -580,7 +573,7 @@
       evtData = evtData.buffer ? evtData : new DataView(evtData);
       // parsing data : TODO
       let view8 = new Uint8Array(evtData.buffer);
-      log ("_onFitnessMachineStatus : " + view8.toString());
+      log (`_onFitnessMachineStatus : ${view8.toString()}`);
 
     } // _onFitnessMachineStatus    
 
@@ -591,7 +584,7 @@
       evtData = evtData.buffer ? evtData : new DataView(evtData);
       // parsing data : TODO
       let view8 = new Uint8Array(evtData.buffer);
-      log ("_onFitnessMachineControlPoint : direto replies : " + view8.toString());
+      log (`_onFitnessMachineControlPoint (direto reply) : ${view8.toString()}`);
 
       // handle the replyPromise here -> works better than installing an event listener on each ftms command
       if (this._replyPromiseResolveFunc) {
@@ -633,10 +626,8 @@
         this.bikeData.lastCrankEventTime = evtData.getUint16(idx, /* littleEndian */ true);
         idx += 2;
       }
-
       if (this._eventListener)
         this._eventListener(this.bikeData);
-
     } // _onCyclingPowerMeasurement
 
     /* Utils */
