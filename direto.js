@@ -22,9 +22,14 @@
       this.connected = false; // setting true only if all necessary services/characteristics are found
       this.bikeData = {};
       this._characteristics = new Map();
-      this._eventListener = null;
+      this._eventListenerBikeData = null;
       this._replyPromiseResolveFunc = null;
       this._replyPromiseTimeoutId;
+      this.hasCadenceSensor = false;
+      this.pedalAnalysisData = {};
+      this.pedalAnalysisData.peanut = [];
+      this._eventListenerPedalAnalysisData = null;
+
     }
 
     // reimplementation with async/await
@@ -36,7 +41,7 @@
         // same issue with navigator.bluetooth.requestDevice({acceptAllDevices:true})
         let device = await navigator.bluetooth.requestDevice({
           filters:[{services:['fitness_machine']}],
-          optionalServices: [0x180A,0x1818,0x1816]
+          optionalServices: [0x180A,0x1818,0x1816,'347b0001-7635-408b-8918-8ff3949ce592']
         });
         this.device = device;
         this._onDisconnectFunc = this._onDisconnected.bind(this);
@@ -72,8 +77,26 @@
           this._cacheCharacteristic(service, 'cycling_power_feature'),
           this._cacheCharacteristic(service, 'cycling_power_measurement'),
         ]);
-        this.connected = true;
 
+        // 7. Pedal Analysis 
+        service = await server.getPrimaryService('347b0001-7635-408b-8918-8ff3949ce592');
+        log("direto.connect : found pedal analysis service!");
+        // 8. Pedal Analysis characteristics
+        // the other characteristics are probably for calibration, not loaded for now
+        await Promise.all ([
+          //this._cacheCharacteristic(service, '347b0010-7635-408b-8918-8ff3949ce592'),
+          //this._cacheCharacteristic(service, '347b0011-7635-408b-8918-8ff3949ce592'),
+          //this._cacheCharacteristic(service, '347b0012-7635-408b-8918-8ff3949ce592'),
+          //this._cacheCharacteristic(service, '347b0013-7635-408b-8918-8ff3949ce592'),
+          //this._cacheCharacteristic(service, '347b0014-7635-408b-8918-8ff3949ce592'),
+          this._cacheCharacteristic(service, '347b0015-7635-408b-8918-8ff3949ce592'),
+          //this._cacheCharacteristic(service, '347b0016-7635-408b-8918-8ff3949ce592'),
+          //this._cacheCharacteristic(service, '347b0017-7635-408b-8918-8ff3949ce592'),
+          //this._cacheCharacteristic(service, '347b0018-7635-408b-8918-8ff3949ce592'),
+          //this._cacheCharacteristic(service, '347b0019-7635-408b-8918-8ff3949ce592'),
+        ]);
+
+        this.connected = true;
       }
       catch (error) {
         // come here if anything above fails
@@ -89,7 +112,8 @@
       this.device.removeEventListener('gattserverdisconnected', this._onDisconnectFunc);
       this.connected = false;
       this._characteristics.clear(); // clear all key:value pairs in the map
-      this._eventListener = null;
+      this._eventListenerBikeData = null;
+      this._eventListenerPedalAnalysisData = null;
 
     } // _onDisconnected
 
@@ -122,8 +146,12 @@
     // install callback for bikeData
     addEventListener(type, callbackFunction) {
       // don't care about the type;
-      type = 'onbikedata';
-      this._eventListener = callbackFunction;
+      if (type == 'onbikedata') {
+        this._eventListenerBikeData = callbackFunction;
+      }
+      else if (type == 'pedaldata') {
+        this._eventListenerPedalAnalysisData = callbackFunction;
+      }
     } // addEventListener
 
     async init() {
@@ -440,20 +468,20 @@
         let fitnessMachineControlPoint = this._characteristics.get('fitness_machine_control_point');
         let fitnessMachineStatus = this._characteristics.get('fitness_machine_status');
         let cyclingPowerMeasurement = this._characteristics.get('cycling_power_measurement');
+        // let ntf11 = this._characteristics.get('347b0011-7635-408b-8918-8ff3949ce592');
+        // let ntf14 = this._characteristics.get('347b0014-7635-408b-8918-8ff3949ce592');
+        let ntf15 = this._characteristics.get('347b0015-7635-408b-8918-8ff3949ce592');
+        // let ntf17 = this._characteristics.get('347b0017-7635-408b-8918-8ff3949ce592');
 
         /* android doesn't support simultaneous GATT actions .. */
-        /*
-        await Promise.all([
-          indoorBikeData.startNotifications(),
-          fitnessMachineControlPoint.startNotifications(),
-          fitnessMachineStatus.startNotifications(),
-          cyclingPowerMeasurement.startNotifications(),
-        ]);
-        */
         await indoorBikeData.startNotifications();
         await fitnessMachineControlPoint.startNotifications();
         await fitnessMachineStatus.startNotifications();
         await cyclingPowerMeasurement.startNotifications();
+        // await ntf11.startNotifications();
+        // await ntf14.startNotifications();
+        await ntf15.startNotifications();
+        // await ntf17.startNotifications();
 
         // todo : find a way to limit the scope of these listeners
         // can't be local to startNotifications, otherwise can't call removeEventListener later
@@ -462,6 +490,10 @@
         fitnessMachineStatus.addEventListener('characteristicvaluechanged', this._onFitnessMachineStatus.bind(this));
         fitnessMachineControlPoint.addEventListener('characteristicvaluechanged', this._onFitnessMachineControlPoint.bind(this));
         cyclingPowerMeasurement.addEventListener('characteristicvaluechanged', this._onCyclingPowerMeasurement.bind(this));
+        // ntf11.addEventListener('characteristicvaluechanged', this._onNtf11Data.bind(this));
+        // ntf14.addEventListener('characteristicvaluechanged', this._onNtf14Data.bind(this));
+        ntf15.addEventListener('characteristicvaluechanged', this._onNtf15Data.bind(this));
+        // ntf17.addEventListener('characteristicvaluechanged', this._onNtf17Data.bind(this));
 
         log ("direto._startNotifications : OK!");
       } 
@@ -477,24 +509,29 @@
         let fitnessMachineControlPoint = this._characteristics.get('fitness_machine_control_point');
         let fitnessMachineStatus = this._characteristics.get('fitness_machine_status');
         let cyclingPowerMeasurement = this._characteristics.get('cycling_power_measurement');
+        // let ntf11 = this._characteristics.get('347b0011-7635-408b-8918-8ff3949ce592');
+        // let ntf14 = this._characteristics.get('347b0014-7635-408b-8918-8ff3949ce592');
+        let ntf15 = this._characteristics.get('347b0015-7635-408b-8918-8ff3949ce592');
+        // let ntf17 = this._characteristics.get('347b0017-7635-408b-8918-8ff3949ce592');
+
         /* android doesn't support simultaneous GATT actions .. */
-        /*
-        await Promise.all([
-          indoorBikeData.stopNotifications(),
-          fitnessMachineControlPoint.stopNotifications(),
-          fitnessMachineStatus.stopNotifications(),
-          cyclingPowerMeasurement.stopNotifications(),
-        ]);
-        */
         await indoorBikeData.stopNotifications();
         await fitnessMachineControlPoint.stopNotifications();
         await fitnessMachineStatus.stopNotifications();
         await cyclingPowerMeasurement.stopNotifications();
+        // await ntf11.stopNotifications();
+        // await ntf14.stopNotifications();
+        await ntf15.stopNotifications();
+        // await ntf17.stopNotifications();
 
         indoorBikeData.removeEventListener('characteristicvaluechanged', this._onIndoorBikeData);
         fitnessMachineStatus.removeEventListener('characteristicvaluechanged', this._onFitnessMachineStatus);
         fitnessMachineControlPoint.removeEventListener('characteristicvaluechanged', this._onFitnessMachineControlPoint);
         cyclingPowerMeasurement.removeEventListener('characteristicvaluechanged', this._onCyclingPowerMeasurement);
+        // ntf11.removeEventListener('characteristicvaluechanged', this._onNtf11Data.bind(this));
+        // ntf14.removeEventListener('characteristicvaluechanged', this._onNtf14Data.bind(this));
+        ntf15.removeEventListener('characteristicvaluechanged', this._onNtf15Data.bind(this));
+        // ntf17.removeEventListener('characteristicvaluechanged', this._onNtf17Data.bind(this));
         
         log ("direto._stopNotifications : OK!");
       } 
@@ -562,8 +599,8 @@
         this.bikeData.elapsedTime = evtData.getUint16(idx, /* littleEndian */ true);
       }
 
-      if (this._eventListener)
-        this._eventListener(this.bikeData);
+      if (this._eventListenerBikeData)
+        this._eventListenerBikeData(this.bikeData);
     } // _onIndoorBikeData
     
     // here ftms status changes are reported
@@ -610,7 +647,14 @@
       if (flags & 0x1) {
         this.bikeData.pedalPowerBalance = evtData.getUint8(idx) >> 1; // percentage with resolution 1/2
         idx += 1;
-      }  
+      }
+      if (flags & 0x2){
+        // the direto detects the presence of the cadence sensor and now indicates that pedal balance reference = 'left', not longer 'unknown'
+        this.hasCadenceSensor = true;
+      }
+      else {
+        this.hasCadenceSensor = false;
+      }
       if (flags & 0x4) { // accumulated torque - skip
         idx += 2;
       }  
@@ -626,9 +670,61 @@
         this.bikeData.lastCrankEventTime = evtData.getUint16(idx, /* littleEndian */ true);
         idx += 2;
       }
-      if (this._eventListener)
-        this._eventListener(this.bikeData);
+      if (this._eventListenerBikeData)
+        this._eventListenerBikeData(this.bikeData);
     } // _onCyclingPowerMeasurement
+
+
+    _onNtf15Data(event) {
+      let evtData = event.target.value;
+      evtData = evtData.buffer ? evtData : new DataView(evtData);
+      /*
+      let view8 = new Uint8Array(evtData.buffer);
+      log ("ntf15 : " + view8.toString()); // log raw data
+      */
+      let id = evtData.getUint8(0);
+      for (let i=0;i<4;i++) {
+        this.pedalAnalysisData.peanut[(id-1)*4+i]= evtData.getUint16(4*(i+1), true);
+      }
+      this.pedalAnalysisData.cadence = evtData.getUint8(3);
+      this.pedalAnalysisData.aValue = evtData.getUint16(1,true); /* power or speed, not clear ? */
+      if (id == 3) {
+        // we have a complete set of new peanut data
+        // summarize statistics
+        this.pedalAnalysisData.maxPower = Math.max(...this.pedalAnalysisData.peanut);
+        this.pedalAnalysisData.minPower = Math.min(...this.pedalAnalysisData.peanut);
+        this.pedalAnalysisData.avgPower = this.pedalAnalysisData.peanut.reduce((tot,v)=> {return tot+v;},0) / this.pedalAnalysisData.peanut.length;
+        this.pedalAnalysisData.uniformity = 100.0* this.pedalAnalysisData.avgPower / this.pedalAnalysisData.maxPower;
+
+        if (this._eventListenerPedalAnalysisData)
+          this._eventListenerPedalAnalysisData(this.pedalAnalysisData);
+      }
+    } // ntf15
+
+    // not used for now
+    _onNtf11Data(event) { // seems to sends 0 all the time during normal operation
+      let evtData = event.target.value;
+      evtData = evtData.buffer ? evtData : new DataView(evtData);
+      let view8 = new Uint8Array(evtData.buffer);
+      log ("ntf11 : " + view8.toString()); // log raw data
+    } // ntf11
+
+    // not used for now
+    _onNtf14Data(event) {
+      let evtData = event.target.value;
+      evtData = evtData.buffer ? evtData : new DataView(evtData);
+      let view8 = new Uint8Array(evtData.buffer);
+      log ("ntf14 : " + view8.toString()); // log raw data
+    } // ntf14
+
+    // not used for now
+    _onNtf17Data(event) {
+      let evtData = event.target.value;
+      evtData = evtData.buffer ? evtData : new DataView(evtData);
+      let view8 = new Uint8Array(evtData.buffer);
+      log ("ntf17 : " + view8.toString()); // log raw data
+    } // ntf17
+   
 
     /* Utils */
     _cacheCharacteristic(service, characteristicUuid) {

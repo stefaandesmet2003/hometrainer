@@ -660,8 +660,8 @@ class Simulator {
       this.dataAvgPower.innerHTML = `${avgPower.toFixed(0)}`;
       this.dataCadence.innerHTML = `${r.curCadence}`;
       this.dataAvgCadence.innerHTML = `${avgCadence.toFixed(0)}`;
-      this.dataPowerBalance.innerHTML = `${(100-r.curPedalPowerBalance)}/${r.curPedalPowerBalance}`;
-      this.dataAvgPowerBalance.innerHTML = `${(100-avgPedalPowerBalance).toFixed(0)}/${avgPedalPowerBalance.toFixed(0)}`;
+      this.dataPowerBalance.innerHTML = `${r.curPedalPowerBalance}/${(100-r.curPedalPowerBalance)}`;
+      this.dataAvgPowerBalance.innerHTML = `${avgPedalPowerBalance.toFixed(0)}/${(100-avgPedalPowerBalance).toFixed(0)}`;
       this.dataHeartRate.innerHTML = `${r.curHeartRate}`;
 
       this.debugTxt.innerHTML = "";
@@ -932,7 +932,7 @@ class Rider {
       if (this.trainer.bikeData.instantaneousPower != undefined) {
         this.state.curPower = this.trainer.bikeData.instantaneousPower;
         this.state.curCadence = this.trainer.bikeData.instantaneousCadence;
-        // curPedalPowerBalance is systematically right side, if used with a cadence sensor
+        // curPedalPowerBalance is systematically left side, if used with a cadence sensor
         // linked to the trainer. Without this feedback signal, left/right is a little random
         this.state.curPedalPowerBalance = this.trainer.bikeData.pedalPowerBalance;
       } else { 

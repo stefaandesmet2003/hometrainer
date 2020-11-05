@@ -1,0 +1,306 @@
+<!doctype html>
+<html>
+<head>
+  <title>Pedal Analysis Test App</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="direto.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs"></script>  
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+  <style>
+    .flex-container {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .flex-container > div {
+      margin: 10px;
+      padding: 10px;
+    }
+    </style>  
+</head>
+
+<body onload="onBodyLoad()">
+
+  <script>
+    'use strict';
+
+    let diretoConnected = false;
+    let chartData = [];
+    let cartChart, cartCfg;
+    let radarChart, radarCfg;
+    let cartCtx, radarCtx;
+    let textPedalData;
+    let peanuts = [];
+    let resistanceValues = [0,20,40,60,80,100,125,150,175,200]; // 10 levels
+    let resistanceLevel = 1;
+
+    function onBodyLoad() {
+      log("start");
+
+      document.querySelector('#log').addEventListener('dblclick', function () {
+        document.querySelector('#log').textContent = "";
+      });
+      document.querySelector('#connect').addEventListener('click', diretoConnectDisconnect);
+      document.getElementById('increase_resistance').addEventListener('click', increaseResistance);
+      document.getElementById('decrease_resistance').addEventListener('click', decreaseResistance);
+
+      radarCtx = document.getElementById('myRadarChart').getContext('2d');
+      cartCtx = document.getElementById('myCartChart').getContext('2d');
+      textPedalData = document.getElementById('text_pedaldata');
+
+      cartCfg = {
+        data: {
+          datasets: [
+          {
+            label: 'stroke1',
+            yAxisID: 'power-axis',
+            backgroundColor: 'rgb(0, 99, 132)',
+            borderColor: 'rgb(0, 99, 132)',
+            data : peanuts[0],
+            type: 'line',
+          },
+          {
+            label: 'stroke2',
+            yAxisID: 'power-axis',
+            backgroundColor: 'blue',
+            borderColor: 'blue',
+            data : peanuts[1],
+            type: 'line',
+          },
+          {
+            label: 'stroke3',
+            yAxisID: 'power-axis',
+            backgroundColor: 'lightblue',
+            borderColor: 'lightblue',
+            data : peanuts[2],
+            type: 'line',
+          },
+        ]
+        },
+        options: {
+          animation : false,
+          hover: {
+            animationDuration: 0 // duration of animations when hovering an item
+          },
+          responsiveAnimationDuration: 0, // animation duration after a resize
+          elements: { // dit geldt voor alle datasets, tenzij per dataset overridden
+            line : {
+              tension : 0, // 0:disable bezier curves
+              fill : false,
+              stepped : false,
+              borderWidth : 2,
+              borderDash: [],
+            },
+            point  : {
+              radius : 2, // 0 = geen bolleke op het meetpunt
+              //hitRadius : 10,
+            }
+          },
+          showLine : true,
+          parsing : false,
+          spanGaps : true,
+
+          scales: {
+            xAxes: [{
+              type: 'category',
+              labels : [0,30,60,90,120,150,180,210,240,270,300,330],
+              offset: false,
+              ticks: {
+                major: {
+                  enabled: true,
+                  fontStyle: 'bold'
+                },
+                source: 'auto', // 'data'
+              },
+            }],
+            yAxes: [{
+              id: 'power-axis',
+              type: 'linear',
+              position: 'left', // 'right', 'left' = default
+              gridLines: {
+                drawBorder: false
+              },
+              ticks : {
+                min : 0,
+              },
+              scaleLabel: {
+                display: true,
+                labelString: 'power (W)',
+                fontColor : 'rgb(0, 99, 132)',
+              }
+            }],
+          },
+        } // options
+      };
+      cartChart = new Chart(cartCtx, cartCfg);      
+
+      radarCfg = {
+        type: 'radar',
+        data: {
+          labels : [0,30,60,90,120,150,180,210,240,270,300,330],
+          datasets: [
+          {
+            label: 'stroke1',
+            backgroundColor: 'rgb(0, 99, 132)',
+            borderColor: 'rgb(0, 99, 132)',
+            data : peanuts[0],
+          },
+          {
+            label: 'stroke2',
+            backgroundColor: 'blue',
+            borderColor: 'blue',
+            data : peanuts[1],
+          },
+          {
+            label: 'stroke3',
+            backgroundColor: 'lightblue',
+            borderColor: 'lightblue',
+            data : peanuts[2],
+          },
+        ]
+        },
+        options: {
+          animation : false,
+          hover: {
+            animationDuration: 0 // duration of animations when hovering an item
+          },
+          responsiveAnimationDuration: 0, // animation duration after a resize
+          elements: { // dit geldt voor alle datasets, tenzij per dataset overridden
+            line : {
+              tension : 0, // 0 = disable bezier curves
+              fill : false,
+              stepped : false,
+              borderWidth : 2,
+              borderDash: [],
+            },
+            point  : {
+              radius : 2, // 0 = geen bolleke op het meetpunt
+              //hitRadius : 10,
+            }
+          },
+          showLine : true,
+          parsing : false,
+          spanGaps : true,
+
+          scale: {
+            angleLines : {
+              display : true,
+            },
+            ticks : {
+                min : 0,
+            },
+          },
+        } // options
+      };
+      radarChart = new Chart(radarCtx, radarCfg);
+    } // onBodyLoad
+
+    async function increaseResistance() {
+      resistanceLevel = Math.min(resistanceLevel+1,9);
+      let resistanceLevelSpan = document.getElementById('resistance_level');
+      resistanceLevelSpan.textContent = `Resistance : ${resistanceLevel}`;
+
+      if (diretoConnected) {
+        direto.setResistance(resistanceValues[resistanceLevel]);
+      }
+    } // increaseResistance
+
+    async function decreaseResistance() {
+      resistanceLevel = Math.max(resistanceLevel-1,0);
+      let resistanceLevelSpan = document.getElementById('resistance_level');
+      resistanceLevelSpan.textContent = `Resistance : ${resistanceLevel}`;
+
+      if (diretoConnected) {
+        direto.setResistance(resistanceValues[resistanceLevel]);
+      }
+    } // decreaseResistance
+
+    async function diretoConnectDisconnect() {
+      let clickConnect = document.querySelector('#connect');
+      if (!diretoConnected) {
+        try {
+          await direto.connect();
+          log("connect done");
+          clickConnect.textContent = "Connected!";
+          diretoConnected = true;
+
+          await direto.init();
+          direto.addEventListener('pedaldata', onPedalData);
+          await direto.start();
+          await direto.setResistance(resistanceValues[resistanceLevel]);
+          document.getElementById('resistance_level').textContent = `Resistance : ${resistanceLevel}`;
+        } 
+        catch(error)  {
+          log('error in diretoConnectDisconnect : ' + error);
+        }
+
+      } 
+      else {
+        await direto.disconnect();
+        log("direto disconnected!");
+        clickConnect.textContent = "Direto Pedal Analysis Test app - click to connect!";
+        diretoConnected = false;
+      }
+
+    } // diretoConnectDisconnect
+
+    function log(line) {
+      let n = Date.now() & 0xffff;
+      console.log (`${n} - ${line}`);
+    }
+    // for logging on page
+    /*
+    function log(line) {
+      document.querySelector('#log').textContent += line + '\n';
+
+    }
+    */
+    function onPedalData(pedalData) {
+      // rotate 3 peanut data
+      peanuts[2] = peanuts[1];
+      peanuts[1] = peanuts[0];
+      peanuts[0] = [...pedalData.peanut];
+      chartData = [...pedalData.peanut];
+      for (let i=0;i<3;i++) {
+        cartCfg.data.datasets[i].data = peanuts[i];
+        radarCfg.data.datasets[i].data = peanuts[i];
+      }
+      cartChart.update();
+      radarChart.update();
+      // update text data
+      textPedalData.innerHTML = `power : min: ${pedalData.minPower} - avg: ${pedalData.avgPower.toFixed(0)} - max: ${pedalData.maxPower} <br>`
+      textPedalData.innerHTML += `uniformity : ${pedalData.uniformity.toFixed(0)} % <br>`
+      textPedalData.innerHTML += `cadence : ${pedalData.cadence} <br>`
+      //textPedalData.innerHTML += `FTMS cadence : ${direto.bikeData.instantaneousCadence} <br>`
+      //textPedalData.innerHTML += `FTMS power : ${direto.bikeData.instantaneousPower}`
+      let hasCadenceSensor = document.getElementById('hasCadenceSensor');
+      if (direto.hasCadenceSensor)
+        hasCadenceSensor.innerHTML = "present!";
+      else
+        hasCadenceSensor.innerHTML = "not present!";
+    } // onPedalData
+    
+  </script>
+
+  <h1 id="connect">Pedal Analysis Test App - Click to connect!</h1>
+  <p>Cadence sensor : <span id="hasCadenceSensor">unknown (connect and start pedalling!)</span></p>
+  <span id="resistance_level">Resistance : 1</span>
+  <button id="increase_resistance"> UP</button>
+  <button id="decrease_resistance"> DOWN</button>
+
+  <h2 id="text_pedaldata">--</h2>
+
+  <div class="flex-container">
+    <div>
+      <canvas id="myCartChart" width="500" height="500"></canvas>
+    </div>
+    <div>
+      <canvas id="myRadarChart" width="500" height="500"></canvas>
+    </div>
+  </div>
+  <pre id="log"></pre>
+
+</body>
+</html>
