@@ -154,6 +154,10 @@
       }
     } // addEventListener
 
+    sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve,ms));
+    }
+
     async init() {
       if (!this.connected) {
         return Promise.reject("direto.init error : not connected");
@@ -175,6 +179,7 @@
         respCode = await this._ftmsCommand(FTMS_CMD_REQUEST_CONTROL);
         if (respCode == FTMS_RESP_SUCCESS) {
           respCode = await this._ftmsCommand(FTMS_CMD_RESET);
+          await this.sleep(500);
         }
         if (respCode == FTMS_RESP_SUCCESS) {
           respCode = await this._ftmsCommand(FTMS_CMD_REQUEST_CONTROL);
@@ -390,6 +395,8 @@
       if (this._replyPromiseResolveFunc)
         // ftms in progress, simply ignore and pretend all is ok.
         return FTMS_RESP_SUCCESS;
+      
+      await this.sleep(20); // 2020.11.11 - test slow down successive writes to avoid the 'GATT operation in progress' exception
 
       let cmdBufferSize = 1;
 

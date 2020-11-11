@@ -242,6 +242,10 @@
       }
     } // decreaseResistance
 
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve,ms));
+    }
+
     async function buttonConnectTrainerOnClick() {
       let buttonConnectTrainer = document.getElementById('buttonConnectTrainer');
       if (!diretoConnected) {
@@ -249,13 +253,15 @@
           await direto.connect();
           log("connect done");
           await direto.init();
+          await sleep(100);
           direto.addEventListener('pedaldata', onPedalData);
-          await direto.start();
-          await direto.setResistance(resistanceValues[resistanceLevel]);
-          document.getElementById('resistance_level').textContent = `Resistance : ${resistanceLevel}`;
           // change button color
           buttonConnectTrainer.classList.add("connected");
           diretoConnected = true;
+          await direto.setResistance(resistanceValues[resistanceLevel]);
+          document.getElementById('resistance_level').textContent = `Resistance : ${resistanceLevel}`;
+          //TODO : start returns 'FAILED', but works nevertheless, we need a little delay here
+          await direto.start();
         } 
         catch(error)  {
           log('error connecting direto : ' + error);
@@ -263,6 +269,7 @@
       } 
       else { // disconnect
         try {
+          await direto.stop();
           await direto.disconnect();
           log("direto disconnected!");
           diretoConnected = false;
