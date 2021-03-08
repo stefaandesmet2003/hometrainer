@@ -685,22 +685,30 @@
     _onNtf15Data(event) {
       let evtData = event.target.value;
       evtData = evtData.buffer ? evtData : new DataView(evtData);
-      /*
+      
       let view8 = new Uint8Array(evtData.buffer);
       log ("ntf15 : " + view8.toString()); // log raw data
-      */
+      
       let id = evtData.getUint8(0);
-      for (let i=0;i<4;i++) {
-        this.pedalAnalysisData.peanut[(id-1)*4+i]= evtData.getUint16(4*(i+1), true);
+      for (let i=0;i<8;i++) {
+        let aData = evtData.getUint16(4+2*i, true);
+        if (aData == 0xFFFF)
+          this.pedalAnalysisData.peanut[(id-1)*8+i]= undefined;
+        else
+          this.pedalAnalysisData.peanut[(id-1)*8+i]= aData;
       }
       this.pedalAnalysisData.cadence = evtData.getUint8(3);
       this.pedalAnalysisData.aValue = evtData.getUint16(1,true); /* power or speed, not clear ? */
       if (id == 3) {
         // we have a complete set of new peanut data
         // summarize statistics
-        this.pedalAnalysisData.maxPower = Math.max(...this.pedalAnalysisData.peanut);
-        this.pedalAnalysisData.minPower = Math.min(...this.pedalAnalysisData.peanut);
-        this.pedalAnalysisData.avgPower = this.pedalAnalysisData.peanut.reduce((tot,v)=> {return tot+v;},0) / this.pedalAnalysisData.peanut.length;
+        //this.pedalAnalysisData.maxPower = Math.max(...this.pedalAnalysisData.peanut);
+        //this.pedalAnalysisData.minPower = Math.min(...this.pedalAnalysisData.peanut);
+        this.pedalAnalysisData.maxPower = this.pedalAnalysisData.peanut.reduce((max,v)=> {return Math.max(max,v||0);},0);
+        this.pedalAnalysisData.minPower = this.pedalAnalysisData.peanut.reduce((min,v)=> {return Math.min(min,v||0xFFFF);},0xFFFF);
+        this.pedalAnalysisData.avgPower = this.pedalAnalysisData.peanut.reduce((tot,v)=> {return tot+(v||0);},0) / 
+                                          this.pedalAnalysisData.peanut.reduce((cnt,v)=> {return cnt+(!isNaN(v));},0);
+                                    //this.pedalAnalysisData.peanut.length;
         this.pedalAnalysisData.uniformity = 100.0* this.pedalAnalysisData.avgPower / this.pedalAnalysisData.maxPower;
 
         if (this._eventListenerPedalAnalysisData)
