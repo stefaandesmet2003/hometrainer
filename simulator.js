@@ -538,6 +538,18 @@ class Simulator {
     this.video.loop = false;
     this.video.pause();
   } // loadVideoFromUrl
+
+  // test with youtube videos - load the video file in the this.video element using YouTubeToHtml5
+  loadVideoFromYouTubeUrl(videoUrl) {
+    if (!this.ytPlayer) { // start the YouTubeToHtml5
+      this.ytPlayer = new YouTubeToHtml5({autoload:false});
+    }
+    this.video.setAttribute("data-yt2html5",videoUrl);
+    this.ytPlayer.load();
+    this.video.playbackRate = 0.0; // de playback rate wordt door de secondUpdate bijgestuurd
+    this.video.loop = false;
+    this.video.pause();
+  } // loadVideoFromYouTubeUrl
   
   async start () {
     this.rider.start();

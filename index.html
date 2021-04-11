@@ -4,6 +4,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@thelevicole/youtube-to-html5-loader@4.0.0/dist/YouTubeToHtml5.min.js"></script>
   <script src="gpxFile.js"></script>
   <script src="rouvyXmlFile.js"></script>
   <script src="VincentyFormula.js"></script>
@@ -518,6 +519,13 @@
   // <video autoplay muted loop id="myVideo" poster="" title="Video title">
   let theRides = [
     {
+      name: "Doongalla, thanks Geert :)",
+      description: "2.5km, 148vm",
+      video_url : "https://youtu.be/97eL4BTVzlE",
+      track_url : "https://stefaandesmet2003.duckdns.org/hometrainer/rides/doongalla.xml",
+      isYouTube : true,
+    },
+    {
       name: "Mount Evans",
       description: "a veeery long climb, with beautiful scenery, lots of rocks, views and altitude to get dizzy, 23km, 1000m ascent",
       video_url : "https://cdn.virtualtraining.eu/routes/2675/video/2675_desktop.mp4",
@@ -703,7 +711,6 @@
       video_url : "https://cdn.virtualtraining.eu/routes/13915/video/13915_desktop.mp4",
       track_url : "https://cdn.virtualtraining.eu/routes/13915/track.xml",
     },
-
   ];
   function initRidesTable() {
     let ridesTable = document.getElementById("tableTheRides");
@@ -730,8 +737,14 @@
     let track = new Track(theRides[rideId]);
     await track.load(theRides[rideId].track_url);
     simulator.setTrack(track);
+
+    if (theRides[rideId].isYouTube) {
+      simulator.loadVideoFromYouTubeUrl(theRides[rideId].video_url);
+    }
+    else {
+      simulator.loadVideoFromUrl(theRides[rideId].video_url);
+    }
     
-    simulator.loadVideoFromUrl(theRides[rideId].video_url);
 
   } // startRideOnClick
   </script>
