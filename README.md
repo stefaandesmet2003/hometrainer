@@ -33,7 +33,7 @@ Hit Connect, wait until the page says 'Connected', and start pedalling. If you p
 **With or without cadence sensor?**  
 Pedalling analysis works without an additional cadence sensor.<br>
 
-But Direto has a 1.5mm jack above the power connection for hooking up a cadence sensor. Any reed contact + magnet combination will work, for instance some spares from an old wired bike computer. The 1.5mm jack can be easily sourced on ebay.
+But Direto has a 2.5mm jack above the power connection for hooking up a cadence sensor. Any reed contact + magnet combination will work, for instance some spares from an old wired bike computer. The 2.5mm jack can be easily sourced on ebay.
 
 The cadence sensor provides an accurate reference for every pedal revolution. With that reference the pedal analysis will show accurate angles, and correctly distinguish between left and right foot.
 
