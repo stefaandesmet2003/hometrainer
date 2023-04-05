@@ -1,0 +1,249 @@
+[
+    {
+      "name": "Doongalla, thanks Geert :)",
+      "description": "2.5km, 148vm",
+      "video_url" : "https://youtu.be/97eL4BTVzlE",
+      "track_url" : "https://stefaandesmet2003.duckdns.org/hometrainer/rides/doongalla.xml",
+      "isYouTube" : true
+    },
+    {
+      "name": "Mount Evans",
+      "description": "a veeery long climb, with beautiful scenery, lots of rocks, views and altitude to get dizzy, 23km, 1000m ascent",
+      "video_url": "https://cdn.virtualtraining.eu/routes/2675/video/2675_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/2675/track.xml"
+    },
+    {
+      "name": "Alcudia to Cap Formentor",
+      "description": "Great Ride in the north of Mallorca, 18km, 1000m ascent",
+      "video_url": "https://cdn.virtualtraining.eu/routes/13238/video/13238_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/13238/track.xml"
+    },
+    {
+      "name": "Red Rocks Amphitheater",
+      "description": "This route takes you on a tour of the Red Rocks Amphitheatre park. Red Rocks is one of the most famous open air entertainment venues in the country for good reason. It is built within a rock structure near Morrison, Colorado, 10 miles west of Denver. There is a large, tilted, disc-shaped rock behind the stage, a huge vertical rock angled outwards from stage right, several large outcrops angled outwards from stage left and a seating area for up to 9,450 people in between. The amphitheatre is owned and operated by the City and County of Denver, Colorado and is located in Red Rocks Park, part of the Denver Mountain Parks system.",
+      "video_url": "https://cdn.virtualtraining.eu/routes/4476/video/4476_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/4476/track.xml"
+    },
+    {
+      "name": "Costa Brava Coast Ride",
+      "description": "The Full Route of Canyalles - Tossa de Mar - St Feliu de Guixols and back to Tossa de Mar. This is a realy beauty coast route with a lot of up and down. Have fun!",
+      "video_url": "https://cdn.virtualtraining.eu/routes/32590/video/32590_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/32590/track.xml"
+    },
+    {
+      "name": "Cape Town Ride",
+      "description": "31km, 707vm, along the ocean, and finish on top of Table Mountain",
+      "video_url": "https://cdn.virtualtraining.eu/routes/3943/video/3943_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/3943/track.xml"
+    },
+    {
+      "name": "Ventana Climb, Asturias",
+      "description": "20km, 1140vm, a long climb right from the start",
+      "video_url": "https://cdn.virtualtraining.eu/routes/7702/video/7702_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/7702/track.xml"
+    },
+    {
+      "name": "Ben Lomond Climb, Tasmania",
+      "description": "24.19km, 1145vm, a long climb with steep pinches",
+      "video_url": "https://cdn.virtualtraining.eu/routes/27104/video/27104_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/27104/track.xml"
+    },
+    {
+      "name": "Blockhaus Climb, Alps",
+      "description": "17km, 1170vm, a long steep climb",
+      "video_url": "https://cdn.virtualtraining.eu/routes/19636/video/19636_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/19636/track.xml"
+    },
+    {
+      "name": "Lagos de Covadonga",
+      "description": "28km, 1132vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/3260/video/3260_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/3260/track.xml"
+    },
+    {
+      "name": "Sognefellet, Norway Fjord Ride",
+      "description": "33km, 1557vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/26823/video/26823_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/26823/track.xml"
+    },
+    {
+      "name": "Tenerife Parador Teide",
+      "description": "43.8km, 2277vm, to the top!",
+      "video_url": "https://cdn.virtualtraining.eu/routes/21958/video/21958_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/21958/track.xml"
+    },
+    {
+      "name": "Warm Springs Oregon",
+      "description": "20.3km, 341vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/18278/video/18278_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/18278/track.xml"
+    },
+    {
+      "name": "Deer Creek Canyon Road",
+      "description": "13.3km, 480vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/4480/video/4480_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/4480/track.xml"
+    },
+    {
+      "name": "Flagstaff",
+      "description": "7.28km, 597vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/1433/video/1433_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/1433/track.xml"
+    },
+    {
+      "name": "Gatineau Park, Canada",
+      "description": "41.6km, 601vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/1627/video/1627_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/1627/track.xml"
+    },
+    {
+      "name": "Lookout Mountain, Colorado",
+      "description": "7.5km, 400vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/1430/video/1430_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/1430/track.xml"
+    },
+    {
+      "name": "Race in South Korea, part1",
+      "description": "32km, 539vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/15779/video/15779_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/15779/track.xml"
+    },
+    {
+      "name": "Sa Calobra",
+      "description": "8.86km, 612vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/4142/video/4142_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/4142/track.xml"
+    },
+    {
+      "name": "Tre Cime di Lavaredo",
+      "description": "22.46km, 1314vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/4316/video/4316_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/4316/track.xml"
+    },
+    {
+      "name": "Sun Moon Lake, Taiwan",
+      "description": "28.91km, 382vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/13904/video/13904_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/13904/track.xml"
+    },
+    {
+      "name": "P-C-H Fernwood",
+      "description": "15.57km, 747vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/16469/video/16469_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/16469/track.xml"
+    },
+    {
+      "name": "Boi Taull Climb",
+      "description": "13.88km, 782vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/5177/video/5177_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/5177/track.xml"
+    },
+    {
+      "name": "Castello di Pedres",
+      "description": "33.9km, 480vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/19641/video/19641_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/19641/track.xml"
+    },
+    {
+      "name": "Gran Canaria GC65",
+      "description": "19.22km, 648vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/11082/video/11082_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/11082/track.xml"
+    },
+    {
+      "name": "Oppdalen Snow ide",
+      "description": "25.22km, 579vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/27600/video/27600_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/27600/track.xml"
+    },
+    {
+      "name": "Guanella Pass Climb",
+      "description": "24km, 914vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/4477/video/4477_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/4477/track.xml"
+    },
+    {
+      "name": "Sella Ronda",
+      "description": "53.78km, 1742vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/3338/video/3338_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/3338/track.xml"
+    },
+    {
+      "name": "Passo Sella",
+      "description": "11.56km, 773vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/7214/video/7214_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/7214/track.xml"
+    },
+    {
+      "name": "Road To Hell Climb",
+      "description": "12.74km, 470vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/36075/video/36075_1080.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/36075/track.xml"
+    },
+    {
+      "name": "Trail Ridge Road Climb",
+      "description": "32.05km, 1325vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/19357/video/19357_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/19357/track.xml"
+    },
+    {
+      "name": "Tre Laghi, Part 2",
+      "description": "33.83km, 599vm",
+      "video_url": "https://cdn.virtualtraining.eu/routes/13915/video/13915_desktop.mp4",
+      "track_url": "https://cdn.virtualtraining.eu/routes/13915/track.xml"
+    },
+    {
+        "name": "Como Lake - RV186 Alpe Giumello",
+        "description": "30.84km 1401vm",
+        "video_url": "https://cdn.virtualtraining.eu/routes/94989/video/94989_1080.mp4",
+        "track_url": "https://cdn.virtualtraining.eu/routes/94989/track.xml"
+      },
+      {
+        "name": "Azkoitia- Alto Elosua",
+        "description": "11km, 548vm",
+        "video_url": "https://mediacdn.rouvy.com/routes/53127/video/53127_1080.mp4",
+        "track_url": "https://cdn.virtualtraining.eu/routes/53127/track.xml"
+      },
+      {
+        "name": "Cadaques",
+        "description": "Visit the Village of Dali: Cadaquez and climb to Perez the Rodes, 22.65 km 775vm",
+        "video_url": "https://mediacdn.rouvy.com/routes/94893/video/94893_1080.mp4",
+        "track_url": "https://cdn.virtualtraining.eu/routes/94893/track.xml"
+      },
+      {
+        "name": "Xodos desde Atzeneta del Maestrat",
+        "description": "15.68km 728vm",
+        "video_url": "https://mediacdn.rouvy.com/routes/73764/video/73764_1080.mp4",
+        "track_url": "https://cdn.virtualtraining.eu/routes/73764/track.xml"
+      },
+      {
+        "name": "Mont Caro up & down (ES)",
+        "description": "35.49km 1386vm",
+        "video_url": "https://mediacdn.rouvy.com/routes/78423/video/78423_1080.mp4",
+        "track_url": "https://cdn.virtualtraining.eu/routes/78423/track.xml"
+      },
+      {
+        "name": "Col de la Llose, Col de Creu (Capcir, Cerdagne)",
+        "description": "",
+        "video_url": "https://mediacdn.rouvy.com/routes/72234/video/72234_1080.mp4",
+        "track_url": "https://cdn.virtualtraining.eu/routes/72234/track.xml"
+      },
+      {
+        "name": "Superbagneres improved with snow",
+        "description": "18.31km 1165vm",
+        "video_url": "https://mediacdn.rouvy.com/routes/24248/video/24248_1080.mp4",
+        "track_url": "https://cdn.virtualtraining.eu/routes/24248/track.xml"
+      },
+      {
+        "name": "Giro D'EL Rei",
+        "description": "41.73km 781vm",
+        "video_url": "https://mediacdn.rouvy.com/routes/73550/video/73550_1080.mp4",
+        "track_url": "https://cdn.virtualtraining.eu/routes/73550/track.xml"
+      },
+      {
+        "name": "From Aljezur to Foia (Portugal)",
+        "description": "27.6km 1048vm",
+        "video_url": "https://mediacdn.rouvy.com/routes/56662/video/56662_720.mp4",
+        "track_url": "https://cdn.virtualtraining.eu/routes/56662/track.xml"
+      }
+    ]

@@ -13,10 +13,10 @@ class Track {
     this._file = aFile;
     this.filename = aFile.name;
     this.trackData = [];
-    //let self = this;
+    let self = this;
   } // constructor
 
-  async open() {
+  async loadFile() {
     return new Promise((resolve,reject) => {
 
       let fileExtension =  this.filename.split('.').pop();
@@ -55,10 +55,42 @@ class Track {
   
     });
 
-  } // open
+  } // loadFile
 
-  // same as open() but from ajax
-  async load(url) {
+  // same as loadFile() but load data from url
+  async loadUrl(url) {
+    self = this;
+    return axios.get(url)
+    .then((res) => {
+      let gpxxml = res.data;
+      let rouvyXmlFile = new RouvyXmlFile();
+      self.trackData = rouvyXmlFile.parseXML(gpxxml);
+      // todo : support gpx links
+      console.log(`Track distance = ${self.trackData.TrackPoints[self.trackData.TrackPoints.length-1].totalDistance}, Video distance = ${self.trackData.VideoPoints[self.trackData.VideoPoints.length-1].totalDistance}`);
+          
+      self.allClimbs = self._findAllClimbs();
+
+      for (let i = 0; i< self.allClimbs.length; i ++) {
+        let climbDistance = self.allClimbs[i].maxDistance - self.allClimbs[i].minDistance;
+        let climbElevation = self.allClimbs[i].maxElevation - self.allClimbs[i].minElevation;
+        console.log(`found summit @  ${self.allClimbs[i].maxElevation}m, ${climbElevation.toFixed(0)}m over ${climbDistance.toFixed(0)}m, avg gradient = ${(100*climbElevation / climbDistance).toFixed(1)} %` );
+      }
+      self._initTrackInfo();
+      // todo : wat als er geen elevation data in de gpx zitten?
+      // 04/2023 : wat moet ik nu hiermee?
+      //resolve(this);
+      return (this); // gokje..
+
+    },(err) => {
+      console.log(err);
+      // 04/2023 : wat moet ik nu hiermee?
+      //reject(Error("http error"));
+      return(Error("http error")); // gokje..
+    });
+  } // loadurl
+
+  // same as loadFile() but load data from url
+  async loadUrlOLD(url) {
     return new Promise((resolve,reject) => {
       let xmlhttp = new XMLHttpRequest();
       let gpxxml; // the raw xml from the gpx/xml file
@@ -94,8 +126,7 @@ class Track {
       xmlhttp.send();
 
     });
-
-  } // load
+  } // loadurlOLD
 
   /* adds info members to the Track object
     .totalDistance
@@ -288,7 +319,7 @@ class Track {
   // find all climbs in the trackData
   // climb ends if elevation descreases by more than 10 VM
   // TODO : cleanup duplicate code
-  _findAllClimbs () {
+    _findAllClimbs () {
 
     const state_findingStartOfClimb = 0;
     const state_findingEndOfClimb = 1;
@@ -619,8 +650,9 @@ class Simulator {
         curVideoPointData = this.rider.track.getCurVideoPointData(r.curDistance);
 
         let playbackRate;
-        if (r.curPower < 1 || curVideoPointData.videoSpeed < 0.01) {
-          // stop de video als je stopt met trappen; anders stopt de video nooit in een afdaling
+        // 04.2023 : i want to coast on a downhill, so changing this (r.curSpeed is in m/s!!)
+        if ((r.curPower < 1 && r.curSpeed < 2.5) || curVideoPointData.videoSpeed < 0.01) {
+          // stop video when not pedalling, but allow coasting on a downhill
           playbackRate = 0.0;
         }
         else {
@@ -742,7 +774,7 @@ class Simulator {
   } // _drawData
 
   // draws a section of the gradient canvas with gradient (color); the section runs from startPercent (0..1) to endPercent (0..1) 
-  _drawGradient (gradient, startPercent, endPercent) {
+  _drawGradientOLD (gradient, startPercent, endPercent) {
     // height 15 versie
     var yMin = 0, yMax = 0;
     const canvasHeight = 15;
@@ -776,7 +808,56 @@ class Simulator {
     this.ctxGradient.clearRect(xMin,0, xMax-xMin,canvasHeight);
     this.ctxGradient.fillStyle = color;
     this.ctxGradient.fillRect(xMin,yMin, xMax-xMin,yMax-yMin);
+  } // _drawGradientOLD
+
+
+  _gradient2Rgb (gradient) {
+    let gradientPct = gradient*100.0;
+    let rgb = [];
+    if (gradientPct < 0.0) {
+      let g = Math.max(Math.floor(255+gradientPct*25.5),0);
+      rgb = [0,g,255];
+    }
+    else if (gradientPct < 2.0) {
+      let b = Math.max(Math.floor(255-gradientPct*127.5),0);
+      rgb = [0,255,b];
+    }
+    else if (gradientPct < 5.0) {
+      let r = Math.min(Math.floor((gradientPct-2.0)*85.0),255);
+      rgb = [r,255,0];
+    }
+    else if (gradientPct < 10.0) {
+      let g = Math.max(Math.floor(255-(gradientPct-5.0)*51.0),0);
+      rgb = [255,g,0];
+    }
+    else { // gradients > 10% and color max at 15%
+      let b = Math.min(Math.floor((gradientPct-10.0)*51.0),255);
+      rgb = [255,0,b];
+    }
+    let rgbColor = "rgb(" + rgb.map(function (h) { return Math.floor(h); }).join(",") + ")";
+    return rgbColor;    
+  } // _gradient2Rgb
+
+  // draws a section of the gradient canvas with gradient (color); the section runs from startPercent (0..1) to endPercent (0..1) 
+  // gradients in decimal, not percentage ! (0.02 -> 2%)
+  _drawGradient (gradient, startPercent, endPercent) {
+    // version 04/2023 : complete height of gradient canvas, smooth color change
+    // 0% : cyan (0,255,255) - 2% : green (0,255,0) - 5% : yellow (255,255,0) - 10% : red (255,0,0) - 15%+ : purple (255,0,255)
+    // <0% : -10%+ : blue (0,0,255)
+    const canvasHeight = 15;
+    let rgbColor = this._gradient2Rgb(gradient);
+
+    // length of the fill -> from startPercent to endPercent
+    // 500 = length of the total canvas
+    let xMin = Math.round(startPercent*500);
+    let xMax = Math.round(endPercent*500);
+    
+    // do the filling - empty the section first
+    this.ctxGradient.clearRect(xMin,0, xMax-xMin,canvasHeight);
+    this.ctxGradient.fillStyle = rgbColor;
+    this.ctxGradient.fillRect(xMin,0, xMax-xMin,canvasHeight);
   } // _drawGradient
+  
 
   _lonlat2map (point) {
     let xy = {};
@@ -814,6 +895,7 @@ class Simulator {
     this.trackImage = this.ctxMap.getImageData(0, 0, this.cvsMapWidth, this.cvsMapHeight);
   } // _initTrackImage
 
+  // TODO 04/2023 : fill met gradient color, maar daarvoor moet je de gradient kennen op de specifieke x pos
   _initProfileImage () {
     // clear canvas
     this.ctxProfile.clearRect(0,0,this.cvsProfile.width, this.cvsProfile.height);
@@ -870,11 +952,19 @@ class Rider {
       riderWeight : riderWeight, // kg
       bikeWeight : 8.0, // kg
     };
+    this.trainerDifficulty = 100.0;
   } // constructor
 
   setRiderWeight(riderWeight) {
     this.bikeModelParams.riderWeight = riderWeight;
   }
+
+  // influences how much the resistance changes with gradients
+  setTrainerDifficulty(trainerDifficulty) {
+    this.trainerDifficulty = trainerDifficulty;
+    this.trainerDifficulty = Math.max(Math.min(this.trainerDifficulty,100.0),0.0); // just to be sure to filter potential junk from UI
+  } // setTrainerDifficulty
+
 
   // track is a Track class object
   // call this only after the track has been loaded from file!
@@ -1011,7 +1101,8 @@ class Rider {
 
       // update bike resistance based on current gradient (curInfo.gradient)
       // experimental formula for Elite Direto based on my 80kg -> TODO adapt following rider weight
-      let newResistanceLevel = Math.round (Math.min(1610*curInfo.gradient + 22,200));
+      // 04/2023 : update with trainerDifficulty, for now will simply adjust the slope of resistance level adjusts
+      let newResistanceLevel = Math.round (Math.min(1610*curInfo.gradient*(this.trainerDifficulty/100.0) + 22,200));
       // direto won't set resistance to 0
       newResistanceLevel = Math.max (newResistanceLevel, 1); 
       // we will tolerate a difference of 1 resistance unit before resending the command
@@ -1019,6 +1110,7 @@ class Rider {
       // || 0 is needed, because the trainer doesn't report resistanceLevel if it has never been set before
       let trainerResistanceLevel = this.trainer.bikeData.resistanceLevel || 0;
       if (Math.abs(trainerResistanceLevel - newResistanceLevel) > 1) {
+        log(`setResistance to ${newResistanceLevel}`);
         this.trainer.setResistance(newResistanceLevel).catch(()=>{});
       }
       

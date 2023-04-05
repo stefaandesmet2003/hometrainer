@@ -687,7 +687,7 @@
       evtData = evtData.buffer ? evtData : new DataView(evtData);
       
       let view8 = new Uint8Array(evtData.buffer);
-      log ("ntf15 : " + view8.toString()); // log raw data
+      //log ("ntf15 : " + view8.toString()); // log raw data
       
       let id = evtData.getUint8(0);
       for (let i=0;i<8;i++) {
