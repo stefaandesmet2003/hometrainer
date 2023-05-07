@@ -723,7 +723,7 @@ class Simulator {
       //this.debugTxt.innerHTML += ` &#x2726; alt: ${r.curElevation.toFixed(0)}m @ ${(curTrackPointData.gradient*100.0).toFixed(1)}%`;
       this.dataGradient.innerHTML = `${(curTrackPointData.gradient*100.0).toFixed(1)}`;
       //this.debugTxt.innerHTML += " resistance = " + this.rider.trainer.bikeData.resistanceLevel;
-      this.dataAscentInfo.innerHTML = `&uarr; ${(t.totalAscent - r.totalAscent).toFixed(0)}m`;
+      this.dataAscentInfo.innerHTML = `&uarr; ${r.totalAscent.toFixed(0)}m &rarr; ${(t.totalAscent - r.totalAscent).toFixed(0)}m`;
       this.dataAscentInfo.innerHTML += ` &darr; ${(t.totalDescent - r.totalDescent).toFixed(0)}m`;
 
       this.debugTxt.innerHTML += "<br> ";

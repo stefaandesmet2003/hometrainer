@@ -12,6 +12,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@thelevicole/youtube-to-html5-loader@4.0.0/dist/YouTubeToHtml5.min.js"></script>
+  <!-- for the pedal chart -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.bundle.min.js"></script>
+
   <script src="gpxFile.js"></script>
   <script src="rouvyXmlFile.js"></script>
   <script src="VincentyFormula.js"></script>
@@ -38,7 +41,7 @@
       min-height: 100%;
   }
 
-  #cvsProfile, #cvsMap, #cvsGradient {
+  #cvsProfile, #cvsMap, #cvsGradient, #myRadarChart {
     border:1px solid #FFFFFF;
     border-radius:5px;
     margin:5px;
@@ -215,6 +218,10 @@
   let menuButton;
   let closeMenu;
   let buttonSaveSettings;
+  
+  // pedal chart
+  let radarChart, radarCfg, radarCtx;
+  let peanuts = [];
 
   // strava stuff
   let stravaUploadPollTimer, stravaAccessToken;
@@ -232,6 +239,89 @@
     buttonConnectTrainer.onclick = buttonConnectTrainerOnClick;
     buttonConnectHrm = document.getElementById("buttonConnectHrm");
     buttonConnectHrm.onclick = buttonConnectHrmOnClick;
+
+    // pedal chart
+    radarCtx = document.getElementById('myRadarChart').getContext('2d');
+    radarCfg = {
+        type: 'radar',
+        data: {
+          //labels : [0,30,60,90,120,150,180,210,240,270,300,330],
+          labels : [0,15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240,255,270,285,300,315,330,345],
+          datasets: [
+          {
+            label: 'stroke1',
+            backgroundColor: 'white',
+            borderColor: 'white',
+            data : peanuts[0],
+          },
+        ]
+        },
+        options: {
+          legend : {
+            display : false,
+          },
+          animation : false,
+          hover: {
+            animationDuration: 0 // duration of animations when hovering an item
+          },
+          responsive : false,
+          responsiveAnimationDuration: 0, // animation duration after a resize
+          elements: { // settings for all datasets, can be overridden per dataset
+            line : {
+              tension : 0, // 0 = disable bezier curves
+              fill : false,
+              stepped : false,
+              borderWidth : 2,
+              borderDash: [],
+            },
+            point  : {
+              radius : 2, // 0 = no dot on the datapoint
+            }
+          },
+          showLine : true,
+          parsing : false,
+          spanGaps : true,
+
+          scale: {
+            /*
+            angleLines : {
+              display : true,
+              color : "#666",
+              borderDash : [10,5],
+            },
+            */
+            angleLines : {
+              display : false,
+            },
+            pointLabels : { // angle values along the circle
+              display : false,
+              fontColor : "white",
+            },
+            gridLines : {
+              display : true,
+              color : "white",
+            },
+            // trick to remove ticks https://medium.com/@richard.jones/getting-rid-of-radar-chart-ticks-in-chartjs-dda06bef2711#:~:text=Unfortunately%20ChartJS%20does%20not%20provide,be%20creative%20in%20removing%20them.&text=This%20removes%20the%20backdrop%20not,%25%20opacity%20%E2%80%94%20i.e.%20totally%20transparent.
+            /*
+            ticks: {
+              callback: function() {return ""},
+              backdropColor: "rgba(0, 0, 0, 0)",
+            },
+            */
+            ticks : {
+              min : 0,
+              fontColor : "white",
+              fontSize : 20,
+              max : 200, // initial value, is later updated based on pedaldata, overriding the autoscaling in ChartJs
+              showLabelBackdrop : false,
+              maxTicksLimit : 1,
+            },
+          },
+        } // options
+
+      };
+      radarChart = new Chart(radarCtx, radarCfg);
+
     
     simulator = new Simulator();
     let settings = getStoredSettings();
@@ -387,12 +477,28 @@
     }
   } // buttonRideOnClick
 
+  function onPedalData(pedalData) {
+      peanuts[0] = [...pedalData.peanut];
+      // show only 1 peanut in this app
+      radarCfg.data.datasets[0].data = peanuts[0];
+      // autoscale in chartjs jumps from 200 to 500
+      // replace with step 50
+      pedalMax = Math.max.apply(null, radarChart.data.datasets[0].data.filter(function (x) {
+        return isFinite(x);
+      }));
+      pedalMax = pedalMax + 50 - (pedalMax % 50)
+      radarCfg.options.scale.ticks.max = pedalMax
+      radarChart.update();
+    } // onPedalData
+
   async function buttonConnectTrainerOnClick() {
     if (!simulator.rider.trainer.connected) {
       try {
         await simulator.rider.connectTrainer();
         // change button color
         buttonConnectTrainer.classList.add("connected");
+        // 04/2023: can this cleaner?
+        simulator.rider.trainer.addEventListener('pedaldata', onPedalData);
       } catch (error) {
         log('error connecting direto : ' + error);
       }
@@ -402,6 +508,7 @@
         await simulator.rider.disconnectTrainer();
         // change button color
         buttonConnectTrainer.classList.remove("connected");
+        simulator.rider.trainer.removeEventListener('pedaldata', onPedalData);
       } catch (error) {
         log (`error disconnecting direto : ${error}`);
       }
@@ -634,8 +741,10 @@
                 <button id="buttonRide" title="start recording your session">Start</button>
               </div>
             </div>
+            <!-- not sure why but this canvas needs to be outside of the next div in order to align with the other canvases-->
+            <canvas id="myRadarChart" width="100" height="100"></canvas>
             <div>
-              <canvas id="cvsProfile" width="500" height="100"></canvas>
+              <canvas id="cvsProfile" width="400" height="100"></canvas>
               <canvas id="cvsMap" width="100" height="100"></canvas>
             </div>
           </div>
