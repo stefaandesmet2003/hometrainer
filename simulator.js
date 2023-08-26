@@ -467,11 +467,6 @@ class Simulator {
     this.video.pause();
 
     // html page info
-    this.cvsMapWidth = 100;
-    this.cvsMapHeight = 100;
-    this.cvsProfileWidth = 500;
-    this.cvsProfileHeight = 100;
-
     this.debugTxt = document.getElementById("debugTxt");
     this.cvsGradient = document.getElementById("cvsGradient");
     this.ctxGradient = this.cvsGradient.getContext("2d");
@@ -509,7 +504,7 @@ class Simulator {
     //log(`click on ${event.target.id} @ (${event.offsetX},${event.offsetY})`);
     // translate offsetX to curDistance
     if (event.target.id == "cvsProfile") {
-      let curDistance = event.offsetX / this.cvsProfileWidth * this.track.totalDistance;
+      let curDistance = event.offsetX / this.cvsProfile.width * this.track.totalDistance;
       log(`setting curDistance =  ${curDistance}`);
       this.rider.state.curDistance = curDistance;
     }
@@ -861,15 +856,15 @@ class Simulator {
 
   _lonlat2map (point) {
     let xy = {};
-    xy.x = 3 + Math.round((this.cvsMapWidth-5) * (point.lon - this.MIN.lon) / (this.MAX.lon - this.MIN.lon));
-    xy.y = this.cvsMapHeight - 3 - Math.round((this.cvsMapHeight-5) * (point.lat - this.MIN.lat) / (this.MAX.lat - this.MIN.lat));
+    xy.x = 3 + Math.round((this.cvsMap.width-5) * (point.lon - this.MIN.lon) / (this.MAX.lon - this.MIN.lon));
+    xy.y = this.cvsMap.height - 3 - Math.round((this.cvsMap.height-5) * (point.lat - this.MIN.lat) / (this.MAX.lat - this.MIN.lat));
     return xy;
   } // lonlat2map
 
   _eledist2profile (point) {
     let profile = {};
-    profile.x = 3 +Math.round((this.cvsProfileWidth - 5)* point.totalDistance / this.PROFILE.totalDistance);
-    profile.y = (this.cvsProfileHeight - 3) - Math.round((this.cvsProfileHeight - 5) * (point.elevation - this.PROFILE.min) / (this.PROFILE.max - this.PROFILE.min));
+    profile.x = 3 +Math.round((this.cvsProfile.width - 5)* point.totalDistance / this.PROFILE.totalDistance);
+    profile.y = (this.cvsProfile.height - 3) - Math.round((this.cvsProfile.height - 5) * (point.elevation - this.PROFILE.min) / (this.PROFILE.max - this.PROFILE.min));
     return profile;
   } // eledist2profile
 
@@ -892,7 +887,7 @@ class Simulator {
       }
     }
     this.ctxMap.stroke();
-    this.trackImage = this.ctxMap.getImageData(0, 0, this.cvsMapWidth, this.cvsMapHeight);
+    this.trackImage = this.ctxMap.getImageData(0, 0, this.cvsMap.width, this.cvsMap.height);
   } // _initTrackImage
 
   // TODO 04/2023 : fill met gradient color, maar daarvoor moet je de gradient kennen op de specifieke x pos
@@ -914,11 +909,11 @@ class Simulator {
       }
     }
     this.ctxProfile.stroke();
-    this.profileImage = this.ctxProfile.getImageData(0, 0, this.cvsProfileWidth, this.cvsProfileHeight);
+    this.profileImage = this.ctxProfile.getImageData(0, 0, this.cvsProfile.width, this.cvsProfile.height);
   } // _initProfileImage
 
   _showPoint (point) {
-    this.ctxMap.clearRect(0,0,this.cvsMapWidth, this.cvsMapHeight);
+    this.ctxMap.clearRect(0,0,this.cvsMap.width, this.cvsMap.height);
     this.ctxMap.putImageData(this.trackImage, 0, 0);
     let xy = this._lonlat2map(point);
     this.ctxMap.beginPath();
@@ -926,7 +921,7 @@ class Simulator {
     this.ctxMap.fillStyle = "yellow";
     this.ctxMap.fill();
 
-    this.ctxProfile.clearRect(0,0,this.cvsProfileWidth, this.cvsProfileHeight);
+    this.ctxProfile.clearRect(0,0,this.cvsProfile.width, this.cvsProfile.height);
     this.ctxProfile.putImageData(this.profileImage, 0, 0);
     let prof = this._eledist2profile(point);
     this.ctxProfile.beginPath();

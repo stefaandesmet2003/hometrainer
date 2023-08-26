@@ -1,0 +1,13 @@
+      {
+        "name": "Puerto de San Lorenza",
+        "description": "31km 1167vm",
+        "video_url": "https://mediacdn.rouvy.com/routes/55278/video/55278_720.mp4",
+        "track_url": "https://cdn.virtualtraining.eu/routes/55278/track.xml"
+      },
+      {
+        "name": "Alto de La Farrapona",
+        "description": "23.7km 1249vm",
+        "video_url": "https://mediacdn.rouvy.com/routes/56017/video/56017_720.mp4",
+        "track_url": "https://cdn.virtualtraining.eu/routes/56017/track.xml"
+      }
+de orig track xml heeft geen video points

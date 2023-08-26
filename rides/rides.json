@@ -3,7 +3,7 @@
       "name": "Doongalla, thanks Geert :)",
       "description": "2.5km, 148vm",
       "video_url" : "https://youtu.be/97eL4BTVzlE",
-      "track_url" : "https://stefaandesmet2003.duckdns.org/hometrainer/rides/doongalla.xml",
+      "track_url" : "https://stefaandesmet2003.github.io/hometrainer/rides/Doongalla.xml",
       "isYouTube" : true
     },
     {
@@ -245,5 +245,23 @@
         "description": "27.6km 1048vm",
         "video_url": "https://mediacdn.rouvy.com/routes/56662/video/56662_720.mp4",
         "track_url": "https://cdn.virtualtraining.eu/routes/56662/track.xml"
+      },
+      {
+        "name": "Jaizkibel from Hondarribia ",
+        "description": "11.9km 606vm",
+        "video_url": "https://mediacdn.rouvy.com/routes/85978/video/85978_720.mp4",
+        "track_url": "https://cdn.virtualtraining.eu/routes/85978/track.xml"
+      },
+      {
+        "name": "Azkoitia- Alto Elosua",
+        "description": "11.3km 548vm",
+        "video_url": "https://mediacdn.rouvy.com/routes/53127/video/53127_720.mp4",
+        "track_url": "https://cdn.virtualtraining.eu/routes/53127/track.xml"
+      },
+      {
+        "name": "Elorrio - Elgeta (Alto de Karabieta)",
+        "description": "11.5km 422vm",
+        "video_url": "https://mediacdn.rouvy.com/routes/70353/video/70353_720.mp4",
+        "track_url": "https://cdn.virtualtraining.eu/routes/70353/track.xml"
       }
     ]
