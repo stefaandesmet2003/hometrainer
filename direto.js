@@ -29,7 +29,7 @@
       this.pedalAnalysisData = {};
       this.pedalAnalysisData.peanut = [];
       this._eventListenerPedalAnalysisData = null;
-
+      this.logDiretoCommands = false;
     }
 
     // reimplementation with async/await
@@ -269,6 +269,7 @@
       // todo range check
       // setting level = 0 gives INVALID PARAMETER error
       if (resistanceLevel == 0) resistanceLevel = 1;
+      if (this.logDiretoCommands) log(`setResistance to ${resistanceLevel}`);
 
       try {
         // request control is not strictly necessary
@@ -349,9 +350,6 @@
         //2019.12.07 : waarom die /10 ??
         // vermoedelijk is minimumResistanceLevel == 1, niet 0, want 0 setten lijkt niet te lukken
         log('Supported Resistance Level Range Info :');
-        //log('> minimumResistanceLevel: ' + (minimumResistanceLevel / 10));
-        //log('> maximumResistanceLevel: ' + (maximumResistanceLevel / 10));
-        //log('> minimumIncrement: ' + (minimumIncrement / 10));
         log(`> minimumResistanceLevel: ${minimumResistanceLevel}`);
         log(`> maximumResistanceLevel: ${maximumResistanceLevel}`);
         log(`> minimumIncrement: ${minimumIncrement}`);
@@ -435,7 +433,7 @@
         const ftmscp = this._characteristics.get('fitness_machine_control_point');
         // 1. send command
         let cmdBytes = new Uint8Array(buffer);
-        log(`_ftmsCommand : ${cmdBytes.toString()}`);
+        if (this.logDiretoCommands) log(`_ftmsCommand : ${cmdBytes.toString()}`);
         // no await here!
         // we need to set up the reply promise synchronously, to be able to catch the reply notification in time
         // from the timings it looks that the reply notification comes very soon after the ftmscp.writeValue promise resolves
@@ -447,7 +445,7 @@
           // bind(this) not needed here because of the arrow function
           this._replyPromiseTimeoutId = setTimeout(() => {
             this._replyPromiseResolveFunc = null;
-            log("_ftmsCommand : reply timeout!");
+            if (this.logDiretoCommands) log("_ftmsCommand : reply timeout!");
             reject("_ftmsCommand : reply timeout");
           }, 1000);
         });
@@ -459,11 +457,11 @@
         evtData = evtData.buffer ? evtData : new DataView(evtData);
         // parsing data : TODO
         view = new Uint8Array(evtData.buffer);
-        log(`ftmsCommand response code : ${view[2]}`)
+        if (this.logDiretoCommands) log(`ftmsCommand response code : ${view[2]}`)
         return (view[2]); /* the ftms cp response code */
 
       } catch(error)  {
-        log(`_ftmsCommand : error ${error} in command ${view.toString()}`);
+        if (this.logDiretoCommands) log(`_ftmsCommand : error ${error} in command ${view.toString()}`);
         this._replyPromiseResolveFunc = null;
         return Promise.reject(`direto._ftmsCommand error : command failed (${error})`);
       }

@@ -64,7 +64,9 @@ class Track {
     .then((res) => {
       let gpxxml = res.data;
       let rouvyXmlFile = new RouvyXmlFile();
+      let gpxFile = new GPXFile(); // 10.2023
       self.trackData = rouvyXmlFile.parseXML(gpxxml);
+      this.trackData = gpxFile.smoothGPX(this.trackData); // 10.2023 for AR routes      
       // todo : support gpx links
       console.log(`Track distance = ${self.trackData.TrackPoints[self.trackData.TrackPoints.length-1].totalDistance}, Video distance = ${self.trackData.VideoPoints[self.trackData.VideoPoints.length-1].totalDistance}`);
           
@@ -498,6 +500,8 @@ class Simulator {
     this.cvsProfile.addEventListener('click',this.onClick.bind(this));
     this.cvsProfile.addEventListener('wheel',this.onWheel.bind(this));
 
+    // console logging
+    this.logVideoPlayback = false;
   } // constructor
 
   onClick(event) {
@@ -670,7 +674,8 @@ class Simulator {
         if (playbackRate < 0.1) playbackRate = 0;
         if (this.video.playbackRate != playbackRate) this.video.playbackRate = playbackRate;
           
-        //console.log("delta : " + (video.currentTime - curVideoSeconds).toFixed(2) + "pbrate : " + playbackRate.toFixed(2) + "speed : " + (curSpeed*3.6).toFixed(2));
+        this.debugTxt.innerHTML += "delta= " + (this.video.currentTime - curVideoPointData.videoSeconds).toFixed(2) + "s, pbrate= " + playbackRate.toFixed(2);
+        if (this.logVideoPlayback && this.isRiding) log("delta= " + (this.video.currentTime - curVideoPointData.videoSeconds).toFixed(2) + "s, pbrate= " + playbackRate.toFixed(2));
   
       } // video chosen
     } // active track
@@ -715,7 +720,6 @@ class Simulator {
       this.dataDistance.innerHTML = `${r.curDistance.toFixed(0)}m`;
       this.dataDistance.innerHTML += ` &rarr; ${(t.totalDistance - r.curDistance).toFixed(0)}m`
   
-      //this.debugTxt.innerHTML += ` &#x2726; alt: ${r.curElevation.toFixed(0)}m @ ${(curTrackPointData.gradient*100.0).toFixed(1)}%`;
       this.dataGradient.innerHTML = `${(curTrackPointData.gradient*100.0).toFixed(1)}`;
       //this.debugTxt.innerHTML += " resistance = " + this.rider.trainer.bikeData.resistanceLevel;
       this.dataAscentInfo.innerHTML = `&uarr; ${r.totalAscent.toFixed(0)}m &rarr; ${(t.totalAscent - r.totalAscent).toFixed(0)}m`;
@@ -729,7 +733,6 @@ class Simulator {
         let curClimb = curTrackPointData.climb.curClimb;
         let climbDistanceLeft = curClimb.maxDistance - r.curDistance;
         let climbElevationLeft = curClimb.maxElevation - r.curElevation;
-        // this.debugTxt.innerHTML += `this climb (${curClimb.index+1}/${t.numClimbs}): ${climbDistanceLeft.toFixed(0)} m @ ${(100*climbElevationLeft / climbDistanceLeft).toFixed(1)}%`;
         this.dataClimbInfo.innerHTML = `(${curClimb.index+1}/${t.numClimbs}) ${climbDistanceLeft.toFixed(0)} m @ ${(100*climbElevationLeft / climbDistanceLeft).toFixed(1)}%`;
       }
       else {
@@ -738,7 +741,6 @@ class Simulator {
           let distFromClimb = nextClimb.minDistance - r.curDistance;
           let climbElevation = nextClimb.maxElevation - nextClimb.minElevation;
           let climbDistance = nextClimb.maxDistance - nextClimb.minDistance;
-          //this.debugTxt.innerHTML += `next climb (${nextClimb.index+1}/${t.numClimbs}) in ${distFromClimb.toFixed(0)}m, ${climbDistance.toFixed(0)}m @ ${(100*climbElevation / climbDistance).toFixed(1)}%`;
           this.dataClimbInfo.innerHTML = `(${nextClimb.index+1}/${t.numClimbs}) ${climbDistance.toFixed(0)}m @ ${(100*climbElevation / climbDistance).toFixed(1)}%`;
           this.dataClimbInfo.innerHTML += "<br>";
           this.dataClimbInfo.innerHTML += `in ${distFromClimb.toFixed(0)}m`;
@@ -746,7 +748,6 @@ class Simulator {
       }
 
       // show avg gradient over next km
-      // this.debugTxt.innerHTML += ` &#x2726; next km @ ${(100*curTrackPointData.avgGradient).toFixed(2)}%`
       this.dataAvgGradient.innerHTML = `1km @ ${(100*curTrackPointData.avgGradient).toFixed(1)}%`;
     } // data shown when track active
 
@@ -767,44 +768,6 @@ class Simulator {
       }
     } // ghost
   } // _drawData
-
-  // draws a section of the gradient canvas with gradient (color); the section runs from startPercent (0..1) to endPercent (0..1) 
-  _drawGradientOLD (gradient, startPercent, endPercent) {
-    // height 15 versie
-    var yMin = 0, yMax = 0;
-    const canvasHeight = 15;
-    if (gradient > 0) {
-      // filling the upper part of the canvas section
-      yMax = 12;
-      yMin = Math.max(Math.floor(12-gradient*100.0),0);
-    }
-    else if (gradient < 0) {
-      // filling the lower part of the canvas section
-      yMin = 12;
-      if (gradient > -0.02) yMax = 13;
-      else yMax = 14;
-    }
-    
-    // length of the fill -> from startPercent to endPercent
-    // 500 = length of the total canvas
-    var xMin = Math.round(startPercent*500);
-    var xMax = Math.round(endPercent*500);
-    
-    // determine the fill color
-    var color; 
-    if (gradient < 0.0) color = "#174c9a"; // kinomap blue
-    else if (gradient < 0.02) color = "#17711d"; // kinomap green
-    else if (gradient < 0.04) color = "#94981d"; // yellow :  #FFFF00, kinomap yellow : 94981d
-    else if (gradient < 0.08) color = "#FF8C00"; // dark orange kinomap : 944c1d
-    else if (gradient < 0.1) color = "#941b1d"; // red #FF0000 // 941b1d : kinomap red
-    else color = 'purple'; // your face color when riding this gradient
-    
-    // do the filling - empty the section first
-    this.ctxGradient.clearRect(xMin,0, xMax-xMin,canvasHeight);
-    this.ctxGradient.fillStyle = color;
-    this.ctxGradient.fillRect(xMin,yMin, xMax-xMin,yMax-yMin);
-  } // _drawGradientOLD
-
 
   _gradient2Rgb (gradient) {
     let gradientPct = gradient*100.0;
@@ -1105,7 +1068,6 @@ class Rider {
       // || 0 is needed, because the trainer doesn't report resistanceLevel if it has never been set before
       let trainerResistanceLevel = this.trainer.bikeData.resistanceLevel || 0;
       if (Math.abs(trainerResistanceLevel - newResistanceLevel) > 1) {
-        log(`setResistance to ${newResistanceLevel}`);
         this.trainer.setResistance(newResistanceLevel).catch(()=>{});
       }
       

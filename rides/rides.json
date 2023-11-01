@@ -1,10 +1,21 @@
 [
     {
-      "name": "Doongalla, thanks Geert :)",
-      "description": "2.5km, 148vm",
-      "video_url" : "https://youtu.be/97eL4BTVzlE",
-      "track_url" : "https://stefaandesmet2003.github.io/hometrainer/rides/Doongalla.xml",
-      "isYouTube" : true
+      "name": "Alto de la Farrapona +",
+      "description": "42.89km, 2190vm",
+      "video_url": "https://mediacdn.rouvy.com/routes/56888/video/56888_720.mp4",
+      "track_url": "http://localhost:3000/rides/56888.xml"
+    },
+    {
+      "name": "Puerto de San Lorenza",
+      "description": "31.32km, 1170vm",
+      "video_url": "https://mediacdn.rouvy.com/routes/55278/video/55278_720.mp4",
+      "track_url": "http://localhost:3000/rides/55278.xml"
+    },
+    {
+      "name": "Alto de la Farrapona short",
+      "description": "23.7km, 1250vm",
+      "video_url": "https://mediacdn.rouvy.com/routes/56017/video/56017_720.mp4",
+      "track_url": "http://localhost:3000/rides/56017.xml"
     },
     {
       "name": "Mount Evans",
@@ -139,12 +150,6 @@
       "track_url": "https://cdn.virtualtraining.eu/routes/5177/track.xml"
     },
     {
-      "name": "Castello di Pedres",
-      "description": "33.9km, 480vm",
-      "video_url": "https://mediacdn.rouvy.com/routes/19641/video/19641_desktop.mp4",
-      "track_url": "https://cdn.virtualtraining.eu/routes/19641/track.xml"
-    },
-    {
       "name": "Gran Canaria GC65",
       "description": "19.22km, 648vm",
       "video_url": "https://mediacdn.rouvy.com/routes/11082/video/11082_desktop.mp4",
@@ -263,5 +268,12 @@
         "description": "11.5km 422vm",
         "video_url": "https://mediacdn.rouvy.com/routes/70353/video/70353_720.mp4",
         "track_url": "https://cdn.virtualtraining.eu/routes/70353/track.xml"
-      }
+      },
+      {
+        "name": "Doongalla, thanks Geert :)",
+        "description": "2.5km, 148vm",
+        "video_url" : "https://youtu.be/97eL4BTVzlE",
+        "track_url" : "https://stefaandesmet2003.github.io/hometrainer/rides/Doongalla.xml",
+        "isYouTube" : true
+      }  
     ]
