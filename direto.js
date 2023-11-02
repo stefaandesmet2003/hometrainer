@@ -145,12 +145,21 @@
 
     // install callback for bikeData
     addEventListener(type, callbackFunction) {
-      // don't care about the type;
       if (type == 'onbikedata') {
         this._eventListenerBikeData = callbackFunction;
       }
       else if (type == 'pedaldata') {
         this._eventListenerPedalAnalysisData = callbackFunction;
+      }
+    } // addEventListener
+
+    // remove callback for bikeData - totally useless
+    removeEventListener(type, callbackFunction) {
+      if (type == 'onbikedata') {
+        this._eventListenerBikeData = null;
+      }
+      else if (type == 'pedaldata') {
+        this._eventListenerPedalAnalysisData = null;
       }
     } // addEventListener
 

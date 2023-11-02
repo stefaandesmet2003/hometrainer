@@ -1,11 +1,12 @@
-GPXFile = function() {
+'use strict';
 
-  var gpxFile = {};
-  gpxFile.DEFAULT_GPXNAME = "GPX with no name";
-  gpxFile.DEFAULT_DESCRIPTION = "GPX with no description";
-  
+class GPXFile {
+  constructor () {
+    this.track = 'unused';
+  } // constructor  
+
   // formatXML taken from https://gist.github.com/sente/1083506 (Stuart Powers)
-  gpxFile.formatXML = function (xml) {
+  formatXML (xml) {
     var formatted = '';
     var reg = /(>)(<)(\/*)/g;
     xml = xml.replace(reg, '$1\r\n$2$3');
@@ -35,8 +36,7 @@ GPXFile = function() {
     return formatted;
   }; // formatXML
 
-
-  gpxFile.parseHeader = function(doc) {
+  parseHeader (doc) {
     var routeName ="";
     var routeDescription ="";
     var routeNameTag;
@@ -84,7 +84,7 @@ GPXFile = function() {
     return {routeName: routeName, routeDescription : routeDescription};    
   }; // parseHeader
 
-  gpxFile.parseGPX = function (xml) {
+  parseGPX (xml) {
     var TrackPoints = [];
     var VideoPoints = [];
     var prevTrackPoint =  null;
@@ -93,7 +93,7 @@ GPXFile = function() {
     var startTime; // 
     var doc = $.parseXML(xml);
     
-    var fileInfo = gpxFile.parseHeader(doc);
+    var fileInfo = this.parseHeader(doc);
     $(doc).find('trkpt').each(function(){
       var trackPoint =  {};
       trackPoint.lat = Number($(this).attr("lat"));
@@ -163,81 +163,6 @@ GPXFile = function() {
     fileInfo.VideoPoints = VideoPoints;
     return fileInfo;
   }; // parseGPX
-
-  gpxFile.smoothGPX = function (fileInfo) {
-    
-    var TrackPoints = fileInfo.TrackPoints; // dit is byReference
-    var length = TrackPoints.length;
-    var idx = 0;
-    var startIdx = idx;
-    var finishedFlag = false;
-    while (!finishedFlag) {
-      // elke cyclus van deze loop vindt 1 segment met een vaste gradient
-      var startElevation = TrackPoints[startIdx].elevation;
-      var startDistance = TrackPoints[startIdx].totalDistance;
-      var localMaxElevation = startElevation;
-      var localMaxIdx = startIdx;
-      var localMinElevation = startElevation;
-      var localMinIdx = startIdx;
-      // zoek de volgende reference elevation : curElevation +- 10m, of local max/min, of niet verder dan 1km
-      while ( (idx < length) &&
-              (Math.abs(startElevation - TrackPoints[idx].elevation) < 10.0) && 
-              ((TrackPoints[idx].totalDistance - startDistance) < 1000.0) &&
-              ((localMaxElevation - TrackPoints[idx].elevation) < 10.0) &&
-              ((TrackPoints[idx].elevation - localMinElevation) < 10.0)) {
-        if (TrackPoints[idx].elevation > localMaxElevation) {
-          localMaxElevation = TrackPoints[idx].elevation;
-          localMaxIdx = idx;
-        }
-        if (TrackPoints[idx].elevation < localMinElevation) {
-          localMinElevation = TrackPoints[idx].elevation;
-          localMinIdx = idx;
-        }
-        idx++;
-      }
-      //nu weten we niet door welke voorwaarde de while is gestopt.. kan beter zeker?
-      if (idx == length) {
-        finishedFlag = true;
-        idx--;
-      }
-      if ((Math.abs(startElevation - TrackPoints[idx].elevation) >= 10.0) || (finishedFlag)) {
-        // 10m hoogteverschil tussen startIdx en idx -> smoothen
-        var gradient = (TrackPoints[idx].elevation - startElevation) / (TrackPoints[idx].totalDistance - startDistance);
-        var tmpIdx;
-        for (tmpIdx = startIdx; tmpIdx <= idx; tmpIdx++)
-          TrackPoints[tmpIdx].elevation = startElevation + gradient*(TrackPoints[tmpIdx].totalDistance - startDistance);
-        startIdx = idx;
-      }
-      else if ((TrackPoints[idx].totalDistance - startDistance) >= 1000.0) {
-        // voorlopig gebruiken we hier localMin en localMax niet
-        // eventueel TODO
-        // smooth tussen begin en einde == idem als hierboven
-        var gradient = (TrackPoints[idx].elevation - startElevation) / (TrackPoints[idx].totalDistance - startDistance);
-        var tmpIdx;
-        for (tmpIdx = startIdx; tmpIdx <= idx; tmpIdx++)
-          TrackPoints[tmpIdx].elevation = startElevation + gradient*(TrackPoints[tmpIdx].totalDistance - startDistance);
-        startIdx = idx;
-      }
-      else if ((localMaxElevation - TrackPoints[idx].elevation) >= 10.0) {
-        // smooth tussen startIdx en localMax, en zet de startIdx = localMaxIdx;
-        var gradient = (localMaxElevation - startElevation) / (TrackPoints[localMaxIdx].totalDistance - startDistance);
-        var tmpIdx;
-        for (tmpIdx = startIdx; tmpIdx <= localMaxIdx; tmpIdx++)
-          TrackPoints[tmpIdx].elevation = startElevation + gradient*(TrackPoints[tmpIdx].totalDistance - startDistance);
-        startIdx = localMaxIdx;
-      }
-      else if ((TrackPoints[idx].elevation - localMinElevation) >= 10.0) {
-        // smooth tussen startIdx en localMax, en zet de startIdx = localMaxIdx;
-        var gradient = (localMinElevation - startElevation) / (TrackPoints[localMinIdx].totalDistance - startDistance);
-        var tmpIdx;
-        for (tmpIdx = startIdx; tmpIdx <= localMaxIdx; tmpIdx++)
-          TrackPoints[tmpIdx].elevation = startElevation + gradient*(TrackPoints[tmpIdx].totalDistance - startDistance);
-        startIdx = localMinIdx;
-      }
-    } // while (!finishedFlag)
-    
-    return  fileInfo;
-  } // smoothGPX
   
 /*  
     var emptydoc = '<?xml version="1.0"?><gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="KinomapVirtualRide" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"> \
@@ -269,23 +194,19 @@ GPXFile = function() {
     </gpx>';
 */  
   
-  gpxFile.makeGPX = function(ridelog) {
+  makeGPX (ridelog) {
+    var emptydoc = '<?xml version="1.0"?><gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="KinomapVirtualRide" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"> \r\n '+
+                    '<metadata>\r\n' +
+                    '  <time>FILL-IN-STARTTIME</time>\r\n' +
+                    '</metadata>\r\n' +
+                    '<trk>\r\n' +
+                    '  <name>GPX Trackname</name>\r\n' +
+                    '  <desc>GPX Track Description</desc>\r\n' +
+                    '  <trkseg>\r\n' +
+                    '  </trkseg>\r\n' +
+                    '</trk>\r\n' +
+                    '</gpx>';
     
-  
-    var emptydoc = '<?xml version="1.0"?><gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Kinomap" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"> \r\n \
-<metadata>\r\n \
-  <time>FILL-IN-STARTTIME</time>\r\n \
-</metadata>\r\n \
-<trk>\r\n \
-  <name>GPX Trackname</name>\r\n \
-  <desc>GPX Track Description</desc>\r\n \
-  <trkseg>\r\n \
-  </trkseg>\r\n \
-</trk>\r\n \
-</gpx>';
-    
-    var emptyTrkpt = '<trkpt lat="0.0" lon="0.0"><ele>0.0</ele><time>2017-05-10T09:00:38.000Z</time><extensions><power>122</power><gpxtpx\:TrackPointExtension><gpxtpx\:cad>57</gpxtpx\:cad></gpxtpx\:TrackPointExtension></extensions></trkpt>';
-  
     var gpxDoc = $.parseXML(emptydoc);
     var metadata = $(gpxDoc).find('metadata');
     var time = metadata.find('time');
@@ -293,16 +214,9 @@ GPXFile = function() {
     time[0].textContent = dt.toISOString();
     
     var trkseg =  $(gpxDoc).find('trkseg');
-    //.parseXML werkt niet met namespaces
-    //var trkpt = $.parseXML(emptyTrkpt);
-    //var elevation = trkpt.find("ele");
-    //var power = trkpt.find("power");
-    //var cadence = trkpt.find("gpxtpx\\:cad");
-    
     // manually build the structure of a trackpoint
     // parsing an empty trackpoint doesn't seem to work because of the namespaces ..
-
-    for (idx = 0; idx < ridelog.length; idx ++) {
+    for (let idx = 0; idx < ridelog.length; idx ++) {
       var trkpt = gpxDoc.createElement("trkpt");
       $(trkpt).attr("lat", ridelog[idx].lat.toFixed(7).toString()); // set the attributeName "lat" with the new value
       $(trkpt).attr("lon", ridelog[idx].lon.toFixed(7).toString());
@@ -330,14 +244,8 @@ GPXFile = function() {
       trkpt.appendChild(extensions);      
       trkseg[0].appendChild(trkpt); 
     }
-    
     return(new XMLSerializer()).serializeToString(gpxDoc);
     
   } // makeGPX
 
-  return gpxFile;
-  
-
-}; // gpxFile
-
-
+} // GPXFile

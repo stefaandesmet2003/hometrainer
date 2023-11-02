@@ -1,9 +1,9 @@
-RouvyXmlFile = function() {
+'use strict';
 
-  var rouvyXmlFile = {};
+class RouvyXmlFile {
 
   // formatXML taken from https://gist.github.com/sente/1083506 (Stuart Powers)
-  rouvyXmlFile.formatXML = function (xml) {
+  formatXML(xml) {
     var formatted = '';
     var reg = /(>)(<)(\/*)/g;
     xml = xml.replace(reg, '$1\r\n$2$3');
@@ -33,8 +33,7 @@ RouvyXmlFile = function() {
     return formatted;
   }; // formatXML
 
-  rouvyXmlFile.parseHeader = function(doc) {
-    // var metaData = $(doc).find('Name');
+  parseHeader(doc) {
     var routeNameTag = $(doc).find('Name');
     if (routeNameTag.length > 0) {
       var routeName = routeNameTag[0].textContent;
@@ -49,12 +48,12 @@ RouvyXmlFile = function() {
     
   }; // parseHeader
 
-  rouvyXmlFile.parseXML = function (xml) {
+  parseXML(xml) {
     var TrackPoints = [];
     var VideoPoints = [];
 
     var doc = $.parseXML(xml);
-    var fileInfo = rouvyXmlFile.parseHeader(doc);
+    var fileInfo = this.parseHeader(doc);
     
     // AltitudePoints
     $(doc).find('AltitudePoint').each(function(){
@@ -88,23 +87,19 @@ RouvyXmlFile = function() {
     return fileInfo;
   }; // parseXML
   
-  rouvyXmlFile.makeGPX = function(ridelog, trackData) {
+  makeGPX(ridelog, trackData) {
+    var emptydoc = '<?xml version="1.0"?><gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="KinomapVirtualRide" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"> \r\n '+
+                    '<metadata>\r\n' +
+                    '  <time>FILL-IN-STARTTIME</time>\r\n' +
+                    '</metadata>\r\n' +
+                    '<trk>\r\n' +
+                    '  <name>GPX Trackname</name>\r\n' +
+                    '  <desc>GPX Track Description</desc>\r\n' +
+                    '  <trkseg>\r\n' +
+                    '  </trkseg>\r\n' +
+                    '</trk>\r\n' +
+                    '</gpx>';
     
-  
-    var emptydoc = '<?xml version="1.0"?><gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="KinomapVirtualRide" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"> \r\n \
-<metadata>\r\n \
-  <time>FILL-IN-STARTTIME</time>\r\n \
-</metadata>\r\n \
-<trk>\r\n \
-  <name>GPX Trackname</name>\r\n \
-  <desc>GPX Track Description</desc>\r\n \
-  <trkseg>\r\n \
-  </trkseg>\r\n \
-</trk>\r\n \
-</gpx>';
-    
-    var emptyTrkpt = '<trkpt lat="0.0" lon="0.0"><ele>0.0</ele><time>2017-05-10T09:00:38.000Z</time><extensions><power>122</power><gpxtpx\:TrackPointExtension><gpxtpx\:cad>57</gpxtpx\:cad></gpxtpx\:TrackPointExtension></extensions></trkpt>';
-  
     var gpxDoc = $.parseXML(emptydoc);
     var metadata = $(gpxDoc).find('metadata');
     var time = metadata.find('time');
@@ -122,16 +117,10 @@ RouvyXmlFile = function() {
     description[0].textContent = trackData.routeDescription;
     
     var trkseg =  $(gpxDoc).find('trkseg');
-    //.parseXML werkt niet met namespaces
-    //var trkpt = $.parseXML(emptyTrkpt);
-    //var elevation = trkpt.find("ele");
-    //var power = trkpt.find("power");
-    //var cadence = trkpt.find("gpxtpx\\:cad");
-    
     // manually build the structure of a trackpoint
     // parsing an empty trackpoint doesn't seem to work because of the namespaces ..
 
-    for (idx = 0; idx < ridelog.length; idx ++) {
+    for (let idx = 0; idx < ridelog.length; idx ++) {
       var trkpt = gpxDoc.createElement("trkpt");
       $(trkpt).attr("lat", ridelog[idx].lat.toFixed(7).toString()); // set the attributeName "lat" with the new value
       $(trkpt).attr("lon", ridelog[idx].lon.toFixed(7).toString());
@@ -180,7 +169,5 @@ RouvyXmlFile = function() {
     return(new XMLSerializer()).serializeToString(gpxDoc);
     
   } // makeGPX  
-
-  return rouvyXmlFile;
 
 }; // RouvyXmlFile

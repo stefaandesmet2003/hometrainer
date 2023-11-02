@@ -1,0 +1,8 @@
+01/11/2023:
+- split js code in different files
+- gpxFile & rouvyFile : using class syntax now iso IIFE
+- gpxFile.js : removed smoothGPX from here and into Track class
+- index.html : changed position of debugTxt
+- index.html : starts the 1st ride from rides.json instead of hardcoded ride
+- rides.json bijgewerkt
+- ghosts revived, wip

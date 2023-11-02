@@ -1,13 +1,17 @@
-      {
-        "name": "Puerto de San Lorenza",
-        "description": "31km 1167vm",
-        "video_url": "https://mediacdn.rouvy.com/routes/55278/video/55278_720.mp4",
-        "track_url": "https://cdn.virtualtraining.eu/routes/55278/track.xml"
-      },
-      {
-        "name": "Alto de La Farrapona",
-        "description": "23.7km 1249vm",
-        "video_url": "https://mediacdn.rouvy.com/routes/56017/video/56017_720.mp4",
-        "track_url": "https://cdn.virtualtraining.eu/routes/56017/track.xml"
-      }
-de orig track xml heeft geen video points
+rouvyXmlFile,gpxFile as class
+
+window.direto : is dat clean?
+js weg uit index.html
+ghosts maken
+elevation profile met kleurtjes, + positie als driehoekje ipv klein bolleke
+pedal chart : hoort dat in index.html of in simulator
+track constructor met die _file ??? wadisda
+add ETA (op basis van current power, of avgpower)
+herken de versnelling (lees omwentelingen van de ftms)
+
+rider
+*****
+heeft de ridelog (die start vanaf start())
+
+this.rider.setTrack(track); waarom track doorgeven naar rider, en niet enkel in simulator??
+-> omdat de rider zijn curSpeed berekent op basis van het profiel van track
