@@ -4,7 +4,6 @@
 TODO : 
 video.duration vgl met videoPoints.videoTime
 auto-start? als track gekozen starten van zodra power!=0 || cadence!=0, 
-auto-pause ? power!= 0 & cadence!=0 is nok, want dan kan je nooit coasten
 */
 
 // shows the graphics overlay
@@ -46,6 +45,9 @@ class Simulator {
     this.dataClimbInfo = document.getElementById("data-climb");
     this.dataAscentInfo = document.getElementById("data-ascent");
     this.dataHeartRate = document.getElementById("data-bpm");
+    this.ghostSpeed = document.getElementById("data-ghost-spd");
+    this.ghostPower = document.getElementById("data-ghost-pow");
+    this.ghostPosition = document.getElementById("data-ghost-pos");
 
     this.cvsMap.addEventListener('click',this.onClick.bind(this));
     this.cvsMap.addEventListener('wheel',this.onWheel.bind(this));
@@ -63,6 +65,9 @@ class Simulator {
       let curDistance = event.offsetX / this.cvsProfile.width * this.track.totalDistance;
       log(`setting curDistance =  ${curDistance}`);
       this.rider.state.curDistance = curDistance;
+      if (this.ghost) {
+        this.ghost.state.curDistance = curDistance;
+      }
     }
   }
 
@@ -85,6 +90,13 @@ class Simulator {
     }
   } // addRider
 
+  addGhost (ghost) {
+    this.ghost = ghost;
+    if (this.track) {
+      ghost.setTrack(this.track);
+    }
+  } // addGhost
+
   setTrack (track) {
     this.track = track;
     if (track.trackData.routeName) console.log(`Route name : ${track.trackData.routeName}`);
@@ -99,6 +111,9 @@ class Simulator {
     if (this.rider) {
       this.rider.setTrack(track);
     }
+    if (this.ghost) { // although a ghost will most probably be assigned later and this.ghost will be null at this point
+      this.ghost.setTrack(track);
+    }
     this._initTrackImage();
     this._initProfileImage();
     this._drawData();
@@ -108,9 +123,6 @@ class Simulator {
     this._showPoint(curTrackPointData);
   } // setTrack
 
-  addGhost (ghost) {
-    this.ghost = ghost;
-  } // addGhost
 
   // load the video file in the this.video element
   loadVideoFromFile(videoFile) {
@@ -182,8 +194,7 @@ class Simulator {
         return;
       }
 
-      // update data
-      this._drawData();
+      this._drawData(); // update data
 
       // update the gradient canvas
       // gradient canvas represents the gradient for the next 30 seconds or minimum 100m
@@ -279,7 +290,8 @@ class Simulator {
 
       this.dataElapsedTime.innerHTML = `${sec2string(r.totalTime)}`;
       this.dataDistance.innerHTML = `${r.curDistance.toFixed(0)}m`;
-      this.dataDistance.innerHTML += ` &rarr; ${(t.totalDistance - r.curDistance).toFixed(0)}m`
+      this.dataDistance.innerHTML += ` &rarr; ${(t.totalDistance - r.curDistance).toFixed(0)}m<br>`
+      this.dataDistance.innerHTML += `ETA: ${sec2string(r.eta)}`
   
       this.dataGradient.innerHTML = `${(curTrackPointData.gradient*100.0).toFixed(1)}`;
       //this.debugTxt.innerHTML += " resistance = " + this.rider.trainer.bikeData.resistanceLevel;
@@ -307,25 +319,31 @@ class Simulator {
           this.dataClimbInfo.innerHTML += `in ${distFromClimb.toFixed(0)}m`;
         }
       }
-
       // show avg gradient over next km
       this.dataAvgGradient.innerHTML = `1km @ ${(100*curTrackPointData.avgGradient).toFixed(1)}%`;
     } // data shown when track active
 
     // show ghost data
     if (this.ghost) {
-      this.debugTxt.innerHTML += "<br>ghost: ";
-      let curPos = {};
-      curPos.totalDistance = this.rider.state.curDistance;
-      curPos.elapsedTime = this.rider.state.totalTime;
-      let ghostData = this.ghost.compareGhost(curPos);
-      this.debugTxt.innerHTML += `${ghostData.curSpeed.toFixed(2)}km/h &#x2726; ${ghostData.curPower}W`;
-      let ghostTimeDiff = ghostData.elapsedTime - curPos.elapsedTime;
-      let ghostDistDiff = ghostData.totalDistance - curPos.totalDistance;
-      if ((ghostTimeDiff < 0) || (ghostDistDiff > 0))  {
-        this.debugTxt.innerHTML += ` &#x2726; ahead by ${sec2string((-ghostTimeDiff).toFixed(1))}, ${ghostDistDiff.toFixed(0)}m`;
-      } else {
-        this.debugTxt.innerHTML += ` &#x2726; behind by ${sec2string(ghostTimeDiff.toFixed(1))}, ${(-ghostDistDiff).toFixed(0)}m`;
+      let g = this.ghost.state;
+      let diff = this.rider.compare(this.ghost);
+      this.ghostSpeed.innerHTML = `${(g.curSpeed*3.6).toFixed(2)}`;
+      this.ghostPower.innerHTML = `${g.curPower}`;
+      if (this.isRiding) {
+        if (diff.timeDifference < 0 || diff.distanceDifference < 0) {
+          this.ghostPosition.innerHTML = `ahead by ${sec2string((-diff.timeDifference).toFixed(1))}, ${(-diff.distanceDifference).toFixed(0)}m`;
+        }
+        else {
+          this.ghostPosition.innerHTML = `behind by ${sec2string(diff.timeDifference.toFixed(1))}, ${diff.distanceDifference.toFixed(0)}m`;
+        }
+      }
+      else {
+        if (this.ghost.simulatedPowerMode) {
+          this.ghostPosition.innerHTML = `ghost ${this.ghost.simPower}W`;
+        }
+        else {
+          this.ghostPosition.innerHTML = `recorded ghost ${this.ghost.track._file.name} date ${new Date(this.ghost.track._file.lastModified).toDateString()}`;
+        }
       }
     } // ghost
   } // _drawData
@@ -377,12 +395,11 @@ class Simulator {
     this.ctxGradient.fillRect(xMin,0, xMax-xMin,canvasHeight);
   } // _drawGradient
   
-
   _lonlat2map (point) {
-    let xy = {};
-    xy.x = 3 + Math.round((this.cvsMap.width-5) * (point.lon - this.MIN.lon) / (this.MAX.lon - this.MIN.lon));
-    xy.y = this.cvsMap.height - 3 - Math.round((this.cvsMap.height-5) * (point.lat - this.MIN.lat) / (this.MAX.lat - this.MIN.lat));
-    return xy;
+    let map = {};
+    map.x = 3 + Math.round((this.cvsMap.width-5) * (point.lon - this.MIN.lon) / (this.MAX.lon - this.MIN.lon));
+    map.y = this.cvsMap.height - 3 - Math.round((this.cvsMap.height-5) * (point.lat - this.MIN.lat) / (this.MAX.lat - this.MIN.lat));
+    return map;
   } // lonlat2map
 
   _eledist2profile (point) {
@@ -392,47 +409,51 @@ class Simulator {
     return profile;
   } // eledist2profile
 
-  _initTrackImage () {
-    // clear canvas
-    this.ctxMap.clearRect(0,0,this.cvsMap.width, this.cvsMap.height);
     // create the trackImage
+    _initTrackImage () {
+    this.ctxMap.clearRect(0,0,this.cvsMap.width, this.cvsMap.height); // clear canvas
     let lats = this.track.trackData.TrackPoints.map(x=>x.lat);
     let lons = this.track.trackData.TrackPoints.map(x=>x.lon);
     this.MIN = {lat : Math.min(...lats), lon : Math.min(...lons)};
     this.MAX = {lat : Math.max(...lats), lon : Math.max(...lons)};
     this.ctxMap.beginPath();
     for (let i=0; i < this.track.trackData.TrackPoints.length; i++) {
-      let xy = this._lonlat2map (this.track.trackData.TrackPoints[i]);
+      let map = this._lonlat2map (this.track.trackData.TrackPoints[i]);
       if (i==0) {
-        this.ctxMap.moveTo(xy.x, xy.y);
+        this.ctxMap.moveTo(map.x, map.y);
       }
       else {
-        this.ctxMap.lineTo(xy.x, xy.y);
+        this.ctxMap.lineTo(map.x, map.y);
       }
     }
     this.ctxMap.stroke();
     this.trackImage = this.ctxMap.getImageData(0, 0, this.cvsMap.width, this.cvsMap.height);
   } // _initTrackImage
 
-  // TODO 04/2023 : fill met gradient color, maar daarvoor moet je de gradient kennen op de specifieke x pos
+  // create the profileImage
+  // 11.2023 : replaced white line profile by a filled color profile
   _initProfileImage () {
-    // clear canvas
-    this.ctxProfile.clearRect(0,0,this.cvsProfile.width, this.cvsProfile.height);
-    // create the profileImage
-    let eles = this.track.trackData.TrackPoints.map(x=>x.elevation);
+    let t = this.track.trackData.TrackPoints;
+    
+    this.ctxProfile.clearRect(0,0,this.cvsProfile.width, this.cvsProfile.height); // clear canvas
+    let eles = t.map(x=>x.elevation);
     this.PROFILE = {min : Math.min(...eles), max : Math.max(...eles)};
-    this.PROFILE.totalDistance = this.track.trackData.TrackPoints[this.track.trackData.TrackPoints.length-1].totalDistance;
-    this.ctxProfile.beginPath();
-    for (let i=0; i < this.track.trackData.TrackPoints.length; i++) {
-      let prof = this._eledist2profile (this.track.trackData.TrackPoints[i]);
-      if (i==0) {
-        this.ctxProfile.moveTo(prof.x, prof.y);
-      }
-      else {
-        this.ctxProfile.lineTo(prof.x, prof.y);
-      }
+    this.PROFILE.totalDistance = t[t.length-1].totalDistance;
+    let prevprof = {x:0, y: this.cvsProfile.height};
+    for (let i=0; i < t.length - 1; i++) {
+      let prof = this._eledist2profile (t[i]);
+      let gradient = (t[i+1].elevation - t[i].elevation) / (t[i+1].totalDistance - t[i].totalDistance);
+      let rgbColor = this._gradient2Rgb(gradient);
+      this.ctxProfile.fillStyle = rgbColor;
+      this.ctxProfile.beginPath();
+      this.ctxProfile.moveTo(prevprof.x, this.cvsProfile.height);
+      this.ctxProfile.lineTo(prevprof.x, prevprof.y);
+      this.ctxProfile.lineTo(prof.x, prof.y);
+      this.ctxProfile.lineTo(prof.x, this.cvsProfile.height);
+      this.ctxProfile.closePath();
+      this.ctxProfile.fill();
+      prevprof = prof;
     }
-    this.ctxProfile.stroke();
     this.profileImage = this.ctxProfile.getImageData(0, 0, this.cvsProfile.width, this.cvsProfile.height);
   } // _initProfileImage
 
@@ -449,9 +470,11 @@ class Simulator {
     this.ctxProfile.putImageData(this.profileImage, 0, 0);
     let prof = this._eledist2profile(point);
     this.ctxProfile.beginPath();
-    this.ctxProfile.arc(prof.x,prof.y, 3, 0, 2*Math.PI);
-    this.ctxProfile.fillStyle = "yellow";
-    this.ctxProfile.fill();
+    this.ctxProfile.strokeStyle = "white";
+    this.ctxProfile.lineWidth = 2;
+    this.ctxProfile.moveTo(prof.x, prof.y-10);
+    this.ctxProfile.lineTo(prof.x, this.cvsProfile.height);
+    this.ctxProfile.stroke();
   } // _showPoint  
 
 } // Simulator
@@ -468,7 +491,6 @@ function sec2string (timeInSeconds) {
   ltime = (ltime - secs) / 60;
   let mins = ltime % 60;
   let hours = (ltime - mins) / 60;
-
   if (hours != 0) {
     retval += `${hours}h`;
   }
@@ -476,6 +498,5 @@ function sec2string (timeInSeconds) {
     retval += `${("00" + mins).slice(-2)}m`; // truukske van internet
   }
   retval += `${("00" + secs).slice(-2)}s`; // truukske van internet
-
   return retval;
 } // sec2string

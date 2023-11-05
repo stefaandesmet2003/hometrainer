@@ -131,6 +131,12 @@ class GPXFile {
       if (trkptCadence.length > 0) {
         trackPoint.cadence = Number(trkptCadence[0].textContent);
       }
+      else { // alt for cadence in gpx recording
+        trkptCadence = $(this).find("cadence");
+        if (trkptCadence.length > 0) {
+          trackPoint.cadence = Number(trkptCadence[0].textContent);
+        }
+      }
       
       TrackPoints.push(trackPoint);
       prevTrackPoint = trackPoint;
@@ -141,7 +147,6 @@ class GPXFile {
       videoPoint.totalDistance = totalDistance;
       
       var trkptTime =  $(this).find("time");
-      //point.time = Date(0);
       if (trkptTime.length > 0) {
         var msec = Date.parse(trkptTime[0].textContent);
         var d = new Date(msec);

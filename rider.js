@@ -99,6 +99,36 @@ class Rider {
     this.isRiding = false;
   } // pause
 
+  // compare this rider with rider2
+  // returns {timeDifference, distanceDifference}, positive when this rider is ahead
+  compare (rider2) {
+    let retval = {};
+      retval.distanceDifference = this.state.curDistance - rider2.state.curDistance;
+      if (this.rideLog.length == 0) { // not started
+        retval.timeDifference = 0; 
+        return retval;
+      }
+
+      // this rider ahead
+      if (this.state.curDistance > rider2.state.curDistance) {
+        // time difference (>0) is time when this rider passed the rider2.state.curDistance
+        // find in this rider's rideLog
+        let pos = 0;
+        while (this.rideLog[pos].curDistance <  rider2.state.curDistance)
+          pos++;
+        retval.timeDifference = this.state.totalTime - pos;
+      }
+      else { // rider2 is ahead
+        // time difference(<0) is time when rider2 passed this rider's curDistance
+        // find in rider2's rideLog
+        let pos = 0;
+        while (rider2.rideLog[pos].curDistance <  this.state.curDistance)
+          pos++;
+        retval.timeDifference = pos - this.state.totalTime;
+      }
+    return retval;
+  } // compare
+
   // function is called every second
   async secUpdate() {
     if (this.trainer && this.trainer.connected) {
@@ -156,7 +186,6 @@ class Rider {
       // update rideLog
       // TODO : als curSpeed 0 is, stoppen met loggen na x seconden
       let point =  {};
-      point.speed = this.state.curSpeed * 3.6; //m/s to km/h
       // Date() is een functie die een lange string returnt die de current date/time voorstelt
       // new Date() creëert een object die de current date/time voorstelt -> heeft de .getTime() method
       // zo is point.time een longint ipv een lange string
@@ -168,6 +197,7 @@ class Rider {
       point.lon = curInfo.lon;
       point.elevation = curInfo.elevation;
       point.bpm = this.state.curHeartRate;
+      point.curDistance = this.state.curDistance; // 11.2023, for the ghost tracking
       this.rideLog.push(point);
 
       if (this.trainer) {
@@ -197,6 +227,29 @@ class Rider {
     else {
       this.state.curSpeed = 0.0;
     }
+    // ETA : run the bike model until the end of the track using current power
+    if (this.state.curPower == 0 && this.state.curSpeed < 0.01) {
+      this.state.eta = 0;
+    }
+    else {
+      let etaSeconds = 0;
+      let etaSpeed = this.state.curSpeed;
+      let etaDistance = this.state.curDistance;
+      let etaPower = this.state.curPower;
+      let etabikeModelData = {};
+      let etaEof = false;
+      while (!etaEof && etaSeconds < 5400) { // run the bikemodel to the end of the track or max 1,5h
+        etaSeconds+= 1;
+        etaDistance += etaSpeed*1.0;
+        let etaCurInfo = this.track.getCurTrackPointData(etaDistance);
+        etaEof = etaCurInfo.eof;
+        etabikeModelData.gradient = etaCurInfo.gradient;
+        etabikeModelData.speed = etaSpeed;
+        etabikeModelData.power = etaPower;
+        etaSpeed = this._runBikeModel(etabikeModelData); // next 1 second we will be riding at curSpeed
+      }
+      this.state.eta = etaSeconds;
+    }
   } // secUpdate
 
   _init() {
@@ -215,6 +268,7 @@ class Rider {
       totalSpeed : 0.0, // km/h
       totalAscent : 0.0, // m
       totalDescent : 0.0, // m
+      eta : 0, // seconds
     };
     this.track = null;
     this.rideLog = [];

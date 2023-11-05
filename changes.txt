@@ -1,3 +1,11 @@
+04/11/2023:
+- implemented ghost as a rider extension
+- ghost time difference / distance difference
+- ghost data item on ui
+- removed .speed from ridelog
+- profile map with filled gradient colors
+- added rider ETA
+
 01/11/2023:
 - split js code in different files
 - gpxFile & rouvyFile : using class syntax now iso IIFE

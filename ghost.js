@@ -1,81 +1,64 @@
 'use strict';
 /*
-oude ghost : 
-een ghost is een track met TrackPoints[] en VideoPoints[]
-de track.TrackPoints[idx].totalDistance is de afgelegde weg op idx
-track.TrackPoints[idx].power : recording van de power
-de track.VideoPoints[idx].videoTime geeft dan het tijdstip dat de ghost op dit punt was
--> compareGhost
+TODO : the recorded file ghost can't handle jumps in curDistance from the UI
+because it takes its curDistance from the totalTime lookup in the gpx log 
+possibility : find position in log that corresponds with the new curDistance and adjust the ghost's totalTime 
 */
-
-class Ghost {
-  constructor (track, isSim=false, simPower = 100) {
-    this.isSim = isSim;
-    if (isSim) {
-      let settings = getStoredSettings();
-      this.rider = new Rider(settings.riderWeight);
-      this.rider.setTrack(track);
-      this.rider.setSimPower(simPower);
-    }
-    else {
-      this.track = track;
-    }
+class Ghost extends Rider {
+  constructor (simPower=100) {
+    let settings = getStoredSettings();
+    super(settings.riderWeight);
+    this.simulatedPowerMode = true;
+    super.setSimPower(simPower);
   } // constructor
 
-  // {curPos.totalDistance, curPos.elapsedTime}
-  // voor een track = eerdere opname
-  // TODO : retval.curSpeed : waarom moet dat in km/h en niet in m/s zoals in de rider?
-  compareGhost (curPos) {
-    let retval = {};
-    if (this.isSim) {
-      // retrieve data from the ghost rider
-      retval.curPower = this.rider.simPower;
-      retval.totalDistance = this.rider.state.curDistance;
-      retval.curSpeed = 3.6 * this.rider.state.curSpeed;
-      retval.elapsedTime = this.rider.state.totalTime;
-    }
-    else {
-      let t = this.track.trackData;
-
-      let ghostPos = 0;
-      
-      // when did the ghost pass at curPos.totalDistance?
-      while ((t.VideoPoints[ghostPos].totalDistance < curPos.totalDistance) && (ghostPos < (t.VideoPoints.length - 1)))
-        ghostPos ++;
-      retval.elapsedTime = t.VideoPoints[ghostPos].videoTime; // retval.elapsedTime - curPos.elapsedTime = voorsprong van de ghost (negatief seconden)
-      
-      // where did the ghost pass at curPos.elapsedTime?
-      ghostPos = 0;
-      while ((t.VideoPoints[ghostPos].videoTime < curPos.elapsedTime) && (ghostPos < (t.VideoPoints.length - 1)))
-        ghostPos ++;
-      retval.totalDistance = t.VideoPoints[ghostPos].totalDistance; // retval.totalDistance - curPos.totalDistance = voorsprong van de ghost (positief meters)
-
-      // ghost performance data
-      retval.power = 0;
-      if (t.TrackPoints[ghostPos].power != null) {
-        retval.curPower = t.TrackPoints[ghostPos].power;
-      }
-      retval.curSpeed = 0.0;
-      if (ghostPos > 0) {
-        retval.curSpeed = 3.6 * (t.TrackPoints[ghostPos].totalDistance - t.TrackPoints[ghostPos-1].totalDistance);
-        retval.curSpeed = retval.curSpeed / (t.VideoPoints[ghostPos].videoTime - t.VideoPoints[ghostPos-1].videoTime);
-      }
-    }
-    return retval;
-  } // compareGhost
-
   start() {
-    if (this.isSim) this.rider.start();
+    console.log(`ghost.start, simulatedPowerMode= ${this.simulatedPowerMode}`);
+    super.start();
   } // start
 
   pause() {
-    if (this.isSim) this.rider.pause();
+    console.log("ghost.pause");
+    super.pause();
   } // pause  
 
-  // voor een power ghost met een dead track
   secUpdate() {
-    if (this.isSim) this.rider.secUpdate();
+    if (this.simulatedPowerMode) super.secUpdate();
+    else { // a modified version of the rider, using the logged data
+      if (this.isRiding) {
+        this.state.totalTime++;
+        this.state.curDistance = this.track.trackData.TrackPoints[this.state.totalTime].totalDistance;
+        this.state.curPower = this.track.trackData.TrackPoints[this.state.totalTime].power;
+        // in order to show the current speed we have to run the bikemodel
+        let curInfo = this.track.getCurTrackPointData(this.state.curDistance);
+        let bikeModelData = {
+          gradient : curInfo.gradient,
+          speed : this.state.curSpeed,
+          power : this.state.curPower,
+        };
+        this.state.curSpeed = this._runBikeModel(bikeModelData); // next 1 second we will be riding at curSpeed        
+        // update rideLog, only need curDistance for now (to compare position with real rider)
+        let point =  {};
+        point.curDistance = this.state.curDistance; // 11.2023, for the ghost tracking
+        this.rideLog.push(point);
+        //console.log(`${this.state.totalTime}:v=${(this.state.curSpeed*3.6).toFixed(2)},d=${this.state.curDistance},p=${this.state.curPower}`)
+      }
+    }
   } // secUpdate
+
+  setTrack(track) {
+    super.setTrack(track);
+    if (track.trackData.TrackPoints[0].hasOwnProperty("power")) {
+      // loading a recorded effort, leaving simulated power mode
+      this.simulatedPowerMode = false;
+      log(`ghost.setTrack : using recorded ghost : ${track._file.name} date ${new Date(track._file.lastModified).toDateString()}`)
+    }
+    else {
+      // keep running in simulated power mode
+      console.log(`ghost.setTrack : = ${this.simPower}W simulated power ghost`);
+    }
+    
+  } // setTrack
 
 } // Ghost
 

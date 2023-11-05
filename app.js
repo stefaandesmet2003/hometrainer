@@ -256,10 +256,10 @@ async function trackFileOnChange(evt) {
   }
   // TODO : check if track file contains valid timing data for a ghost, that it's the same track as the main track etc
   else if (!simulator.ghost) {
-    ghost = new Ghost(track);
+    ghost = new Ghost();
     simulator.addGhost(ghost);
   }
-
+  ghost.setTrack(track);
 }  // trackFileOnChange
 
 function buttonRideOnClick() {
@@ -418,7 +418,6 @@ function buttonUploadOnClick() {
       stravaUploadPollTimer = setInterval(doStravaUploadPoll,2000,res.data.id);
     }
   }, (err) => console.log(err));
-    
 } // buttonUploadOnClick
 
 // trackData enkel nodig voor trackData.routeName en trackData.routeDescription
@@ -438,7 +437,6 @@ function ridelog2ShortXML(ridelog, trackData) {
   }
   doc += '</gpx>';
   return doc;
-
 } // ridelog2ShortXML
 
 function initRidesTable() {
@@ -454,8 +452,8 @@ function initRidesTable() {
   for (let i=0; i<aRideButtons.length;i++) {
     aRideButtons[i].onclick = startRideOnClick;
   }
-
 } // initRidesTable
+
 async function startRideOnClick(event) {
   let rideId = parseInt(event.target.id.substr(5)); // button id= ride_%i
   // quick sanity check
@@ -467,9 +465,8 @@ async function startRideOnClick(event) {
   await track.loadUrl(theRides[rideId].track_url);
   simulator.setTrack(track);
   // test 11.2023
-  ghost = new Ghost(track,true,240);
+  ghost = new Ghost(240); // 11.2023 a fixed watt ghost for now
   simulator.addGhost(ghost);
-
 
   if (theRides[rideId].isYouTube) {
     simulator.loadVideoFromYouTubeUrl(theRides[rideId].video_url);

@@ -62,104 +62,8 @@ class Track {
       //reject(Error("http error"));
       return(Error("http error")); // gokje..
     });
-  } // loadurl
+  } // loadUrl
 
-  // smoothes the trackData.TrackPoints elevations in place
-  _smooth(trackData) {
-    var TrackPoints = trackData.TrackPoints; // dit is byReference
-    var length = TrackPoints.length;
-    var idx = 0;
-    var startIdx = idx;
-    var finishedFlag = false;
-    while (!finishedFlag) {
-      // elke cyclus van deze loop vindt 1 segment met een vaste gradient
-      var startElevation = TrackPoints[startIdx].elevation;
-      var startDistance = TrackPoints[startIdx].totalDistance;
-      var localMaxElevation = startElevation;
-      var localMaxIdx = startIdx;
-      var localMinElevation = startElevation;
-      var localMinIdx = startIdx;
-      // zoek de volgende reference elevation : curElevation +- 10m, of local max/min, of niet verder dan 1km
-      while ( (idx < length) &&
-              (Math.abs(startElevation - TrackPoints[idx].elevation) < 10.0) && 
-              ((TrackPoints[idx].totalDistance - startDistance) < 1000.0) &&
-              ((localMaxElevation - TrackPoints[idx].elevation) < 10.0) &&
-              ((TrackPoints[idx].elevation - localMinElevation) < 10.0)) {
-        if (TrackPoints[idx].elevation > localMaxElevation) {
-          localMaxElevation = TrackPoints[idx].elevation;
-          localMaxIdx = idx;
-        }
-        if (TrackPoints[idx].elevation < localMinElevation) {
-          localMinElevation = TrackPoints[idx].elevation;
-          localMinIdx = idx;
-        }
-        idx++;
-      }
-      //nu weten we niet door welke voorwaarde de while is gestopt.. kan beter zeker?
-      if (idx == length) {
-        finishedFlag = true;
-        idx--;
-      }
-      if ((Math.abs(startElevation - TrackPoints[idx].elevation) >= 10.0) || (finishedFlag)) {
-        // 10m hoogteverschil tussen startIdx en idx -> smoothen
-        var gradient = (TrackPoints[idx].elevation - startElevation) / (TrackPoints[idx].totalDistance - startDistance);
-        var tmpIdx;
-        for (tmpIdx = startIdx; tmpIdx <= idx; tmpIdx++)
-          TrackPoints[tmpIdx].elevation = startElevation + gradient*(TrackPoints[tmpIdx].totalDistance - startDistance);
-        startIdx = idx;
-      }
-      else if ((TrackPoints[idx].totalDistance - startDistance) >= 1000.0) {
-        // voorlopig gebruiken we hier localMin en localMax niet
-        // eventueel TODO
-        // smooth tussen begin en einde == idem als hierboven
-        var gradient = (TrackPoints[idx].elevation - startElevation) / (TrackPoints[idx].totalDistance - startDistance);
-        var tmpIdx;
-        for (tmpIdx = startIdx; tmpIdx <= idx; tmpIdx++)
-          TrackPoints[tmpIdx].elevation = startElevation + gradient*(TrackPoints[tmpIdx].totalDistance - startDistance);
-        startIdx = idx;
-      }
-      else if ((localMaxElevation - TrackPoints[idx].elevation) >= 10.0) {
-        // smooth tussen startIdx en localMax, en zet de startIdx = localMaxIdx;
-        var gradient = (localMaxElevation - startElevation) / (TrackPoints[localMaxIdx].totalDistance - startDistance);
-        var tmpIdx;
-        for (tmpIdx = startIdx; tmpIdx <= localMaxIdx; tmpIdx++)
-          TrackPoints[tmpIdx].elevation = startElevation + gradient*(TrackPoints[tmpIdx].totalDistance - startDistance);
-        startIdx = localMaxIdx;
-      }
-      else if ((TrackPoints[idx].elevation - localMinElevation) >= 10.0) {
-        // smooth tussen startIdx en localMax, en zet de startIdx = localMaxIdx;
-        var gradient = (localMinElevation - startElevation) / (TrackPoints[localMinIdx].totalDistance - startDistance);
-        var tmpIdx;
-        for (tmpIdx = startIdx; tmpIdx <= localMaxIdx; tmpIdx++)
-          TrackPoints[tmpIdx].elevation = startElevation + gradient*(TrackPoints[tmpIdx].totalDistance - startDistance);
-        startIdx = localMinIdx;
-      }
-    } // while (!finishedFlag)
-    return trackData;
-  } // _smooth
-
-  /* adds info members to the Track object
-    .totalDistance
-    .numClimbs, .totalAscent, .totalDescent
-    .totalVideoTime
-    call after _findAllClimbs!
-  */
-  _initTrackInfo () {
-
-    this.totalDistance = this.trackData.TrackPoints[this.trackData.TrackPoints.length-1].totalDistance;
-
-    this.totalAscent = 0.0;
-    this.totalDescent = 0.0;
-    for (let i = 0; i < this.trackData.TrackPoints.length - 1; i++) {
-      let eleDiff = this.trackData.TrackPoints[i+1].elevation - this.trackData.TrackPoints[i].elevation;
-      if (eleDiff > 0.0) this.totalAscent += eleDiff;
-      else this.totalDescent -= eleDiff;
-    }
-    this.totalVideoTime = this.trackData.VideoPoints[this.trackData.VideoPoints.length-1].videoTime;
-    this.numClimbs = this.allClimbs.length;
-
-  } // _initTrackInfo
-  
   // curDistance in m
   /* returnInfo {
     .eof
@@ -172,20 +76,21 @@ class Track {
     let returnInfo = {};
     let curGradient = 0.0; // %
     let curElevation = 0.0;
+    let t = this.trackData.TrackPoints;
 
     // 1. position info - find position in gps track 'curTrackFilePos' based on curDistance
     // in deze implementatie zoek je telkens vanaf het begin van de trackdata
     let curTrackFilePos = 0; // temp, tot we weten hoe we via de UI in de video vooruit/achteruit gaan 
-    while (this.trackData.TrackPoints[curTrackFilePos].totalDistance < curDistance) {
+    while (t[curTrackFilePos].totalDistance < curDistance) {
         curTrackFilePos++;
-        if (curTrackFilePos == this.trackData.TrackPoints.length) break;
+        if (curTrackFilePos == t.length) break;
     }
     
     if (curTrackFilePos == this.trackData.TrackPoints.length) {
       returnInfo.eof = true; // end of file reached -> stop simulation
-      returnInfo.lat = this.trackData.TrackPoints[this.trackData.TrackPoints.length-1].lat;
-      returnInfo.lon = this.trackData.TrackPoints[this.trackData.TrackPoints.length-1].lon;
-      returnInfo.elevation = this.trackData.TrackPoints[this.trackData.TrackPoints.length-1].elevation;
+      returnInfo.lat = t[t.length-1].lat;
+      returnInfo.lon = t[t.length-1].lon;
+      returnInfo.elevation = t[t.length-1].elevation;
       let climbInfo = {};
       climbInfo.onClimb = false;
       climbInfo.curClimb = undefined;
@@ -197,22 +102,20 @@ class Track {
     // 2019.12.07 TODO!! dit werkt niet als er 2 identieke trackpoints na elkaar in
     // de xml zitten -> distanceMin == distanceMax --> div/0!
     let gpxPartFilePos = 0.0;
-    if (curTrackFilePos != this.trackData.TrackPoints.length) {
+    if (curTrackFilePos != t.length) {
       curTrackFilePos = Math.max(curTrackFilePos-1,0);
-      let distanceMin = this.trackData.TrackPoints[curTrackFilePos].totalDistance;
-      let distanceMax = this.trackData.TrackPoints[Math.min(curTrackFilePos+1,this.trackData.TrackPoints.length-1)].totalDistance;
+      let distanceMin = t[curTrackFilePos].totalDistance;
+      let distanceMax = t[Math.min(curTrackFilePos+1,t.length-1)].totalDistance;
       gpxPartFilePos = (curDistance - distanceMin) / (distanceMax - distanceMin);
     }
     
     // find average gradient tussen 2 opeenvolgende trackpoints; eventueel is vooraf al smoothing uitgevoerd, maar niet hier!
     // curTrackFilePos gaat hier hoogstens length-2 zijn, dus curTrackFilePos+1 wijst nog steeds in de TrackPoints array
-    curGradient = (this.trackData.TrackPoints[curTrackFilePos+1].elevation - this.trackData.TrackPoints[curTrackFilePos].elevation) / (this.trackData.TrackPoints[curTrackFilePos+1].totalDistance - this.trackData.TrackPoints[curTrackFilePos].totalDistance);
-    
-    curElevation = this.trackData.TrackPoints[curTrackFilePos].elevation + curGradient* (curDistance - this.trackData.TrackPoints[curTrackFilePos].totalDistance);
-    // ofwel curElevation = trackData.TrackPoints[curTrackFilePos].elevation + gpxPartFilePos* (trackData.TrackPoints[curTrackFilePos+1].elevation - trackData.TrackPoints[curTrackFilePos].elevation);
+    curGradient = (t[curTrackFilePos+1].elevation - t[curTrackFilePos].elevation) / (t[curTrackFilePos+1].totalDistance - t[curTrackFilePos].totalDistance);
+    curElevation = t[curTrackFilePos].elevation + curGradient* (curDistance - t[curTrackFilePos].totalDistance);
 
-    returnInfo.lat = this.trackData.TrackPoints[curTrackFilePos].lat + gpxPartFilePos* (this.trackData.TrackPoints[curTrackFilePos+1].lat - this.trackData.TrackPoints[curTrackFilePos].lat);
-    returnInfo.lon = this.trackData.TrackPoints[curTrackFilePos].lon + gpxPartFilePos* (this.trackData.TrackPoints[curTrackFilePos+1].lon - this.trackData.TrackPoints[curTrackFilePos].lon);
+    returnInfo.lat = t[curTrackFilePos].lat + gpxPartFilePos* (t[curTrackFilePos+1].lat - t[curTrackFilePos].lat);
+    returnInfo.lon = t[curTrackFilePos].lon + gpxPartFilePos* (t[curTrackFilePos+1].lon - t[curTrackFilePos].lon);
     returnInfo.elevation = curElevation;
     returnInfo.gradient = curGradient;
 
@@ -264,6 +167,7 @@ class Track {
   */
   // TODO : zorgen dat .videoSpeed niet 0 kan worden (op het eind van de VideoPoints)    
   getCurVideoPointData (curDistance) {
+    let v = this.trackData.VideoPoints;
     let returnInfo = {};
     // in deze implementatie zoek je telkens vanaf het begin van de trackdata
     let curVideoFilePos = 0;
@@ -271,42 +175,42 @@ class Track {
 
     // video info - find curVideoFilePos & curVideoSeconds based on curDistance
     // 1. curvideoSeconds
-    while (this.trackData.VideoPoints[curVideoFilePos].totalDistance < curDistance){
+    while (v[curVideoFilePos].totalDistance < curDistance){
       curVideoFilePos++;
-      if (curVideoFilePos == this.trackData.VideoPoints.length) break;
+      if (curVideoFilePos == v.length) break;
     }
       
     if (curVideoFilePos == 0) {
       // we zitten vóór het eerste VideoPoint
-      if (this.trackData.VideoPoints[0].totalDistance)
-        curVideoSeconds = this.trackData.VideoPoints[0].videoTime*(curDistance / this.trackData.VideoPoints[0].totalDistance);
+      if (v[0].totalDistance)
+        curVideoSeconds = v[0].videoTime*(curDistance / v[0].totalDistance);
     }
-    else if (curVideoFilePos == this.trackData.VideoPoints.length) {
+    else if (curVideoFilePos == v.length) {
       // we zijn voorbij het laatste video ref point
       // curVideoSeconds = interpolatie tussen [curVideoFilePos-1].videoTime en video.duration obv afgelegde afstand
       // -> 2019.12 dat doen we niet meer, want track heeft geen notie van de video zelf
       // we nemen de videoTime van het laatste VideoPoint
-      curVideoSeconds = this.trackData.VideoPoints[this.trackData.VideoPoints.length-1].videoTime;
+      curVideoSeconds = v[v.length-1].videoTime;
       //const trackTotalDistance = this.trackData.TrackPoints[this.trackData.TrackPoints.length-1].totalDistance;
-      //curVideoSeconds = this.trackData.VideoPoints[curVideoFilePos-1].videoTime + (curDistance - this.trackData.VideoPoints[curVideoFilePos-1].totalDistance)/(trackTotalDistance - this.trackData.VideoPoints[curVideoFilePos-1].totalDistance) * (this.video.duration - this.trackData.VideoPoints[curVideoFilePos-1].videoTime);
+      //curVideoSeconds = v[curVideoFilePos-1].videoTime + (curDistance - v[curVideoFilePos-1].totalDistance)/(trackTotalDistance - v[curVideoFilePos-1].totalDistance) * (this.video.duration - v[curVideoFilePos-1].videoTime);
     }
     else {
       // curVideoSeconds = interpolatie tussen [curVideoFilePos-1].videoTime en [curVideoFilePos].videoTime obv afgelegde afstand
-      curVideoSeconds = this.trackData.VideoPoints[curVideoFilePos-1].videoTime + (curDistance - this.trackData.VideoPoints[curVideoFilePos-1].totalDistance)/(this.trackData.VideoPoints[curVideoFilePos].totalDistance - this.trackData.VideoPoints[curVideoFilePos-1].totalDistance) * (this.trackData.VideoPoints[curVideoFilePos].videoTime - this.trackData.VideoPoints[curVideoFilePos-1].videoTime);
+      curVideoSeconds = v[curVideoFilePos-1].videoTime + (curDistance - v[curVideoFilePos-1].totalDistance)/(v[curVideoFilePos].totalDistance - v[curVideoFilePos-1].totalDistance) * (v[curVideoFilePos].videoTime - v[curVideoFilePos-1].videoTime);
     }
     
     // 2. curvideoSpeed : average speed over at least 10 seconds of video
     let videoSpeedRefPosMin, videoSpeedRefPosMax;
-    if (curVideoFilePos != this.trackData.VideoPoints.length) {
+    if (curVideoFilePos != v.length) {
       videoSpeedRefPosMin = Math.max(0,curVideoFilePos-1);
       videoSpeedRefPosMax = videoSpeedRefPosMin + 1;
-      while (this.trackData.VideoPoints[videoSpeedRefPosMax].videoTime < curVideoSeconds + 10.0) {
+      while (v[videoSpeedRefPosMax].videoTime < curVideoSeconds + 10.0) {
         videoSpeedRefPosMax++;
-        if (videoSpeedRefPosMax == this.trackData.VideoPoints.length) break;
+        if (videoSpeedRefPosMax == v.length) break;
       }
-      videoSpeedRefPosMax = Math.min(videoSpeedRefPosMax,this.trackData.VideoPoints.length-1);
-      curVideoSpeed = (this.trackData.VideoPoints[videoSpeedRefPosMax].totalDistance - this.trackData.VideoPoints[videoSpeedRefPosMin].totalDistance);
-      curVideoSpeed = curVideoSpeed / (this.trackData.VideoPoints[videoSpeedRefPosMax].videoTime - this.trackData.VideoPoints[videoSpeedRefPosMin].videoTime);
+      videoSpeedRefPosMax = Math.min(videoSpeedRefPosMax,v.length-1);
+      curVideoSpeed = (v[videoSpeedRefPosMax].totalDistance - v[videoSpeedRefPosMin].totalDistance);
+      curVideoSpeed = curVideoSpeed / (v[videoSpeedRefPosMax].videoTime - v[videoSpeedRefPosMin].videoTime);
     }
     else {
       // we zijn voorbij het laatste video ref point
@@ -320,145 +224,232 @@ class Track {
 
   } // getCurVideoPointData
 
+  getGradientsOverDistance (startDistance, endDistance) {
+    let t = this.trackData.TrackPoints;
+    let iPos = 0;
+    let gradients = [];
+    let corrEndDistance = Math.min(endDistance, t[t.length-1].totalDistance);
+
+    if (startDistance >= t[t.length-1].totalDistance) {
+      return [];
+    }
+
+    // find start iPos
+    while (t[iPos].totalDistance <= startDistance) {
+      iPos++;
+    }
+
+    let aGradient = {};
+    // van startDistance tot iPos + 1
+    aGradient.distance = t[iPos].totalDistance - startDistance;
+    if (aGradient.distance) {
+      aGradient.gradient = t[iPos].elevation - t[iPos-1].elevation;
+      aGradient.gradient /= (t[iPos].totalDistance - t[iPos-1].totalDistance);
+      gradients.push(aGradient);
+    }
+
+    while (iPos < t.length-1 && t[iPos].totalDistance < corrEndDistance) {
+      let aGradient = {};
+      aGradient.distance = Math.min (t[iPos+1].totalDistance, corrEndDistance) - t[iPos].totalDistance;
+      if (aGradient.distance) {
+        aGradient.gradient = t[iPos+1].elevation - t[iPos].elevation;
+        aGradient.gradient /= (t[iPos+1].totalDistance - t[iPos].totalDistance);
+        gradients.push(aGradient);
+      }
+      iPos++;
+    }
+    return gradients;
+  } // getGradientsOverDistance
+
   getAvgGradient (curDistance, distanceToAverage) {
     // todo : need helper curDistance 2 curPos!
 
   } // getAvgGradient
 
   // helper functions
-  // find all climbs in the trackData
-  // climb ends if elevation descreases by more than 10 VM
-  // TODO : cleanup duplicate code
-    _findAllClimbs () {
+  // smoothes the trackData.TrackPoints elevations in place
+  _smooth(trackData) {
+    let TrackPoints = trackData.TrackPoints; // dit is byReference
+    let length = TrackPoints.length;
+    let idx = 0;
+    let startIdx = idx;
+    let finishedFlag = false;
+    while (!finishedFlag) {
+      // elke cyclus van deze loop vindt 1 segment met een vaste gradient
+      let startElevation = TrackPoints[startIdx].elevation;
+      let startDistance = TrackPoints[startIdx].totalDistance;
+      let localMaxElevation = startElevation;
+      let localMaxIdx = startIdx;
+      let localMinElevation = startElevation;
+      let localMinIdx = startIdx;
+      // zoek de volgende reference elevation : curElevation +- 10m, of local max/min, of niet verder dan 1km
+      while ( (idx < length) &&
+              (Math.abs(startElevation - TrackPoints[idx].elevation) < 10.0) && 
+              ((TrackPoints[idx].totalDistance - startDistance) < 1000.0) &&
+              ((localMaxElevation - TrackPoints[idx].elevation) < 10.0) &&
+              ((TrackPoints[idx].elevation - localMinElevation) < 10.0)) {
+        if (TrackPoints[idx].elevation > localMaxElevation) {
+          localMaxElevation = TrackPoints[idx].elevation;
+          localMaxIdx = idx;
+        }
+        if (TrackPoints[idx].elevation < localMinElevation) {
+          localMinElevation = TrackPoints[idx].elevation;
+          localMinIdx = idx;
+        }
+        idx++;
+      }
+      //nu weten we niet door welke voorwaarde de while is gestopt.. kan beter zeker?
+      if (idx == length) {
+        finishedFlag = true;
+        idx--;
+      }
+      if ((Math.abs(startElevation - TrackPoints[idx].elevation) >= 10.0) || (finishedFlag)) {
+        // 10m hoogteverschil tussen startIdx en idx -> smoothen
+        let gradient = (TrackPoints[idx].elevation - startElevation) / (TrackPoints[idx].totalDistance - startDistance);
+        let tmpIdx;
+        for (tmpIdx = startIdx; tmpIdx <= idx; tmpIdx++)
+          TrackPoints[tmpIdx].elevation = startElevation + gradient*(TrackPoints[tmpIdx].totalDistance - startDistance);
+        startIdx = idx;
+      }
+      else if ((TrackPoints[idx].totalDistance - startDistance) >= 1000.0) {
+        // voorlopig gebruiken we hier localMin en localMax niet
+        // eventueel TODO
+        // smooth tussen begin en einde == idem als hierboven
+        let gradient = (TrackPoints[idx].elevation - startElevation) / (TrackPoints[idx].totalDistance - startDistance);
+        let tmpIdx;
+        for (tmpIdx = startIdx; tmpIdx <= idx; tmpIdx++)
+          TrackPoints[tmpIdx].elevation = startElevation + gradient*(TrackPoints[tmpIdx].totalDistance - startDistance);
+        startIdx = idx;
+      }
+      else if ((localMaxElevation - TrackPoints[idx].elevation) >= 10.0) {
+        // smooth tussen startIdx en localMax, en zet de startIdx = localMaxIdx;
+        let gradient = (localMaxElevation - startElevation) / (TrackPoints[localMaxIdx].totalDistance - startDistance);
+        let tmpIdx;
+        for (tmpIdx = startIdx; tmpIdx <= localMaxIdx; tmpIdx++)
+          TrackPoints[tmpIdx].elevation = startElevation + gradient*(TrackPoints[tmpIdx].totalDistance - startDistance);
+        startIdx = localMaxIdx;
+      }
+      else if ((TrackPoints[idx].elevation - localMinElevation) >= 10.0) {
+        // smooth tussen startIdx en localMax, en zet de startIdx = localMaxIdx;
+        let gradient = (localMinElevation - startElevation) / (TrackPoints[localMinIdx].totalDistance - startDistance);
+        let tmpIdx;
+        for (tmpIdx = startIdx; tmpIdx <= localMaxIdx; tmpIdx++)
+          TrackPoints[tmpIdx].elevation = startElevation + gradient*(TrackPoints[tmpIdx].totalDistance - startDistance);
+        startIdx = localMinIdx;
+      }
+    } // while (!finishedFlag)
+    return trackData;
+  } // _smooth
 
+  // find all climbs in the (smoothed) trackData
+  // climb ends if elevation decreases by more than 10 VM
+  // TODO : cleanup duplicate code
+  _findAllClimbs () {
+    let t = this.trackData.TrackPoints;
     const state_findingStartOfClimb = 0;
     const state_findingEndOfClimb = 1;
     const minClimbElevation = 10.0; // parameter for the algorithm
     let allClimbs = [];
-    const length = this.trackData.TrackPoints.length;
     
     let stateAlgo = state_findingStartOfClimb;
     let pos = 0;
     let climbStartPos = 0;
     let climbEndPos = 0;
-    let refElevation = this.trackData.TrackPoints[0].elevation;
+    let refElevation = t[0].elevation;
     
-    while (pos < (this.trackData.TrackPoints.length - 1)) {
+    while (pos < (t.length - 1)) {
       pos ++;
       if (stateAlgo == state_findingStartOfClimb) {
-        if (this.trackData.TrackPoints[pos].elevation > refElevation) {
+        if (t[pos].elevation > refElevation) {
           // we are climbing -> let's now find the end of this climb
           stateAlgo = state_findingEndOfClimb;
           climbStartPos = pos - 1;
         }
-        else if (this.trackData.TrackPoints[pos].elevation < refElevation) {
+        else if (t[pos].elevation < refElevation) {
           // we are not climbing, keep searching
         }
-        refElevation = this.trackData.TrackPoints[pos].elevation;
+        refElevation = t[pos].elevation;
       }
       else if (stateAlgo == state_findingEndOfClimb) {
-        if (this.trackData.TrackPoints[pos].elevation > refElevation) {
-          refElevation = this.trackData.TrackPoints[pos].elevation;
+        if (t[pos].elevation > refElevation) {
+          refElevation = t[pos].elevation;
           climbEndPos = pos;
         }
-        if (this.trackData.TrackPoints[pos].elevation < (refElevation - minClimbElevation)) {
+        if (t[pos].elevation < (refElevation - minClimbElevation)) {
           // back in a descent; did we find a climb?
-          if ( (this.trackData.TrackPoints[pos].elevation - this.trackData.TrackPoints[climbStartPos].elevation) > minClimbElevation ) {
+          if ( (t[pos].elevation - t[climbStartPos].elevation) > minClimbElevation ) {
             // we need at least 10m of elevation difference to qualify it as a 'climb'
-            var climb = {};
+            let climb = {};
             climb.index = allClimbs.length;
             climb.startPos = climbStartPos;
             climb.endPos = climbEndPos;
-            climb.minElevation = this.trackData.TrackPoints[climbStartPos].elevation;
-            climb.maxElevation = this.trackData.TrackPoints[climbEndPos].elevation;
-            climb.minDistance = this.trackData.TrackPoints[climbStartPos].totalDistance;
-            climb.maxDistance = this.trackData.TrackPoints[climbEndPos].totalDistance;
+            climb.minElevation = t[climbStartPos].elevation;
+            climb.maxElevation = t[climbEndPos].elevation;
+            climb.minDistance = t[climbStartPos].totalDistance;
+            climb.maxDistance = t[climbEndPos].totalDistance;
             allClimbs.push(climb);
           }
           else {
             // startPos is just a hump in the road; let's restart the search for a climb
           }
           stateAlgo = state_findingStartOfClimb; // start finding next climb
-          refElevation = this.trackData.TrackPoints[pos].elevation;
+          refElevation = t[pos].elevation;
         }
       }
     }
     // did we leave the loop in the middle of a climb -> let's count it in
-    if ((stateAlgo == state_findingEndOfClimb) && ((this.trackData.TrackPoints[climbEndPos].elevation - this.trackData.TrackPoints[climbStartPos].elevation) > minClimbElevation)) {
-      var climb = {};
+    if ((stateAlgo == state_findingEndOfClimb) && ((t[climbEndPos].elevation - t[climbStartPos].elevation) > minClimbElevation)) {
+      let climb = {};
       climb.index = allClimbs.length;
       climb.startPos = climbStartPos;
       climb.endPos = climbEndPos;
-      climb.minElevation = this.trackData.TrackPoints[climbStartPos].elevation;
-      climb.maxElevation = this.trackData.TrackPoints[climbEndPos].elevation;
-      climb.minDistance = this.trackData.TrackPoints[climbStartPos].totalDistance;
-      climb.maxDistance = this.trackData.TrackPoints[climbEndPos].totalDistance;
+      climb.minElevation = t[climbStartPos].elevation;
+      climb.maxElevation = t[climbEndPos].elevation;
+      climb.minDistance = t[climbStartPos].totalDistance;
+      climb.maxDistance = t[climbEndPos].totalDistance;
       allClimbs.push(climb);
     }
     
     return allClimbs;
   } // _findAllClimbs
 
+  /* adds info members to the Track object
+    .totalDistance
+    .numClimbs, .totalAscent, .totalDescent
+    .totalVideoTime
+    call after _findAllClimbs!
+  */
+  _initTrackInfo () {
+    this.totalDistance = this.trackData.TrackPoints[this.trackData.TrackPoints.length-1].totalDistance;
+    this.totalAscent = 0.0;
+    this.totalDescent = 0.0;
+    for (let i = 0; i < this.trackData.TrackPoints.length - 1; i++) {
+      let eleDiff = this.trackData.TrackPoints[i+1].elevation - this.trackData.TrackPoints[i].elevation;
+      if (eleDiff > 0.0) this.totalAscent += eleDiff;
+      else this.totalDescent -= eleDiff;
+    }
+    this.totalVideoTime = this.trackData.VideoPoints[this.trackData.VideoPoints.length-1].videoTime;
+    this.numClimbs = this.allClimbs.length;
+  } // _initTrackInfo
+
   /* return :
   [ {distance: , gradient : },...]
   */
-  getGradientsOverDistance (startDistance, endDistance) {
-    let iPos = 0;
-    let gradients = [];
-    const length = this.trackData.TrackPoints.length;
-    let corrEndDistance = Math.min(endDistance, this.trackData.TrackPoints[length-1].totalDistance);
-
-    if (startDistance >= this.trackData.TrackPoints[length-1].totalDistance) {
-      return [];
-    }
-
-    // find start iPos
-    while (this.trackData.TrackPoints[iPos].totalDistance <= startDistance) {
-      iPos++;
-    }
-
-    let aGradient = {};
-    // van startDistance tot iPos + 1
-    aGradient.distance = this.trackData.TrackPoints[iPos].totalDistance - startDistance;
-    if (aGradient.distance) {
-      aGradient.gradient = this.trackData.TrackPoints[iPos].elevation - this.trackData.TrackPoints[iPos-1].elevation;
-      aGradient.gradient /= (this.trackData.TrackPoints[iPos].totalDistance - this.trackData.TrackPoints[iPos-1].totalDistance);
-      gradients.push(aGradient);
-    }
-
-    while (iPos < length-1 && this.trackData.TrackPoints[iPos].totalDistance < corrEndDistance) {
-      let aGradient = {};
-      aGradient.distance = Math.min (this.trackData.TrackPoints[iPos+1].totalDistance, corrEndDistance) - this.trackData.TrackPoints[iPos].totalDistance;
-      if (aGradient.distance) {
-        aGradient.gradient = this.trackData.TrackPoints[iPos+1].elevation - this.trackData.TrackPoints[iPos].elevation;
-        aGradient.gradient /= (this.trackData.TrackPoints[iPos+1].totalDistance - this.trackData.TrackPoints[iPos].totalDistance);
-        gradients.push(aGradient);
-      }
-      iPos++;
-    }
-    return gradients;
-
-  } // getGradientsOverDistance
-
+  
   _calcGradientOverDistance (curPos, distance) {
-    var refElevation = curPos.elevation;
-    var refDistance;
-    var pos = 0;
-    const length = this.trackData.TrackPoints.length;
-    
-    // refDistance not beyond the end of the track
-    refDistance = Math.min (curPos.distance + distance, this.trackData.TrackPoints[length-1].totalDistance );
+    let t = this.trackData.TrackPoints;
+    let refElevation = curPos.elevation;
+    let refDistance = Math.min (curPos.distance + distance, t[t.length-1].totalDistance); // refDistance not beyond the end of the track
     
     // find elevation at refDistance + distance;
-    while ((this.trackData.TrackPoints[pos].totalDistance <= refDistance) && (pos < length-1)) {
+    let pos = 0;
+    while ((t[pos].totalDistance <= refDistance) && (pos < t.length-1)) {
        pos++;
     }
     // refDistance ligt nu ts pos-1 en pos
-    var frx = (refDistance - this.trackData.TrackPoints[pos-1].totalDistance) / (this.trackData.TrackPoints[pos].totalDistance - this.trackData.TrackPoints[pos-1].totalDistance);
-    var refElevation = this.trackData.TrackPoints[pos-1].elevation + frx*(this.trackData.TrackPoints[pos].elevation - this.trackData.TrackPoints[pos-1].elevation);
-    
+    let frx = (refDistance - t[pos-1].totalDistance) / (t[pos].totalDistance - t[pos-1].totalDistance);
+    refElevation = t[pos-1].elevation + frx*(t[pos].elevation - t[pos-1].elevation);
     return ((refElevation - curPos.elevation)/(refDistance - curPos.distance));
-    
   } // _calcGradientOverDistance  
 
 } // Track
