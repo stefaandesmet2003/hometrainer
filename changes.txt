@@ -1,3 +1,7 @@
+06/11/2023:
+- added some new rides
+- fixed an occasional div0
+
 04/11/2023:
 - implemented ghost as a rider extension
 - ghost time difference / distance difference

@@ -305,7 +305,9 @@ class Track {
       }
       if ((Math.abs(startElevation - TrackPoints[idx].elevation) >= 10.0) || (finishedFlag)) {
         // 10m hoogteverschil tussen startIdx en idx -> smoothen
-        let gradient = (TrackPoints[idx].elevation - startElevation) / (TrackPoints[idx].totalDistance - startDistance);
+        let gradient;
+        if (TrackPoints[idx].totalDistance - startDistance == 0) gradient = 0.0; // finished on the last trackpoint
+        else gradient = (TrackPoints[idx].elevation - startElevation) / (TrackPoints[idx].totalDistance - startDistance);
         let tmpIdx;
         for (tmpIdx = startIdx; tmpIdx <= idx; tmpIdx++)
           TrackPoints[tmpIdx].elevation = startElevation + gradient*(TrackPoints[tmpIdx].totalDistance - startDistance);

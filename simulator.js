@@ -404,7 +404,8 @@ class Simulator {
 
   _eledist2profile (point) {
     let profile = {};
-    profile.x = 3 +Math.round((this.cvsProfile.width - 5)* point.totalDistance / this.PROFILE.totalDistance);
+    if (point.totalDistance == 0) profile.x = 0;
+    else profile.x = 3 +Math.round((this.cvsProfile.width - 5)* point.totalDistance / this.PROFILE.totalDistance);
     profile.y = (this.cvsProfile.height - 3) - Math.round((this.cvsProfile.height - 5) * (point.elevation - this.PROFILE.min) / (this.PROFILE.max - this.PROFILE.min));
     return profile;
   } // eledist2profile
