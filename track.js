@@ -80,13 +80,13 @@ class Track {
 
     // 1. position info - find position in gps track 'curTrackFilePos' based on curDistance
     // in deze implementatie zoek je telkens vanaf het begin van de trackdata
-    let curTrackFilePos = 0; // temp, tot we weten hoe we via de UI in de video vooruit/achteruit gaan 
-    while (t[curTrackFilePos].totalDistance < curDistance) {
-        curTrackFilePos++;
-        if (curTrackFilePos == t.length) break;
+    let nextTrackFilePos = 0; // temp, tot we weten hoe we via de UI in de video vooruit/achteruit gaan 
+    while (t[nextTrackFilePos].totalDistance <= curDistance) {
+      nextTrackFilePos++;
+        if (nextTrackFilePos == t.length) break;
     }
     
-    if (curTrackFilePos == this.trackData.TrackPoints.length) {
+    if (nextTrackFilePos == t.length) {
       returnInfo.eof = true; // end of file reached -> stop simulation
       returnInfo.lat = t[t.length-1].lat;
       returnInfo.lon = t[t.length-1].lon;
@@ -99,23 +99,24 @@ class Track {
       returnInfo.avgGradient = 0.0;
       return returnInfo;
     }
-    // 2019.12.07 TODO!! dit werkt niet als er 2 identieke trackpoints na elkaar in
-    // de xml zitten -> distanceMin == distanceMax --> div/0!
+
     let gpxPartFilePos = 0.0;
-    if (curTrackFilePos != t.length) {
-      curTrackFilePos = Math.max(curTrackFilePos-1,0);
-      let distanceMin = t[curTrackFilePos].totalDistance;
-      let distanceMax = t[Math.min(curTrackFilePos+1,t.length-1)].totalDistance;
-      gpxPartFilePos = (curDistance - distanceMin) / (distanceMax - distanceMin);
-    }
+    let curTrackFilePos = Math.max(nextTrackFilePos-1,0);
+    while (t[curTrackFilePos].totalDistance >= t[nextTrackFilePos].totalDistance) { // fix for identical trackpoints
+      curTrackFilePos--;
+      if (curTrackFilePos == 0) break;
+  }
+    let distanceMin = t[curTrackFilePos].totalDistance;
+    let distanceMax = t[Math.min(curTrackFilePos+1,t.length-1)].totalDistance + 0.1; // avoid NaN
+    gpxPartFilePos = (curDistance - distanceMin) / (distanceMax - distanceMin);
     
     // find average gradient tussen 2 opeenvolgende trackpoints; eventueel is vooraf al smoothing uitgevoerd, maar niet hier!
     // curTrackFilePos gaat hier hoogstens length-2 zijn, dus curTrackFilePos+1 wijst nog steeds in de TrackPoints array
-    curGradient = (t[curTrackFilePos+1].elevation - t[curTrackFilePos].elevation) / (t[curTrackFilePos+1].totalDistance - t[curTrackFilePos].totalDistance);
+    curGradient = (t[nextTrackFilePos].elevation - t[curTrackFilePos].elevation) / (t[nextTrackFilePos].totalDistance - t[curTrackFilePos].totalDistance +0.1); //avoid NaN
     curElevation = t[curTrackFilePos].elevation + curGradient* (curDistance - t[curTrackFilePos].totalDistance);
 
-    returnInfo.lat = t[curTrackFilePos].lat + gpxPartFilePos* (t[curTrackFilePos+1].lat - t[curTrackFilePos].lat);
-    returnInfo.lon = t[curTrackFilePos].lon + gpxPartFilePos* (t[curTrackFilePos+1].lon - t[curTrackFilePos].lon);
+    returnInfo.lat = t[curTrackFilePos].lat + gpxPartFilePos* (t[nextTrackFilePos].lat - t[curTrackFilePos].lat);
+    returnInfo.lon = t[curTrackFilePos].lon + gpxPartFilePos* (t[nextTrackFilePos].lon - t[curTrackFilePos].lon);
     returnInfo.elevation = curElevation;
     returnInfo.gradient = curGradient;
 
@@ -448,9 +449,13 @@ class Track {
     while ((t[pos].totalDistance <= refDistance) && (pos < t.length-1)) {
        pos++;
     }
-    // refDistance ligt nu ts pos-1 en pos
-    let frx = (refDistance - t[pos-1].totalDistance) / (t[pos].totalDistance - t[pos-1].totalDistance);
-    refElevation = t[pos-1].elevation + frx*(t[pos].elevation - t[pos-1].elevation);
+    // refDistance ligt nu ts prevpos (pos-1 meestal, maar soms zijn er identieke trackpoints) en pos
+    let prevpos = pos-1;
+    while ((prevpos > 0) && (t[prevpos].totalDistance >= t[pos].totalDistance) && (t[prevpos].totalDistance >= curPos.distance)) {
+      prevpos--;
+   }    
+    let frx = (refDistance - t[prevpos].totalDistance) / (t[pos].totalDistance - t[prevpos].totalDistance + 0.1); // 0.1:avoid NaN
+    refElevation = t[pos-1].elevation + frx*(t[pos].elevation - t[prevpos].elevation);
     return ((refElevation - curPos.elevation)/(refDistance - curPos.distance));
   } // _calcGradientOverDistance  
 

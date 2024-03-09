@@ -7,14 +7,22 @@
   const FTMS_CMD_SET_TARGET_POWER = 5;
   const FTMS_CMD_START_RESUME = 7;
   const FTMS_CMD_STOP_PAUSE = 8;
+  const FTMS_CMD_SET_WHEEL_CIRCUMFERENCE = 18;
   const FTMS_CMD_PARAM_STOP = 1;
   const FTMS_CMD_PARAM_PAUSE = 2;
   // ftms response codes
-  const FTMS_RESP_ERROR = -1;
   const FTMS_RESP_SUCCESS = 1;
   const FTMS_RESP_INVALID_PARAMETER = 3;
   const FTMS_RESP_FAILED = 4;
   const FTMS_RESP_CONTROL_NOT_PERMITTED = 5;
+  // ftms status codes
+  const FTMS_STATUS_RESET = 1;
+  const FTMS_STATUS_STOPPED_PAUSED_BY_USER = 2;
+  const FTMS_STATUS_STARTED_BY_USER = 4;
+  const FTMS_STATUS_RESISTANCE_LEVEL_CHANGED = 7;
+  const FTMS_STATUS_POWER_LEVEL_CHANGED = 8;
+  const FTMS_STATUS_WHEEL_CIRCUMFERENCE_CHANGED = 19;
+  // others not used here
 
   class Direto {
     constructor() {
@@ -30,6 +38,7 @@
       this.pedalAnalysisData.peanut = [];
       this._eventListenerPedalAnalysisData = null;
       this.logDiretoCommands = false;
+      this.logMachineStatus = true;
     }
 
     // reimplementation with async/await
@@ -202,7 +211,7 @@
         return Promise.reject(`direto.init error : command failed (${respCode})`);
       }
       return respCode; // implicit Promise.resolve(respCode)
-  } // init
+    } // init
 
     async start() {
       if (!this.connected) {
@@ -325,6 +334,35 @@
       return respCode; // implicit Promise.resolve(respCode)
     } // setTargetPower
 
+    // 01.2021 for test
+    async setWheelCircumference (wheelCircumferenceInMm) {
+      if (!this.connected) {
+        return Promise.reject("direto.setWheelCircumference error : not connected");
+      }
+      let respCode = FTMS_RESP_SUCCESS;
+      wheelCircumferenceInMm = wheelCircumferenceInMm * 10; // in 0.1mm acc. FTMS spec
+      if (wheelCircumferenceInMm > 0xFFFF) wheelCircumferenceInMm = 0xFFFF; // limit to uint16
+
+      try {
+        // request control is not strictly necessary
+        // only if a cmd returns FTMS_RESP_CONTROL_NOT_PERMITTED
+        respCode = await this._ftmsCommand(FTMS_CMD_REQUEST_CONTROL);
+        if (respCode == FTMS_RESP_SUCCESS) {
+          respCode = await this._ftmsCommand(
+            FTMS_CMD_SET_WHEEL_CIRCUMFERENCE, 
+            [{"type":"uint16", "val":wheelCircumferenceInMm}]);
+        }
+      }
+      catch (error) {
+        return Promise.reject(`direto.setWheelCircumference error : command failed (${error})`);
+      }
+
+      if (respCode != FTMS_RESP_SUCCESS) {
+        return Promise.reject(`direto.setWheelCircumference error : command failed (${respCode})`);
+      }
+      return respCode; // implicit Promise.resolve(respCode)
+    } // setWheelCircumference
+
     async getFitnessMachineFeatureInfo () {
       if (!this.connected) {
         return Promise.reject("direto.getFitnessMachineFeatureInfo error : not connected");
@@ -391,12 +429,28 @@
       }
     } // getSupportedPowerRange
 
+    async getCyclingPowerFeature () {
+      if (!this.connected) {
+        return Promise.reject("direto.getCyclingPowerFeature error : not connected");
+      }
+      try {
+        let value = await this._characteristics.get('cycling_power_feature').readValue();
+        // In Chrome 50+, a DataView is returned instead of an ArrayBuffer.
+        value = value.buffer ? value : new DataView(value);
+        let features = value.getUint32(0, /*littleEndian=*/true);
+        log(`Cycling Power Features : ${features.toString(16)}`); // hex bits https://github.com/oesmith/gatt-xml/blob/master/org.bluetooth.characteristic.cycling_power_feature.xml
+      } 
+      catch(error)  {
+        log(`direto.getCyclingPowerFeature error : failed reading characteristic : ${error}`);
+        return Promise.reject(`direto.getCyclingPowerFeature error : failed reading characteristic : ${error}`);
+      }
+    } // getCyclingPowerFeature
+
     /*
       params [{"val":int,"type":str}]; type:"uint8","int16", others not yet needed
       returns : ftms response code or a rejected promise
       1 = SUCCESS, 3 = INVALID PARAMETER, 4 = FAILED, 5 = CONTROL NOT PERMITTED
     */
-    
     async _ftmsCommand (cmd, params=[]) {
       // 2020.10.28 - quickfix to solve reentrancy issue when called from a setInterval.
       if (this._replyPromiseResolveFunc)
@@ -415,6 +469,10 @@
         }
         else if (param.type == "int16") {
           view.setInt16(offset,param.val, /* little endian */ true);
+          newOffset += 2;
+        }
+        else if (param.type == "uint16") {
+          view.setUint16(offset,param.val, /* little endian */ true);
           newOffset += 2;
         }
         return newOffset;
@@ -542,10 +600,10 @@
         fitnessMachineStatus.removeEventListener('characteristicvaluechanged', this._onFitnessMachineStatus);
         fitnessMachineControlPoint.removeEventListener('characteristicvaluechanged', this._onFitnessMachineControlPoint);
         cyclingPowerMeasurement.removeEventListener('characteristicvaluechanged', this._onCyclingPowerMeasurement);
-        // ntf11.removeEventListener('characteristicvaluechanged', this._onNtf11Data.bind(this));
-        // ntf14.removeEventListener('characteristicvaluechanged', this._onNtf14Data.bind(this));
-        ntf15.removeEventListener('characteristicvaluechanged', this._onNtf15Data.bind(this));
-        // ntf17.removeEventListener('characteristicvaluechanged', this._onNtf17Data.bind(this));
+        // ntf11.removeEventListener('characteristicvaluechanged', this._onNtf11Data);
+        // ntf14.removeEventListener('characteristicvaluechanged', this._onNtf14Data);
+        ntf15.removeEventListener('characteristicvaluechanged', this._onNtf15Data);
+        // ntf17.removeEventListener('characteristicvaluechanged', this._onNtf17Data);
         
         log ("direto._stopNotifications : OK!");
       } 
@@ -603,7 +661,7 @@
       if (flags & 0x100) { // C9 expended energy - skip
         idx += 5;
       }
-      if (flags & 0x200) { // C10 hear rate - skip
+      if (flags & 0x200) { // C10 heart rate - skip
         idx += 1;
       }
       if (flags & 0x400) { // C11 metabolic equivalent - skip
@@ -622,10 +680,34 @@
       let evtData = event.target.value;
       // In Chrome 50+, a DataView is returned instead of an ArrayBuffer.
       evtData = evtData.buffer ? evtData : new DataView(evtData);
-      // parsing data : TODO
-      let view8 = new Uint8Array(evtData.buffer);
-      log (`_onFitnessMachineStatus : ${view8.toString()}`);
-
+      // response consists of 2 UINT8 : OpCode, Parameter (§4.17)
+      if (this.logMachineStatus) {
+        let opCode = evtData.getUint8(0);
+        if (opCode == FTMS_STATUS_RESET) log (`_onFitnessMachineStatus : machine reset!`);
+        else if (opCode == FTMS_STATUS_STOPPED_PAUSED_BY_USER) {
+          let param = evtData.getUint8(1);
+          if (param == FTMS_CMD_PARAM_STOP) log (`_onFitnessMachineStatus : machine stopped!`);
+          else if (param == FTMS_CMD_PARAM_PAUSE) log (`_onFitnessMachineStatus : machine paused!`);
+          else log (`_onFitnessMachineStatus : machine paused/stopped with parameter ${param}!`);
+        }
+        else if (opCode == FTMS_STATUS_STARTED_BY_USER) log (`_onFitnessMachineStatus : machine started/resumed!`);
+        else if (opCode == FTMS_STATUS_RESISTANCE_LEVEL_CHANGED) {
+          let param = evtData.getUint8(1);
+          log (`_onFitnessMachineStatus : resistance level changed to ${param}!`);
+        }
+        else if (opCode == FTMS_STATUS_POWER_LEVEL_CHANGED){
+          let param = evtData.getInt16(1,/* littleEndian */ true);
+          log (`_onFitnessMachineStatus : power level changed to ${param}!`);
+        } 
+        else if (opCode == FTMS_STATUS_WHEEL_CIRCUMFERENCE_CHANGED) {
+          let param = evtData.getUint16(1,/* littleEndian */ true);
+          log (`_onFitnessMachineStatus : wheel circumference changed to ${param}!`);
+        }
+        else {
+          let view8 = new Uint8Array(evtData.buffer);
+          log (`_onFitnessMachineStatus : unknown opcode & param : ${view8.toString()}`);
+        }
+      }
     } // _onFitnessMachineStatus    
 
     // a fixed listener for ftms replies instead of a listener per command
@@ -635,7 +717,13 @@
       evtData = evtData.buffer ? evtData : new DataView(evtData);
       // parsing data : TODO
       let view8 = new Uint8Array(evtData.buffer);
-      log (`_onFitnessMachineControlPoint (direto reply) : ${view8.toString()}`);
+      //response consists of 3 UINT8 : ResponseCode (0x80), Request OpCode, ResultCode (§4.16.2.22)
+      let resultCode = view8[2];
+      if (resultCode != FTMS_RESP_SUCCESS) 
+        log (`_onFitnessMachineControlPoint (direto ERROR reply) : ${view8.toString()}`); // always log error replies for now
+      else {
+        if (this.logDiretoCommands) log (`_onFitnessMachineControlPoint (direto OK reply) : ${view8.toString()}`);
+      }
 
       // handle the replyPromise here -> works better than installing an event listener on each ftms command
       if (this._replyPromiseResolveFunc) {
@@ -673,12 +761,18 @@
         idx += 2;
       }  
       if (flags & 0x10) { // wheel rev data
-        this.bikeData.cumulativeWheelRevolutions = evtData.getUint32(idx, /* littleEndian */ true);
+        // 01.2024 TMP
+        this.bikeData.lastCumulativeWheelRevolutions = this.bikeData.cumulativeWheelRevolutions;
+        // 01.2024 END TMP
+        //this.bikeData.cumulativeWheelRevolutions = evtData.getUint32(idx, /* littleEndian */ true);
         idx+= 4;
         this.bikeData.lastWheelEventTime = evtData.getUint16(idx, /* littleEndian */ true);
         idx += 2;
       }  
       if (flags & 0x20) { // crank rev data
+        // 01.2024 TMP
+        //this.bikeData.lastCumulativeCrankRevolutions = this.bikeData.cumulativeCrankRevolutions;
+        // 01.2024 END TMP
         this.bikeData.cumulativeCrankRevolutions = evtData.getUint16(idx, /* littleEndian */ true);
         idx+= 2;
         this.bikeData.lastCrankEventTime = evtData.getUint16(idx, /* littleEndian */ true);
@@ -686,6 +780,20 @@
       }
       if (this._eventListenerBikeData)
         this._eventListenerBikeData(this.bikeData);
+
+      // 01.2024 for test
+      /*
+      if (this.bikeData.lastCumulativeCrankRevolutions != this.bikeData.cumulativeCrankRevolutions)
+       {
+        // crank moved
+        let dcr = this.bikeData.cumulativeCrankRevolutions - this.bikeData.lastCumulativeCrankRevolutions;
+        let dwr = this.bikeData.cumulativeWheelRevolutions - this.bikeData.lastCumulativeWheelRevolutions;
+        let rpm = this.bikeData.instantaneousCadence;
+        //log (`WR/CR:${(dwr/dcr).toFixed(3)}, WR:${this.bikeData.cumulativeWheelRevolutions}-${this.bikeData.lastCumulativeWheelRevolutions}, CR:${this.bikeData.cumulativeCrankRevolutions}-${this.bikeData.lastCumulativeCrankRevolutions}`);
+        log (`WR/rpm*CR: ${(100.0*dwr/(dcr*rpm)).toFixed(3)}, v: ${this.bikeData.instantaneousSpeed}, rpm: ${this.bikeData.instantaneousCadence}`);
+      }
+      */
+
     } // _onCyclingPowerMeasurement
 
 

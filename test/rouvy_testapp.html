@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+  <title>rouvy AR Test App</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+
+</head>
+
+<body onload="onBodyLoad()">
+
+<h1>find AR file</h1>
+<div>
+  <button id="buttonFileChooser" title= "choose a track file from your PC" onclick="document.getElementById('rouvyFile').click()">AR file</button>
+  <!-- <input type="file" id="rouvyFile" style="display:none;" accept=".gpx,.xml" /> -->
+  <input type="file" id="rouvyFile" style="display:none;" accept="" />
+</div>
+
+<pre id="log"></pre>
+
+<script>
+  /* https:\/\/cdn.virtualtraining.eu\/routes\/56017\/ar\/56017 */
+
+  /* example from https://stackoverflow.com/questions/38632849/how-can-i-uncompress-a-gzip-file-in-javascript */
+  function rouvyfiletest(aFile) {
+    var reader = new FileReader();
+    reader.onload = function(event) {
+      var result = pako.inflate(event.target.result, { to: 'string' });
+      console.log(result);
+    }
+    reader.readAsArrayBuffer(aFile);    
+  }
+
+  function onBodyLoad() {
+    log("start");
+
+    document.getElementById("rouvyFile").onchange = fileOnChange;
+    document.querySelector('#log').addEventListener('dblclick', function () {
+      document.querySelector('#log').textContent = "";
+    });
+  } // onBodyLoad
+
+  async function fileOnChange(evt) {
+    let id = evt.target.id; // voor het geval we verschillende choose file buttons zouden gaan gebruiken die allemaal naar deze functie wijzen
+    let files = evt.target.files; // FileList object
+    
+    // voorlopig wordt maar enkel de 1ste file uit de FileList geparsed
+    
+    if (files.length == 0)
+      return;
+    // files[0] is the track file
+    let aFile = files[0];
+    let fileContents  = await loadFile(aFile);
+    let arjson = JSON.parse(fileContents);
+    log(`route duration  = ${arjson.Route.CameraPositions.length/30.0} seconds`)
+    // TODO - de AR file verwerken
+    //let fileContents  = await rouvyfiletest(aFile);
+  }  // fileOnChange
+
+  async function loadFile(aFile) {
+    return new Promise((resolve,reject) => {
+      /* dit werkt niet op een file zonder file extension
+      let fileExtension =  aFile.filename.split('.').pop();
+      log(`fileExtension=${fileExtension}`)
+      */
+      let reader = new FileReader();
+      reader.onload = function(event) {
+        var fileContents = pako.inflate(event.target.result, { to: 'string' });
+        //console.log(fileContents);
+        log(`file unzipped!`)
+        resolve(fileContents);
+      }
+      reader.readAsArrayBuffer(aFile);    
+    });
+
+  } // loadFile  
+
+  function log(line) {
+    document.querySelector('#log').textContent += line + '\n';
+
+  }
+  /*
+  function log(line) {
+    let n = Date.now() & 0xffff;
+    console.log (`${n} - ${line}`);
+  }
+ */
+</script>
+
+</body>
+</html>

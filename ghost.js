@@ -3,6 +3,7 @@
 TODO : the recorded file ghost can't handle jumps in curDistance from the UI
 because it takes its curDistance from the totalTime lookup in the gpx log 
 possibility : find position in log that corresponds with the new curDistance and adjust the ghost's totalTime 
+(maar dan klopt de behind/ahead niet meer? misschien wel wat compare gebeurt in de ridelogs ..)
 */
 class Ghost extends Rider {
   constructor (simPower=100) {
@@ -26,10 +27,24 @@ class Ghost extends Rider {
     if (this.simulatedPowerMode) super.secUpdate();
     else { // a modified version of the rider, using the logged data
       if (this.isRiding) {
-        this.state.totalTime++;
+        // 01.2024 : adjust totalTime from curDistance (die kan springen in UI)
+        if (this.state.curDistance != this.track.trackData.TrackPoints[this.state.totalTime].totalDistance){
+          // curDistance changed from UI -> adjust totalTime
+          let timeIdx = 0; // start looking from start, because UI can jump forward & backward
+          while (timeIdx < this.track.trackData.TrackPoints.length && this.track.trackData.TrackPoints[timeIdx].totalDistance <= this.state.curDistance) {
+            timeIdx++;
+          }
+          this.state.totalTime = timeIdx-1;
+        }
+        else {
+          this.state.totalTime++;
+        }
+        // end 01.2024
+        //01.2024 this.state.totalTime++;
         this.state.curDistance = this.track.trackData.TrackPoints[this.state.totalTime].totalDistance;
         this.state.curPower = this.track.trackData.TrackPoints[this.state.totalTime].power;
         // in order to show the current speed we have to run the bikemodel
+        // 01.2024 : ghost speed niet meer in UI, dus dit mag eventueel weg
         let curInfo = this.track.getCurTrackPointData(this.state.curDistance);
         let bikeModelData = {
           gradient : curInfo.gradient,
@@ -41,7 +56,6 @@ class Ghost extends Rider {
         let point =  {};
         point.curDistance = this.state.curDistance; // 11.2023, for the ghost tracking
         this.rideLog.push(point);
-        //console.log(`${this.state.totalTime}:v=${(this.state.curSpeed*3.6).toFixed(2)},d=${this.state.curDistance},p=${this.state.curPower}`)
       }
     }
   } // secUpdate

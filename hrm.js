@@ -82,7 +82,7 @@
       return;
     } // disconnect
 
-    // install callback for bikeData
+    // install callback for heartData
     addEventListener(type, callbackFunction) {
       // don't care about the type;
       type = 'heartdata';

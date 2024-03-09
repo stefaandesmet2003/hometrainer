@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
     <Track xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"> 
        <CheckValue>blabla</CheckValue>  
-       <Name>55278</Name>  
-       <Description>Puerto de San Lorenza</Description>  
+       <Name>55278_Puerto de San Lorenza</Name>  
+       <Description>None</Description>  
        <Date>2020-08-19 11:03:31</Date>  
        <Action>CYCLO_ROAD</Action> 
        <Difficulty>NOT_SPECIFIED</Difficulty> 

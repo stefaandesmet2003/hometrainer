@@ -111,6 +111,10 @@
   span.averagevalue {
     font-size: 0.75rem;
   }
+  span.climbdata {
+    text-align: left;
+    display: block; /* needed for the text-align to work on the span text, dunno why */
+  }
 
   button {
       /*width: 100px; */
@@ -195,8 +199,9 @@
 
   /* moet nog preciezer, want is enkel voor de table in de modal */
   table {
-    width: 80%;
+    width: 95%;
     margin-top : 10px;
+    font-size: 12px;
   }
   table, th, td {
   border: 1px solid black;
@@ -221,10 +226,6 @@
           <!-- style="display:none" -->
         <div class="data-left">
           <p class="dataitem">
-            <span id="data-spd" class="datavalue">0.00 </span> km/h<br>
-            <span id="data-avspd" class="averagevalue">0.00</span><span class="averagevalue"> km/h</span>
-          </p>
-          <p class="dataitem">
             <span id="data-pow" class="datavalue">-</span><span> W</span>
             <span id="data-balance">--/--</span><br>
             <span id="data-avpow" class="averagevalue">-</span><span class="averagevalue"> W</span>
@@ -234,8 +235,12 @@
             <span id="data-rpm" class="datavalue">-</span><span> rpm </span><br>
             <span id="data-avrpm" class="averagevalue">-</span><span class="averagevalue"> rpm</span>
           </p>
-          <p class="dataitem">
+          <p id="bubble-hrm" class="dataitem"> <!-- id for showing/hiding the bubble -->
             <span id="data-bpm" class="datavalue">-</span><span> &#x2665;</span><br>
+          </p>
+          <p class="dataitem">
+            <span id="data-spd" class="datavalue">0.00 </span> km/h<br>
+            <span id="data-avspd" class="averagevalue">0.00</span><span class="averagevalue"> km/h</span>
           </p>
         </div>
         <div class="data-right">
@@ -243,15 +248,17 @@
             <span id="data-time" class="datavalue">--</span><br>
             <span id="data-dist">--</span>
           </p>
+          <p id='bubble-allclimbs' class="dataitem">
+            <span id="data-allclimbs" class="climbdata"></span>
+          </p>
           <p class="dataitem">
             <span class="datavalue">&#x25b2; </span>
-            <span id="data-grad" class="datavalue">-</span> % 
+            <span id="data-grad" class="datavalue">-</span>
             <span id="data-avgrad" class="averagevalue"></span><br>
             <span id="data-ascent"></span> <br>
             <span id="data-climb"></span>
           </p>
           <p class="dataitem">
-            <span id="data-ghost-spd" class="datavalue">0.00 </span> km/h<br>
             <span id="data-ghost-pow"class="datavalue">0</span> W<br>
             <span id="data-ghost-pos">no ghost</span><br>
           </p>
@@ -304,9 +311,9 @@
       <div style="height:250px;overflow:auto;margin:5px">
         <table id="tableTheRides">
           <tr>
+            <th></th>
             <th>The Ride</th>
             <th>What to expect!</th>
-            <th></th>
           </tr>
         </table>
       </div>

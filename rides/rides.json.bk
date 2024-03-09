@@ -1,0 +1,272 @@
+[
+  {
+    "name": "Akaroa Harbour - Long Bay Road",
+    "description": " 17.99 km, 943 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/77109/video/77109_720.mp4",
+    "track_url": "http://localhost:3000/rides/77109.xml"
+  },
+  {
+    "name": "Tour de Manc Saddleworth Hills",
+    "description": " 17.99 km, 585 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/81488/video/81488_720.mp4",
+    "track_url": "http://localhost:3000/rides/81488.xml"
+  },
+  {
+    "name": "Akaroa to Wainui | Lands End Rd | New Zealand",
+    "description": " 32.04 km, 983 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/83294/video/83294_720.mp4",
+    "track_url": "http://localhost:3000/rides/83294.xml"
+  },
+  {
+    "name": "Mt Wellington Ascent",
+    "description": "Maquarie St to Mt Wellington pinnacle., 20.33 km, 1064 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/31652/video/31652_desktop.mp4",
+    "track_url": "https://cdn.virtualtraining.eu/routes/31652/track.xml"
+  },
+  {
+    "name": "Tour Down Under 2024 | Stage 3 - Cockatoo Valley",
+    "description": " 36.24 km, 766 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/95912/video/95912_720.mp4",
+    "track_url": "http://localhost:3000/rides/95912.xml"
+  },
+  {
+    "name": "Tour de France 2023 | Col de la Loze",
+    "description": " 34.58 km, 1903 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/95373/video/95373_720.mp4",
+    "track_url": "http://localhost:3000/rides/95373.xml"
+  },
+  {
+    "name": "La Vuelta 2021 | Stage 11 - Las Lagunillas",
+    "description": " 42.74 km, 970 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/77656/video/77656_720.mp4",
+    "track_url": "http://localhost:3000/rides/77656.xml"
+  },
+  {
+    "name": "KOM RACE SUMMIT FINISH",
+    "description": " 9.88 km, 731 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/79357/video/79357_720.mp4",
+    "track_url": "http://localhost:3000/rides/79357.xml"
+  },
+  {
+    "name": "Evergreen Residential, Colorado",
+    "description": " 19.92 km, 546 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/78811/video/78811_720.mp4",
+    "track_url": "http://localhost:3000/rides/78811.xml"
+  },
+  {
+    "name": "La Vuelta 2021 | Stage 18 - Alto Gamoniteiru",
+    "description": " 29.84 km, 1953 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/78396/video/78396_720.mp4",
+    "track_url": "http://localhost:3000/rides/78396.xml"
+  },
+  {
+    "name": "Okains Bay",
+    "description": " 30.01 km, 1155 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/78185/video/78185_720.mp4",
+    "track_url": "http://localhost:3000/rides/78185.xml"
+  },
+  {
+    "name": "Pikes Peak Highway | Colorado | USA",
+    "description": " 29.05 km, 1986 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/93829/video/93829_720.mp4",
+    "track_url": "http://localhost:3000/rides/93829.xml"
+  },
+  {
+    "name": "National Monument | Colorado | USA",
+    "description": " 25.25 km, 680 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/92431/video/92431_720.mp4",
+    "track_url": "http://localhost:3000/rides/92431.xml"
+  },
+  {
+    "name": "Bryce Canyon National Park | Utah | USA",
+    "description": " 27.00 km, 587 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/95266/video/95266_720.mp4",
+    "track_url": "http://localhost:3000/rides/95266.xml"
+  },
+  {
+    "name": "Cascade Springs in Fall | UTAH | USA",
+    "description": " 26.67 km, 1019 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/94237/video/94237_720.mp4",
+    "track_url": "http://localhost:3000/rides/94237.xml"
+  },
+  {
+    "name": "Arches National Park | UTAH | USA",
+    "description": "You'll enjoy this beautiful evening ride through Arches National Park as the sun sets over the towering sandstone. You'll ride past Park Avenue, Court House Towers and the 3 Gossips. You will also pass by the Iconic Balanced Rock. How it's still standing is anyone's guess. You'll then do a loop past Windows arches and Double Arch. Up next you'll pass by the turn off for the World Famous Delicate arch that gives Arches it's name, and righfully so. You won't see if from your bike however. It does require a short hike to view it. Onto Fiery Furnace. A labrynth of towering sandstone sculptures. Some have become lost in this maze and have needed rescue. You'll then pass by Sand Dune Arch and Skyline Arch. You'll finish your sunset ride at the base of Devil's Garden, where you'll find Tunnel Arch, Pine Tree Arch, Navajo Arch and the World's longest spanning arch, Landscape Arch. Also opening scenes of Indiana Jones and the last Crusade were fillmed in this area., 35.86 km, 840 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/89633/video/89633_720.mp4",
+    "track_url": "http://localhost:3000/rides/89633.xml"
+  },
+  {
+    "name": "Utah_Arches National Park_northbound",
+    "description": " 29.90 km, 755 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/74256/video/74256_720.mp4",
+    "track_url": "https://cdn.virtualtraining.eu/routes/74256/track.xml"
+  },
+  {
+    "name": "La Vuelta 2021 | Stage 12 - Cordoba",
+    "description": " 30.95 km, 997 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/77756/video/77756_720.mp4",
+    "track_url": "http://localhost:3000/rides/77756.xml"
+  },
+  {
+    "name": "PEDALITALY Gaiole - Tuscany - Italy",
+    "description": " 33.06 km, 700 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/84408/video/84408_720.mp4",
+    "track_url": "http://localhost:3000/rides/84408.xml"
+  },
+  {
+    "name": "Broken River | Narnia location | New Zealand",
+    "description": " 29.40 km, 556 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/86987/video/86987_720.mp4",
+    "track_url": "http://localhost:3000/rides/86987.xml"
+  },
+  {
+    "name": "Glenhope | Hurunui | New Zealand",
+    "description": " 33.60 km, 579 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/87659/video/87659_720.mp4",
+    "track_url": "http://localhost:3000/rides/87659.xml"
+  },
+  {
+    "name": "La Doyenne | Belgium",
+    "description": " 26.10 km, 833 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/87667/video/87667_720.mp4",
+    "track_url": "http://localhost:3000/rides/87667.xml"
+  },
+  {
+    "name": "Stage 5 (Novazzano) - Tour de Suisse 2022",
+    "description": " 27.92 km, 663 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/92452/video/92452_720.mp4",
+    "track_url": "http://localhost:3000/rides/92452.xml"
+  },
+  {
+    "name": "Akaroa Harbour - Long Bay Road",
+    "description": " 17.99 km, 943 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/77109/video/77109_720.mp4",
+    "track_url": "http://localhost:3000/rides/77109.xml"
+  },
+  {
+    "name": "Tour de Manc Saddleworth Hills",
+    "description": " 17.99 km, 585 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/81488/video/81488_720.mp4",
+    "track_url": "http://localhost:3000/rides/81488.xml"
+  },
+  {
+    "name": "Akaroa to Wainui | Lands End Rd | New Zealand",
+    "description": " 32.04 km, 983 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/83294/video/83294_720.mp4",
+    "track_url": "http://localhost:3000/rides/83294.xml"
+  },
+  {
+    "name": "Mt Wellington Ascent",
+    "description": "Maquarie St to Mt Wellington pinnacle., 20.33 km, 1064 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/31652/video/31652_desktop.mp4",
+    "track_url": "https://cdn.virtualtraining.eu/routes/31652/track.xml"
+  },
+  {
+    "name": "Tour Down Under 2024 | Stage 3 - Cockatoo Valley",
+    "description": " 36.24 km, 766 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/95912/video/95912_720.mp4",
+    "track_url": "http://localhost:3000/rides/95912.xml"
+  },
+  {
+    "name": "Tour de France 2023 | Col de la Loze",
+    "description": " 34.58 km, 1903 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/95373/video/95373_720.mp4",
+    "track_url": "http://localhost:3000/rides/95373.xml"
+  },
+  {
+    "name": "La Vuelta 2021 | Stage 11 - Las Lagunillas",
+    "description": " 42.74 km, 970 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/77656/video/77656_720.mp4",
+    "track_url": "http://localhost:3000/rides/77656.xml"
+  },
+  {
+    "name": "KOM RACE SUMMIT FINISH",
+    "description": " 9.88 km, 731 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/79357/video/79357_720.mp4",
+    "track_url": "http://localhost:3000/rides/79357.xml"
+  },
+  {
+    "name": "Evergreen Residential, Colorado",
+    "description": " 19.92 km, 546 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/78811/video/78811_720.mp4",
+    "track_url": "http://localhost:3000/rides/78811.xml"
+  },
+  {
+    "name": "La Vuelta 2021 | Stage 18 - Alto Gamoniteiru",
+    "description": " 29.84 km, 1953 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/78396/video/78396_720.mp4",
+    "track_url": "http://localhost:3000/rides/78396.xml"
+  },
+  {
+    "name": "Okains Bay",
+    "description": " 30.01 km, 1155 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/78185/video/78185_720.mp4",
+    "track_url": "http://localhost:3000/rides/78185.xml"
+  },
+  {
+    "name": "Pikes Peak Highway | Colorado | USA",
+    "description": " 29.05 km, 1986 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/93829/video/93829_720.mp4",
+    "track_url": "http://localhost:3000/rides/93829.xml"
+  },
+  {
+    "name": "National Monument | Colorado | USA",
+    "description": " 25.25 km, 680 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/92431/video/92431_720.mp4",
+    "track_url": "http://localhost:3000/rides/92431.xml"
+  },
+  {
+    "name": "Bryce Canyon National Park | Utah | USA",
+    "description": " 27.00 km, 587 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/95266/video/95266_720.mp4",
+    "track_url": "http://localhost:3000/rides/95266.xml"
+  },
+  {
+    "name": "Cascade Springs in Fall | UTAH | USA",
+    "description": " 26.67 km, 1019 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/94237/video/94237_720.mp4",
+    "track_url": "http://localhost:3000/rides/94237.xml"
+  },
+  {
+    "name": "Arches National Park | UTAH | USA",
+    "description": "You'll enjoy this beautiful evening ride through Arches National Park as the sun sets over the towering sandstone. You'll ride past Park Avenue, Court House Towers and the 3 Gossips. You will also pass by the Iconic Balanced Rock. How it's still standing is anyone's guess. You'll then do a loop past Windows arches and Double Arch. Up next you'll pass by the turn off for the World Famous Delicate arch that gives Arches it's name, and righfully so. You won't see if from your bike however. It does require a short hike to view it. Onto Fiery Furnace. A labrynth of towering sandstone sculptures. Some have become lost in this maze and have needed rescue. You'll then pass by Sand Dune Arch and Skyline Arch. You'll finish your sunset ride at the base of Devil's Garden, where you'll find Tunnel Arch, Pine Tree Arch, Navajo Arch and the World's longest spanning arch, Landscape Arch. Also opening scenes of Indiana Jones and the last Crusade were fillmed in this area., 35.86 km, 840 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/89633/video/89633_720.mp4",
+    "track_url": "http://localhost:3000/rides/89633.xml"
+  },
+  {
+    "name": "Utah_Arches National Park_northbound",
+    "description": " 29.90 km, 755 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/74256/video/74256_720.mp4",
+    "track_url": "https://cdn.virtualtraining.eu/routes/74256/track.xml"
+  },
+  {
+    "name": "NISEKO CLASSIC Stage2 - Climb to Niseko",
+    "description": " 34.30 km, 840 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/83572/video/83572_720.mp4",
+    "track_url": "http://localhost:3000/rides/83572.xml"
+  },
+  {
+    "name": "Khau Pha Pass | Vietnam",
+    "description": " 14.52 km, 742 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/84282/video/84282_720.mp4",
+    "track_url": "http://localhost:3000/rides/84282.xml"
+  },
+  {
+    "name": "La Vuelta 2022 | Stage 18 - Alto de Piornal",
+    "description": " 19.94 km, 823 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/93411/video/93411_720.mp4",
+    "track_url": "http://localhost:3000/rides/93411.xml"
+  },
+  {
+    "name": "Tidbinbilla to Corin Dam | Australia",
+    "description": " 24.94 km, 723 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/95921/video/95921_720.mp4",
+    "track_url": "http://localhost:3000/rides/95921.xml"
+  },
+  {
+    "name": "Panorama Route 2 | High Tatras | Slovakia",
+    "description": " 32.44 km, 735 vm",
+    "video_url": "https://mediacdn.rouvy.com/routes/95502/video/95502_720.mp4",
+    "track_url": "http://localhost:3000/rides/95502.xml"
+  }
+]

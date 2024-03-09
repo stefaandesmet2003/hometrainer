@@ -44,8 +44,10 @@ class Simulator {
     this.dataAvgGradient = document.getElementById("data-avgrad");
     this.dataClimbInfo = document.getElementById("data-climb");
     this.dataAscentInfo = document.getElementById("data-ascent");
+    this.bubbleAllClimbs = document.getElementById("bubble-allclimbs");
+    this.dataAllClimbs = document.getElementById("data-allclimbs");
+    this.bubbleHrm = document.getElementById("bubble-hrm");
     this.dataHeartRate = document.getElementById("data-bpm");
-    this.ghostSpeed = document.getElementById("data-ghost-spd");
     this.ghostPower = document.getElementById("data-ghost-pow");
     this.ghostPosition = document.getElementById("data-ghost-pos");
 
@@ -257,6 +259,43 @@ class Simulator {
 
   // draw data (currently text format)
   _drawData() {
+
+    function findRidelogRecord(curDistance) {
+      let rl = this.rider.rideLog;
+      for (let ridx=0;ridx<rl.length;ridx++) {
+        if (rl[ridx].curDistance >= curDistance) {
+          return ridx;
+        }
+      }
+      return (rl.length-1); // curDistance is beyond last ridelog item -> return last ridelog item
+    }
+
+    // text for the climb efforts bubble
+    function summarizeClimbEfforts() {
+      let retval = "";
+      // shortcut for when ride not started
+      if (this.rider.rideLog.length == 0) return retval;
+
+      const allClimbs = this.track.allClimbs;
+      if (allClimbs.length == 0) return retval;
+
+      const arrAvg = arr => arr.reduce((a,b) => a + b, 0) / arr.length; // array averaging function
+      for (let idx=0; idx<allClimbs.length; idx++) {
+        let climbStart = findRidelogRecord.bind(this)(allClimbs[idx].minDistance);
+        let climbEnd = findRidelogRecord.bind(this)(allClimbs[idx].maxDistance);
+        if (climbStart == -1)
+          return retval; // no ridelog yet
+        if (climbEnd != climbStart) { // there are ridelog data for this climb
+          let rideLog = this.rider.rideLog.slice(climbStart,climbEnd+1);
+          let avgPower = arrAvg(rideLog.map(x=>x.power));
+          let climbTime = (this.rider.rideLog[climbEnd].time - this.rider.rideLog[climbStart].time) / 1000; // ms -> s
+          if (retval != "") retval += '<br>';
+          retval += `${idx+1}/${allClimbs.length}: ${sec2string(climbTime.toFixed(0))} - ${avgPower.toFixed(0)}W`;
+        }
+      }
+      return retval;
+    } // summarizeClimbEfforts
+
     //show live rider data
     let r = this.rider.state; // abbreviation
     if (r) {
@@ -279,7 +318,15 @@ class Simulator {
       this.dataAvgCadence.innerHTML = `${avgCadence.toFixed(0)}`;
       this.dataPowerBalance.innerHTML = `${r.curPedalPowerBalance}/${(100-r.curPedalPowerBalance)}`;
       this.dataAvgPowerBalance.innerHTML = `${avgPedalPowerBalance.toFixed(0)}/${(100-avgPedalPowerBalance).toFixed(0)}`;
+
+      this.dataAllClimbs.innerHTML = summarizeClimbEfforts.bind(this)();
+      if (this.dataAllClimbs.innerHTML == "") this.bubbleAllClimbs.style.display = 'none'; // don't show the climbs bubble if no climb data logged
+      else this.bubbleAllClimbs.style.display = '';
+
       this.dataHeartRate.innerHTML = `${r.curHeartRate}`;
+      if (!this.rider.hrm.connected) this.bubbleHrm.style.display= 'none'; // don't show the hrm bubble if no hrm connected
+      else this.bubbleHrm.style.display= '';
+
       this.debugTxt.innerHTML = "";
     }
 
@@ -293,7 +340,7 @@ class Simulator {
       this.dataDistance.innerHTML += ` &rarr; ${(t.totalDistance - r.curDistance).toFixed(0)}m<br>`
       this.dataDistance.innerHTML += `ETA: ${sec2string(r.eta)}`
   
-      this.dataGradient.innerHTML = `${(curTrackPointData.gradient*100.0).toFixed(1)}`;
+      this.dataGradient.innerHTML = `${(curTrackPointData.gradient*100.0).toFixed(1)}%`;
       //this.debugTxt.innerHTML += " resistance = " + this.rider.trainer.bikeData.resistanceLevel;
       this.dataAscentInfo.innerHTML = `&uarr; ${r.totalAscent.toFixed(0)}m &rarr; ${(t.totalAscent - r.totalAscent).toFixed(0)}m`;
       this.dataAscentInfo.innerHTML += ` &darr; ${(t.totalDescent - r.totalDescent).toFixed(0)}m`;
@@ -327,7 +374,6 @@ class Simulator {
     if (this.ghost) {
       let g = this.ghost.state;
       let diff = this.rider.compare(this.ghost);
-      this.ghostSpeed.innerHTML = `${(g.curSpeed*3.6).toFixed(2)}`;
       this.ghostPower.innerHTML = `${g.curPower}`;
       if (this.isRiding) {
         if (diff.timeDifference < 0 || diff.distanceDifference < 0) {
@@ -480,11 +526,7 @@ class Simulator {
 
 } // Simulator
 
-function log(line) {
-  let n = Date.now() & 0xffff;
-  console.log (`${n} - ${line}`);
-} // log
-
+// 01.2024 : werkt alleen juist voor int timeInSeconds !!
 function sec2string (timeInSeconds) {
   let retval = "";
   let ltime = timeInSeconds;

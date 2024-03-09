@@ -1,0 +1,616 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <Track xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"> 
+       <CheckValue>blabla</CheckValue>  
+       <Name>76585_Cycling Unlimited - Glaubenberg</Name>  
+       <Description>None</Description>  
+       <Date>2021-06-24 05:27:30</Date>  
+       <Action>CYCLO_ROAD</Action> 
+       <Difficulty>NOT_SPECIFIED</Difficulty> 
+       <Video>xx.mp4</Video>  
+    <AltitudePoints>
+  <AltitudePoint Distance="0.00" Lat="46.991456" Lng="8.065918" Alt="733.39"/>
+  <AltitudePoint Distance="32.19" Lat="46.991322" Lng="8.066273" Alt="734.06"/>
+  <AltitudePoint Distance="48.28" Lat="46.991231" Lng="8.066516" Alt="734.58"/>
+  <AltitudePoint Distance="80.47" Lat="46.991104" Lng="8.066798" Alt="735.41"/>
+  <AltitudePoint Distance="96.56" Lat="46.991010" Lng="8.066962" Alt="736.02"/>
+  <AltitudePoint Distance="112.65" Lat="46.990892" Lng="8.067103" Alt="736.72"/>
+  <AltitudePoint Distance="128.75" Lat="46.990718" Lng="8.067269" Alt="737.38"/>
+  <AltitudePoint Distance="160.93" Lat="46.990544" Lng="8.067434" Alt="738.26"/>
+  <AltitudePoint Distance="193.12" Lat="46.990255" Lng="8.067526" Alt="739.80"/>
+  <AltitudePoint Distance="209.21" Lat="46.990110" Lng="8.067572" Alt="740.62"/>
+  <AltitudePoint Distance="225.31" Lat="46.989965" Lng="8.067617" Alt="741.35"/>
+  <AltitudePoint Distance="241.40" Lat="46.989856" Lng="8.067711" Alt="741.85"/>
+  <AltitudePoint Distance="257.49" Lat="46.989746" Lng="8.067805" Alt="742.12"/>
+  <AltitudePoint Distance="257.49" Lat="46.989636" Lng="8.067899" Alt="742.33"/>
+  <AltitudePoint Distance="273.59" Lat="46.989526" Lng="8.067993" Alt="742.67"/>
+  <AltitudePoint Distance="321.87" Lat="46.989260" Lng="8.068290" Alt="744.29"/>
+  <AltitudePoint Distance="354.05" Lat="46.988993" Lng="8.068588" Alt="746.46"/>
+  <AltitudePoint Distance="386.24" Lat="46.988761" Lng="8.068781" Alt="748.68"/>
+  <AltitudePoint Distance="418.43" Lat="46.988517" Lng="8.068950" Alt="751.43"/>
+  <AltitudePoint Distance="450.62" Lat="46.988243" Lng="8.069134" Alt="755.07"/>
+  <AltitudePoint Distance="498.90" Lat="46.987854" Lng="8.069318" Alt="760.45"/>
+  <AltitudePoint Distance="531.08" Lat="46.987572" Lng="8.069331" Alt="764.14"/>
+  <AltitudePoint Distance="547.18" Lat="46.987303" Lng="8.069308" Alt="767.53"/>
+  <AltitudePoint Distance="579.36" Lat="46.987079" Lng="8.069455" Alt="770.55"/>
+  <AltitudePoint Distance="595.46" Lat="46.986934" Lng="8.069529" Alt="772.47"/>
+  <AltitudePoint Distance="627.64" Lat="46.986723" Lng="8.069466" Alt="774.99"/>
+  <AltitudePoint Distance="643.74" Lat="46.986504" Lng="8.069276" Alt="777.89"/>
+  <AltitudePoint Distance="675.92" Lat="46.986351" Lng="8.069201" Alt="779.86"/>
+  <AltitudePoint Distance="692.02" Lat="46.986124" Lng="8.069228" Alt="782.80"/>
+  <AltitudePoint Distance="724.20" Lat="46.985817" Lng="8.069426" Alt="786.97"/>
+  <AltitudePoint Distance="756.39" Lat="46.985666" Lng="8.069437" Alt="788.97"/>
+  <AltitudePoint Distance="772.48" Lat="46.985506" Lng="8.069357" Alt="791.20"/>
+  <AltitudePoint Distance="788.58" Lat="46.985342" Lng="8.069139" Alt="793.94"/>
+  <AltitudePoint Distance="804.67" Lat="46.985220" Lng="8.068999" Alt="795.55"/>
+  <AltitudePoint Distance="820.76" Lat="46.985069" Lng="8.068965" Alt="797.32"/>
+  <AltitudePoint Distance="885.14" Lat="46.984632" Lng="8.069236" Alt="803.45"/>
+  <AltitudePoint Distance="901.23" Lat="46.984388" Lng="8.069360" Alt="806.90"/>
+  <AltitudePoint Distance="933.42" Lat="46.984218" Lng="8.069445" Alt="809.30"/>
+  <AltitudePoint Distance="949.51" Lat="46.984060" Lng="8.069494" Alt="811.55"/>
+  <AltitudePoint Distance="965.60" Lat="46.983878" Lng="8.069460" Alt="813.75"/>
+  <AltitudePoint Distance="981.70" Lat="46.983696" Lng="8.069427" Alt="815.95"/>
+  <AltitudePoint Distance="997.79" Lat="46.983570" Lng="8.069382" Alt="817.44"/>
+  <AltitudePoint Distance="1013.88" Lat="46.983443" Lng="8.069337" Alt="818.78"/>
+  <AltitudePoint Distance="1029.98" Lat="46.983355" Lng="8.069207" Alt="819.95"/>
+  <AltitudePoint Distance="1046.07" Lat="46.983267" Lng="8.069078" Alt="820.84"/>
+  <AltitudePoint Distance="1062.16" Lat="46.983149" Lng="8.068863" Alt="822.06"/>
+  <AltitudePoint Distance="1078.26" Lat="46.983005" Lng="8.068726" Alt="823.16"/>
+  <AltitudePoint Distance="1110.44" Lat="46.982749" Lng="8.068626" Alt="825.27"/>
+  <AltitudePoint Distance="1142.63" Lat="46.982454" Lng="8.068542" Alt="828.18"/>
+  <AltitudePoint Distance="1158.72" Lat="46.982279" Lng="8.068492" Alt="830.19"/>
+  <AltitudePoint Distance="1190.91" Lat="46.982031" Lng="8.068450" Alt="833.27"/>
+  <AltitudePoint Distance="1223.10" Lat="46.981787" Lng="8.068551" Alt="836.20"/>
+  <AltitudePoint Distance="1239.19" Lat="46.981643" Lng="8.068659" Alt="838.22"/>
+  <AltitudePoint Distance="1255.29" Lat="46.981518" Lng="8.068804" Alt="840.38"/>
+  <AltitudePoint Distance="1303.57" Lat="46.981232" Lng="8.069263" Alt="845.48"/>
+  <AltitudePoint Distance="1351.85" Lat="46.981017" Lng="8.069660" Alt="849.74"/>
+  <AltitudePoint Distance="1384.03" Lat="46.980852" Lng="8.070106" Alt="853.81"/>
+  <AltitudePoint Distance="1416.22" Lat="46.980717" Lng="8.070560" Alt="857.58"/>
+  <AltitudePoint Distance="1464.50" Lat="46.980660" Lng="8.071064" Alt="860.99"/>
+  <AltitudePoint Distance="1480.59" Lat="46.980670" Lng="8.071323" Alt="862.76"/>
+  <AltitudePoint Distance="1528.87" Lat="46.980775" Lng="8.071964" Alt="867.45"/>
+  <AltitudePoint Distance="1544.97" Lat="46.980780" Lng="8.072216" Alt="869.38"/>
+  <AltitudePoint Distance="1577.15" Lat="46.980745" Lng="8.072603" Alt="872.23"/>
+  <AltitudePoint Distance="1609.34" Lat="46.980697" Lng="8.073116" Alt="876.22"/>
+  <AltitudePoint Distance="1673.71" Lat="46.980634" Lng="8.073795" Alt="881.08"/>
+  <AltitudePoint Distance="1705.90" Lat="46.980597" Lng="8.074196" Alt="883.97"/>
+  <AltitudePoint Distance="1721.99" Lat="46.980528" Lng="8.074562" Alt="886.52"/>
+  <AltitudePoint Distance="1770.27" Lat="46.980397" Lng="8.075062" Alt="889.67"/>
+  <AltitudePoint Distance="1818.55" Lat="46.980264" Lng="8.075586" Alt="893.47"/>
+  <AltitudePoint Distance="1850.74" Lat="46.980124" Lng="8.076147" Alt="897.34"/>
+  <AltitudePoint Distance="1882.93" Lat="46.980037" Lng="8.076568" Alt="900.46"/>
+  <AltitudePoint Distance="1931.21" Lat="46.979910" Lng="8.077058" Alt="904.80"/>
+  <AltitudePoint Distance="1963.39" Lat="46.979833" Lng="8.077415" Alt="907.79"/>
+  <AltitudePoint Distance="1979.49" Lat="46.979780" Lng="8.077779" Alt="910.36"/>
+  <AltitudePoint Distance="2027.77" Lat="46.979710" Lng="8.078261" Alt="913.59"/>
+  <AltitudePoint Distance="2059.96" Lat="46.979604" Lng="8.078723" Alt="917.01"/>
+  <AltitudePoint Distance="2092.14" Lat="46.979475" Lng="8.079192" Alt="920.32"/>
+  <AltitudePoint Distance="2124.33" Lat="46.979347" Lng="8.079520" Alt="922.97"/>
+  <AltitudePoint Distance="2172.61" Lat="46.979092" Lng="8.080043" Alt="927.69"/>
+  <AltitudePoint Distance="2204.80" Lat="46.978922" Lng="8.080364" Alt="930.73"/>
+  <AltitudePoint Distance="2253.08" Lat="46.978693" Lng="8.080766" Alt="934.60"/>
+  <AltitudePoint Distance="2285.26" Lat="46.978468" Lng="8.081165" Alt="938.18"/>
+  <AltitudePoint Distance="2301.36" Lat="46.978368" Lng="8.081377" Alt="939.86"/>
+  <AltitudePoint Distance="2333.54" Lat="46.978267" Lng="8.081589" Alt="941.23"/>
+  <AltitudePoint Distance="2349.64" Lat="46.978164" Lng="8.081832" Alt="942.44"/>
+  <AltitudePoint Distance="2365.73" Lat="46.978061" Lng="8.082075" Alt="943.26"/>
+  <AltitudePoint Distance="2397.92" Lat="46.977958" Lng="8.082319" Alt="943.89"/>
+  <AltitudePoint Distance="2414.01" Lat="46.977855" Lng="8.082562" Alt="944.61"/>
+  <AltitudePoint Distance="2446.20" Lat="46.977715" Lng="8.082944" Alt="945.71"/>
+  <AltitudePoint Distance="2478.38" Lat="46.977575" Lng="8.083325" Alt="947.07"/>
+  <AltitudePoint Distance="2494.48" Lat="46.977483" Lng="8.083599" Alt="948.22"/>
+  <AltitudePoint Distance="2526.66" Lat="46.977390" Lng="8.083873" Alt="949.72"/>
+  <AltitudePoint Distance="2542.76" Lat="46.977309" Lng="8.084130" Alt="951.19"/>
+  <AltitudePoint Distance="2574.94" Lat="46.977227" Lng="8.084386" Alt="952.65"/>
+  <AltitudePoint Distance="2591.04" Lat="46.977113" Lng="8.084629" Alt="954.16"/>
+  <AltitudePoint Distance="2607.13" Lat="46.976998" Lng="8.084871" Alt="955.68"/>
+  <AltitudePoint Distance="2639.32" Lat="46.976884" Lng="8.085114" Alt="957.19"/>
+  <AltitudePoint Distance="2655.41" Lat="46.976769" Lng="8.085357" Alt="958.70"/>
+  <AltitudePoint Distance="2687.60" Lat="46.976631" Lng="8.085597" Alt="960.18"/>
+  <AltitudePoint Distance="2703.69" Lat="46.976493" Lng="8.085837" Alt="961.67"/>
+  <AltitudePoint Distance="2735.88" Lat="46.976277" Lng="8.086212" Alt="963.44"/>
+  <AltitudePoint Distance="2784.16" Lat="46.976137" Lng="8.086646" Alt="965.11"/>
+  <AltitudePoint Distance="2816.34" Lat="46.975998" Lng="8.087079" Alt="966.71"/>
+  <AltitudePoint Distance="2864.63" Lat="46.975840" Lng="8.087605" Alt="968.08"/>
+  <AltitudePoint Distance="2896.81" Lat="46.975683" Lng="8.088131" Alt="969.53"/>
+  <AltitudePoint Distance="2945.09" Lat="46.975482" Lng="8.088540" Alt="970.83"/>
+  <AltitudePoint Distance="2977.28" Lat="46.975281" Lng="8.088949" Alt="972.38"/>
+  <AltitudePoint Distance="3025.56" Lat="46.975107" Lng="8.089400" Alt="974.24"/>
+  <AltitudePoint Distance="3057.75" Lat="46.974932" Lng="8.089851" Alt="976.21"/>
+  <AltitudePoint Distance="3106.03" Lat="46.974735" Lng="8.090406" Alt="979.32"/>
+  <AltitudePoint Distance="3138.21" Lat="46.974598" Lng="8.090823" Alt="981.97"/>
+  <AltitudePoint Distance="3170.40" Lat="46.974511" Lng="8.091225" Alt="984.77"/>
+  <AltitudePoint Distance="3202.59" Lat="46.974430" Lng="8.091603" Alt="987.66"/>
+  <AltitudePoint Distance="3218.68" Lat="46.974407" Lng="8.091837" Alt="989.24"/>
+  <AltitudePoint Distance="3234.77" Lat="46.974385" Lng="8.092072" Alt="990.58"/>
+  <AltitudePoint Distance="3283.05" Lat="46.974351" Lng="8.092597" Alt="993.02"/>
+  <AltitudePoint Distance="3315.24" Lat="46.974317" Lng="8.093123" Alt="995.28"/>
+  <AltitudePoint Distance="3347.43" Lat="46.974287" Lng="8.093457" Alt="996.96"/>
+  <AltitudePoint Distance="3363.52" Lat="46.974257" Lng="8.093791" Alt="998.95"/>
+  <AltitudePoint Distance="3411.80" Lat="46.974207" Lng="8.094327" Alt="1002.85"/>
+  <AltitudePoint Distance="3460.08" Lat="46.974155" Lng="8.094890" Alt="1006.67"/>
+  <AltitudePoint Distance="3492.27" Lat="46.974102" Lng="8.095458" Alt="1010.54"/>
+  <AltitudePoint Distance="3540.55" Lat="46.974050" Lng="8.096017" Alt="1014.29"/>
+  <AltitudePoint Distance="3572.73" Lat="46.974010" Lng="8.096453" Alt="1017.01"/>
+  <AltitudePoint Distance="3621.01" Lat="46.973956" Lng="8.097040" Alt="1020.48"/>
+  <AltitudePoint Distance="3669.30" Lat="46.973900" Lng="8.097645" Alt="1024.25"/>
+  <AltitudePoint Distance="3717.58" Lat="46.973844" Lng="8.098246" Alt="1028.40"/>
+  <AltitudePoint Distance="3749.76" Lat="46.973804" Lng="8.098678" Alt="1031.91"/>
+  <AltitudePoint Distance="3781.95" Lat="46.973763" Lng="8.099118" Alt="1035.38"/>
+  <AltitudePoint Distance="3814.14" Lat="46.973719" Lng="8.099535" Alt="1038.74"/>
+  <AltitudePoint Distance="3846.32" Lat="46.973667" Lng="8.099967" Alt="1041.93"/>
+  <AltitudePoint Distance="3878.51" Lat="46.973600" Lng="8.100364" Alt="1044.68"/>
+  <AltitudePoint Distance="3910.70" Lat="46.973538" Lng="8.100705" Alt="1046.64"/>
+  <AltitudePoint Distance="3926.79" Lat="46.973476" Lng="8.101046" Alt="1048.54"/>
+  <AltitudePoint Distance="3958.98" Lat="46.973391" Lng="8.101508" Alt="1050.85"/>
+  <AltitudePoint Distance="4007.26" Lat="46.973305" Lng="8.101971" Alt="1052.86"/>
+  <AltitudePoint Distance="4055.54" Lat="46.973194" Lng="8.102651" Alt="1055.36"/>
+  <AltitudePoint Distance="4119.91" Lat="46.973056" Lng="8.103407" Alt="1057.35"/>
+  <AltitudePoint Distance="4168.19" Lat="46.972918" Lng="8.104163" Alt="1058.96"/>
+  <AltitudePoint Distance="4200.38" Lat="46.972795" Lng="8.104393" Alt="1059.54"/>
+  <AltitudePoint Distance="4216.47" Lat="46.972613" Lng="8.104527" Alt="1060.06"/>
+  <AltitudePoint Distance="4248.66" Lat="46.972418" Lng="8.104584" Alt="1060.98"/>
+  <AltitudePoint Distance="4264.75" Lat="46.972252" Lng="8.104504" Alt="1062.00"/>
+  <AltitudePoint Distance="4280.84" Lat="46.972087" Lng="8.104424" Alt="1063.00"/>
+  <AltitudePoint Distance="4296.94" Lat="46.971921" Lng="8.104345" Alt="1064.09"/>
+  <AltitudePoint Distance="4313.03" Lat="46.971756" Lng="8.104265" Alt="1065.14"/>
+  <AltitudePoint Distance="4345.22" Lat="46.971509" Lng="8.104101" Alt="1066.16"/>
+  <AltitudePoint Distance="4377.40" Lat="46.971262" Lng="8.103937" Alt="1066.73"/>
+  <AltitudePoint Distance="4409.59" Lat="46.971031" Lng="8.103928" Alt="1066.78"/>
+  <AltitudePoint Distance="4425.68" Lat="46.970790" Lng="8.104051" Alt="1066.43"/>
+  <AltitudePoint Distance="4457.87" Lat="46.970549" Lng="8.104174" Alt="1065.62"/>
+  <AltitudePoint Distance="4506.15" Lat="46.970219" Lng="8.104411" Alt="1064.46"/>
+  <AltitudePoint Distance="4538.34" Lat="46.969889" Lng="8.104647" Alt="1062.99"/>
+  <AltitudePoint Distance="4570.53" Lat="46.969612" Lng="8.104846" Alt="1061.88"/>
+  <AltitudePoint Distance="4618.81" Lat="46.969339" Lng="8.105018" Alt="1060.87"/>
+  <AltitudePoint Distance="4650.99" Lat="46.968937" Lng="8.104967" Alt="1059.29"/>
+  <AltitudePoint Distance="4683.18" Lat="46.968695" Lng="8.104844" Alt="1057.84"/>
+  <AltitudePoint Distance="4715.37" Lat="46.968502" Lng="8.104708" Alt="1056.40"/>
+  <AltitudePoint Distance="4731.46" Lat="46.968309" Lng="8.104572" Alt="1054.63"/>
+  <AltitudePoint Distance="4795.83" Lat="46.967802" Lng="8.104604" Alt="1049.70"/>
+  <AltitudePoint Distance="4811.93" Lat="46.967559" Lng="8.104781" Alt="1047.33"/>
+  <AltitudePoint Distance="4876.30" Lat="46.967115" Lng="8.105286" Alt="1043.51"/>
+  <AltitudePoint Distance="4924.58" Lat="46.966766" Lng="8.105714" Alt="1041.06"/>
+  <AltitudePoint Distance="4972.86" Lat="46.966550" Lng="8.106035" Alt="1039.50"/>
+  <AltitudePoint Distance="5005.05" Lat="46.966406" Lng="8.106427" Alt="1037.92"/>
+  <AltitudePoint Distance="5037.23" Lat="46.966262" Lng="8.106818" Alt="1036.37"/>
+  <AltitudePoint Distance="5085.51" Lat="46.966130" Lng="8.107488" Alt="1034.05"/>
+  <AltitudePoint Distance="5133.79" Lat="46.966049" Lng="8.108187" Alt="1031.59"/>
+  <AltitudePoint Distance="5214.26" Lat="46.966018" Lng="8.109156" Alt="1028.49"/>
+  <AltitudePoint Distance="5294.73" Lat="46.965986" Lng="8.110122" Alt="1025.10"/>
+  <AltitudePoint Distance="5326.92" Lat="46.965969" Lng="8.110556" Alt="1023.62"/>
+  <AltitudePoint Distance="5359.10" Lat="46.965877" Lng="8.111073" Alt="1022.17"/>
+  <AltitudePoint Distance="5407.38" Lat="46.965784" Lng="8.111591" Alt="1021.20"/>
+  <AltitudePoint Distance="5439.57" Lat="46.965692" Lng="8.112108" Alt="1020.18"/>
+  <AltitudePoint Distance="5487.85" Lat="46.965599" Lng="8.112626" Alt="1018.99"/>
+  <AltitudePoint Distance="5552.22" Lat="46.965403" Lng="8.113553" Alt="1017.53"/>
+  <AltitudePoint Distance="5632.69" Lat="46.965208" Lng="8.114481" Alt="1016.82"/>
+  <AltitudePoint Distance="5713.16" Lat="46.965012" Lng="8.115408" Alt="1016.07"/>
+  <AltitudePoint Distance="5777.53" Lat="46.964816" Lng="8.116336" Alt="1015.23"/>
+  <AltitudePoint Distance="5858.00" Lat="46.964544" Lng="8.117362" Alt="1014.06"/>
+  <AltitudePoint Distance="5890.18" Lat="46.964401" Lng="8.117746" Alt="1013.58"/>
+  <AltitudePoint Distance="5922.37" Lat="46.964220" Lng="8.118086" Alt="1013.07"/>
+  <AltitudePoint Distance="6035.02" Lat="46.963563" Lng="8.119086" Alt="1011.95"/>
+  <AltitudePoint Distance="6131.59" Lat="46.962906" Lng="8.120085" Alt="1011.39"/>
+  <AltitudePoint Distance="6228.15" Lat="46.962396" Lng="8.120916" Alt="1011.04"/>
+  <AltitudePoint Distance="6308.61" Lat="46.961886" Lng="8.121747" Alt="1010.81"/>
+  <AltitudePoint Distance="6372.99" Lat="46.961510" Lng="8.122446" Alt="1010.61"/>
+  <AltitudePoint Distance="6437.36" Lat="46.961134" Lng="8.123144" Alt="1010.38"/>
+  <AltitudePoint Distance="6533.92" Lat="46.960507" Lng="8.123983" Alt="1010.27"/>
+  <AltitudePoint Distance="6630.48" Lat="46.959881" Lng="8.124822" Alt="1010.13"/>
+  <AltitudePoint Distance="6694.85" Lat="46.959472" Lng="8.125343" Alt="1010.23"/>
+  <AltitudePoint Distance="6759.23" Lat="46.959064" Lng="8.125864" Alt="1010.20"/>
+  <AltitudePoint Distance="6791.41" Lat="46.958929" Lng="8.126235" Alt="1010.10"/>
+  <AltitudePoint Distance="6807.51" Lat="46.958813" Lng="8.126581" Alt="1009.95"/>
+  <AltitudePoint Distance="6855.79" Lat="46.958602" Lng="8.126910" Alt="1009.93"/>
+  <AltitudePoint Distance="6871.88" Lat="46.958451" Lng="8.126986" Alt="1009.90"/>
+  <AltitudePoint Distance="6887.98" Lat="46.958275" Lng="8.126986" Alt="1009.87"/>
+  <AltitudePoint Distance="6936.26" Lat="46.957893" Lng="8.126785" Alt="1009.71"/>
+  <AltitudePoint Distance="6984.54" Lat="46.957510" Lng="8.126584" Alt="1009.11"/>
+  <AltitudePoint Distance="7000.63" Lat="46.957280" Lng="8.126591" Alt="1008.93"/>
+  <AltitudePoint Distance="7065.00" Lat="46.956809" Lng="8.126825" Alt="1008.74"/>
+  <AltitudePoint Distance="7113.28" Lat="46.956338" Lng="8.127059" Alt="1008.22"/>
+  <AltitudePoint Distance="7145.47" Lat="46.956103" Lng="8.127132" Alt="1007.52"/>
+  <AltitudePoint Distance="7161.56" Lat="46.955858" Lng="8.127105" Alt="1006.58"/>
+  <AltitudePoint Distance="7225.94" Lat="46.955409" Lng="8.126949" Alt="1004.10"/>
+  <AltitudePoint Distance="7242.03" Lat="46.955180" Lng="8.126935" Alt="1003.09"/>
+  <AltitudePoint Distance="7290.31" Lat="46.954808" Lng="8.127040" Alt="1001.54"/>
+  <AltitudePoint Distance="7322.50" Lat="46.954545" Lng="8.127162" Alt="1001.00"/>
+  <AltitudePoint Distance="7354.68" Lat="46.954185" Lng="8.127265" Alt="1000.28"/>
+  <AltitudePoint Distance="7402.96" Lat="46.953837" Lng="8.127414" Alt="999.94"/>
+  <AltitudePoint Distance="7435.15" Lat="46.953490" Lng="8.127563" Alt="999.59"/>
+  <AltitudePoint Distance="7483.43" Lat="46.953143" Lng="8.127713" Alt="999.25"/>
+  <AltitudePoint Distance="7515.62" Lat="46.952795" Lng="8.127862" Alt="999.29"/>
+  <AltitudePoint Distance="7563.90" Lat="46.952450" Lng="8.127964" Alt="999.19"/>
+  <AltitudePoint Distance="7596.08" Lat="46.952105" Lng="8.128066" Alt="999.08"/>
+  <AltitudePoint Distance="7644.36" Lat="46.951759" Lng="8.128168" Alt="998.65"/>
+  <AltitudePoint Distance="7676.55" Lat="46.951414" Lng="8.128270" Alt="998.35"/>
+  <AltitudePoint Distance="7724.83" Lat="46.951054" Lng="8.128486" Alt="998.19"/>
+  <AltitudePoint Distance="7757.02" Lat="46.950693" Lng="8.128701" Alt="998.67"/>
+  <AltitudePoint Distance="7805.30" Lat="46.950332" Lng="8.128917" Alt="999.68"/>
+  <AltitudePoint Distance="7853.58" Lat="46.949972" Lng="8.129133" Alt="1001.09"/>
+  <AltitudePoint Distance="7917.95" Lat="46.949431" Lng="8.129511" Alt="1003.74"/>
+  <AltitudePoint Distance="7982.33" Lat="46.949027" Lng="8.130104" Alt="1006.40"/>
+  <AltitudePoint Distance="7998.42" Lat="46.948897" Lng="8.130324" Alt="1007.58"/>
+  <AltitudePoint Distance="8046.70" Lat="46.948579" Lng="8.130465" Alt="1009.92"/>
+  <AltitudePoint Distance="8078.89" Lat="46.948254" Lng="8.130256" Alt="1011.70"/>
+  <AltitudePoint Distance="8111.07" Lat="46.948061" Lng="8.130415" Alt="1013.20"/>
+  <AltitudePoint Distance="8127.17" Lat="46.947869" Lng="8.130685" Alt="1014.69"/>
+  <AltitudePoint Distance="8207.63" Lat="46.947283" Lng="8.131270" Alt="1018.37"/>
+  <AltitudePoint Distance="8320.29" Lat="46.946470" Lng="8.131838" Alt="1022.81"/>
+  <AltitudePoint Distance="8368.57" Lat="46.946058" Lng="8.132087" Alt="1025.31"/>
+  <AltitudePoint Distance="8416.85" Lat="46.945645" Lng="8.132336" Alt="1027.80"/>
+  <AltitudePoint Distance="8497.32" Lat="46.944899" Lng="8.132526" Alt="1032.04"/>
+  <AltitudePoint Distance="8577.78" Lat="46.944153" Lng="8.132715" Alt="1036.58"/>
+  <AltitudePoint Distance="8609.97" Lat="46.943933" Lng="8.132931" Alt="1038.20"/>
+  <AltitudePoint Distance="8642.16" Lat="46.943766" Lng="8.133185" Alt="1039.53"/>
+  <AltitudePoint Distance="8722.62" Lat="46.943443" Lng="8.134174" Alt="1044.51"/>
+  <AltitudePoint Distance="8754.81" Lat="46.943330" Lng="8.134702" Alt="1047.09"/>
+  <AltitudePoint Distance="8787.00" Lat="46.943123" Lng="8.134975" Alt="1049.21"/>
+  <AltitudePoint Distance="8819.18" Lat="46.942876" Lng="8.135033" Alt="1051.21"/>
+  <AltitudePoint Distance="8883.56" Lat="46.942306" Lng="8.134940" Alt="1055.68"/>
+  <AltitudePoint Distance="9012.30" Lat="46.941173" Lng="8.134810" Alt="1064.80"/>
+  <AltitudePoint Distance="9028.40" Lat="46.940980" Lng="8.134686" Alt="1066.41"/>
+  <AltitudePoint Distance="9060.58" Lat="46.940805" Lng="8.134516" Alt="1067.96"/>
+  <AltitudePoint Distance="9076.68" Lat="46.940643" Lng="8.134330" Alt="1069.46"/>
+  <AltitudePoint Distance="9124.96" Lat="46.940424" Lng="8.133983" Alt="1071.73"/>
+  <AltitudePoint Distance="9141.05" Lat="46.940246" Lng="8.133874" Alt="1073.03"/>
+  <AltitudePoint Distance="9157.14" Lat="46.940077" Lng="8.133884" Alt="1074.26"/>
+  <AltitudePoint Distance="9173.24" Lat="46.939967" Lng="8.134067" Alt="1075.54"/>
+  <AltitudePoint Distance="9189.33" Lat="46.939973" Lng="8.134332" Alt="1076.80"/>
+  <AltitudePoint Distance="9221.52" Lat="46.940030" Lng="8.134555" Alt="1077.72"/>
+  <AltitudePoint Distance="9253.70" Lat="46.940160" Lng="8.134930" Alt="1079.28"/>
+  <AltitudePoint Distance="9269.80" Lat="46.940031" Lng="8.135110" Alt="1080.57"/>
+  <AltitudePoint Distance="9285.89" Lat="46.939850" Lng="8.134975" Alt="1082.18"/>
+  <AltitudePoint Distance="9318.08" Lat="46.939696" Lng="8.134725" Alt="1084.36"/>
+  <AltitudePoint Distance="9334.17" Lat="46.939635" Lng="8.134550" Alt="1085.83"/>
+  <AltitudePoint Distance="9350.27" Lat="46.939525" Lng="8.134210" Alt="1088.88"/>
+  <AltitudePoint Distance="9382.45" Lat="46.939415" Lng="8.133870" Alt="1092.03"/>
+  <AltitudePoint Distance="9398.55" Lat="46.939343" Lng="8.133771" Alt="1093.13"/>
+  <AltitudePoint Distance="9414.64" Lat="46.939272" Lng="8.133672" Alt="1094.06"/>
+  <AltitudePoint Distance="9414.64" Lat="46.939181" Lng="8.133616" Alt="1094.80"/>
+  <AltitudePoint Distance="9430.73" Lat="46.939090" Lng="8.133560" Alt="1095.35"/>
+  <AltitudePoint Distance="9446.83" Lat="46.938917" Lng="8.133500" Alt="1095.98"/>
+  <AltitudePoint Distance="9462.92" Lat="46.938739" Lng="8.133439" Alt="1096.61"/>
+  <AltitudePoint Distance="9495.11" Lat="46.938561" Lng="8.133378" Alt="1097.20"/>
+  <AltitudePoint Distance="9511.20" Lat="46.938373" Lng="8.133320" Alt="1098.18"/>
+  <AltitudePoint Distance="9527.29" Lat="46.938185" Lng="8.133262" Alt="1099.54"/>
+  <AltitudePoint Distance="9575.57" Lat="46.937761" Lng="8.133083" Alt="1103.23"/>
+  <AltitudePoint Distance="9623.85" Lat="46.937436" Lng="8.132904" Alt="1105.90"/>
+  <AltitudePoint Distance="9656.04" Lat="46.937122" Lng="8.132747" Alt="1108.51"/>
+  <AltitudePoint Distance="9688.23" Lat="46.936830" Lng="8.132604" Alt="1110.97"/>
+  <AltitudePoint Distance="9704.32" Lat="46.936700" Lng="8.132491" Alt="1112.22"/>
+  <AltitudePoint Distance="9720.41" Lat="46.936573" Lng="8.132344" Alt="1113.44"/>
+  <AltitudePoint Distance="9768.69" Lat="46.936297" Lng="8.132054" Alt="1115.92"/>
+  <AltitudePoint Distance="9800.88" Lat="46.935994" Lng="8.131858" Alt="1118.08"/>
+  <AltitudePoint Distance="9833.07" Lat="46.935805" Lng="8.131604" Alt="1119.46"/>
+  <AltitudePoint Distance="9849.16" Lat="46.935695" Lng="8.131392" Alt="1120.08"/>
+  <AltitudePoint Distance="9897.44" Lat="46.935440" Lng="8.130945" Alt="1121.44"/>
+  <AltitudePoint Distance="9913.53" Lat="46.935266" Lng="8.130774" Alt="1122.15"/>
+  <AltitudePoint Distance="9994.00" Lat="46.934752" Lng="8.130010" Alt="1124.45"/>
+  <AltitudePoint Distance="10090.56" Lat="46.934241" Lng="8.129134" Alt="1126.32"/>
+  <AltitudePoint Distance="10171.03" Lat="46.933766" Lng="8.128359" Alt="1127.89"/>
+  <AltitudePoint Distance="10203.22" Lat="46.933542" Lng="8.128158" Alt="1128.62"/>
+  <AltitudePoint Distance="10235.40" Lat="46.933224" Lng="8.127850" Alt="1129.52"/>
+  <AltitudePoint Distance="10267.59" Lat="46.933111" Lng="8.127568" Alt="1130.11"/>
+  <AltitudePoint Distance="10348.06" Lat="46.932699" Lng="8.126595" Alt="1131.68"/>
+  <AltitudePoint Distance="10396.34" Lat="46.932474" Lng="8.126178" Alt="1132.66"/>
+  <AltitudePoint Distance="10412.43" Lat="46.932296" Lng="8.125967" Alt="1133.52"/>
+  <AltitudePoint Distance="10444.62" Lat="46.932077" Lng="8.125826" Alt="1134.63"/>
+  <AltitudePoint Distance="10508.99" Lat="46.931528" Lng="8.125483" Alt="1137.46"/>
+  <AltitudePoint Distance="10557.27" Lat="46.931238" Lng="8.125133" Alt="1139.24"/>
+  <AltitudePoint Distance="10573.36" Lat="46.931121" Lng="8.124868" Alt="1140.45"/>
+  <AltitudePoint Distance="10637.74" Lat="46.930861" Lng="8.124193" Alt="1143.65"/>
+  <AltitudePoint Distance="10702.11" Lat="46.930664" Lng="8.123415" Alt="1147.49"/>
+  <AltitudePoint Distance="10718.20" Lat="46.930464" Lng="8.123257" Alt="1149.35"/>
+  <AltitudePoint Distance="10750.39" Lat="46.930246" Lng="8.123265" Alt="1150.94"/>
+  <AltitudePoint Distance="10766.48" Lat="46.930015" Lng="8.123241" Alt="1152.67"/>
+  <AltitudePoint Distance="10782.58" Lat="46.929885" Lng="8.123169" Alt="1153.74"/>
+  <AltitudePoint Distance="10798.67" Lat="46.929782" Lng="8.123031" Alt="1154.69"/>
+  <AltitudePoint Distance="10814.76" Lat="46.929697" Lng="8.122860" Alt="1155.56"/>
+  <AltitudePoint Distance="10830.86" Lat="46.929628" Lng="8.122655" Alt="1156.55"/>
+  <AltitudePoint Distance="10846.95" Lat="46.929562" Lng="8.122447" Alt="1157.36"/>
+  <AltitudePoint Distance="10879.14" Lat="46.929490" Lng="8.122263" Alt="1158.40"/>
+  <AltitudePoint Distance="10895.23" Lat="46.929326" Lng="8.122133" Alt="1159.56"/>
+  <AltitudePoint Distance="10911.33" Lat="46.929182" Lng="8.122055" Alt="1160.37"/>
+  <AltitudePoint Distance="10927.42" Lat="46.929044" Lng="8.121934" Alt="1161.25"/>
+  <AltitudePoint Distance="10943.51" Lat="46.928943" Lng="8.121782" Alt="1162.27"/>
+  <AltitudePoint Distance="10959.61" Lat="46.928850" Lng="8.121630" Alt="1163.44"/>
+  <AltitudePoint Distance="10975.70" Lat="46.928728" Lng="8.121468" Alt="1165.10"/>
+  <AltitudePoint Distance="10991.79" Lat="46.928573" Lng="8.121614" Alt="1167.11"/>
+  <AltitudePoint Distance="11007.89" Lat="46.928579" Lng="8.121755" Alt="1168.37"/>
+  <AltitudePoint Distance="11023.98" Lat="46.928611" Lng="8.121911" Alt="1169.67"/>
+  <AltitudePoint Distance="11040.07" Lat="46.928664" Lng="8.122164" Alt="1171.54"/>
+  <AltitudePoint Distance="11056.17" Lat="46.928746" Lng="8.122374" Alt="1173.20"/>
+  <AltitudePoint Distance="11072.26" Lat="46.928815" Lng="8.122513" Alt="1174.43"/>
+  <AltitudePoint Distance="11088.35" Lat="46.928881" Lng="8.122654" Alt="1175.47"/>
+  <AltitudePoint Distance="11104.45" Lat="46.928926" Lng="8.122804" Alt="1176.56"/>
+  <AltitudePoint Distance="11104.45" Lat="46.928848" Lng="8.122808" Alt="1177.55"/>
+  <AltitudePoint Distance="11120.54" Lat="46.928771" Lng="8.122812" Alt="1178.64"/>
+  <AltitudePoint Distance="11120.54" Lat="46.928693" Lng="8.122817" Alt="1179.87"/>
+  <AltitudePoint Distance="11136.63" Lat="46.928615" Lng="8.122821" Alt="1181.15"/>
+  <AltitudePoint Distance="11152.73" Lat="46.928461" Lng="8.122538" Alt="1185.17"/>
+  <AltitudePoint Distance="11168.82" Lat="46.928365" Lng="8.122410" Alt="1187.23"/>
+  <AltitudePoint Distance="11184.91" Lat="46.928236" Lng="8.122329" Alt="1189.28"/>
+  <AltitudePoint Distance="11201.01" Lat="46.928095" Lng="8.122317" Alt="1191.14"/>
+  <AltitudePoint Distance="11233.19" Lat="46.927912" Lng="8.122361" Alt="1193.34"/>
+  <AltitudePoint Distance="11233.19" Lat="46.927797" Lng="8.122370" Alt="1194.75"/>
+  <AltitudePoint Distance="11265.38" Lat="46.927618" Lng="8.122352" Alt="1197.05"/>
+  <AltitudePoint Distance="11281.47" Lat="46.927434" Lng="8.122391" Alt="1199.51"/>
+  <AltitudePoint Distance="11297.57" Lat="46.927323" Lng="8.122494" Alt="1201.12"/>
+  <AltitudePoint Distance="11313.66" Lat="46.927184" Lng="8.122631" Alt="1203.27"/>
+  <AltitudePoint Distance="11329.75" Lat="46.927032" Lng="8.122694" Alt="1205.46"/>
+  <AltitudePoint Distance="11345.85" Lat="46.926912" Lng="8.122710" Alt="1206.92"/>
+  <AltitudePoint Distance="11361.94" Lat="46.926736" Lng="8.122661" Alt="1208.97"/>
+  <AltitudePoint Distance="11394.13" Lat="46.926544" Lng="8.122530" Alt="1211.14"/>
+  <AltitudePoint Distance="11410.22" Lat="46.926374" Lng="8.122501" Alt="1212.92"/>
+  <AltitudePoint Distance="11458.50" Lat="46.925978" Lng="8.122602" Alt="1217.08"/>
+  <AltitudePoint Distance="11474.59" Lat="46.925818" Lng="8.122584" Alt="1218.53"/>
+  <AltitudePoint Distance="11490.69" Lat="46.925642" Lng="8.122470" Alt="1220.54"/>
+  <AltitudePoint Distance="11522.87" Lat="46.925342" Lng="8.122182" Alt="1224.47"/>
+  <AltitudePoint Distance="11571.15" Lat="46.925051" Lng="8.121979" Alt="1228.65"/>
+  <AltitudePoint Distance="11571.15" Lat="46.924953" Lng="8.121942" Alt="1229.93"/>
+  <AltitudePoint Distance="11619.43" Lat="46.924620" Lng="8.121819" Alt="1233.88"/>
+  <AltitudePoint Distance="11651.62" Lat="46.924270" Lng="8.121698" Alt="1237.83"/>
+  <AltitudePoint Distance="11699.90" Lat="46.923852" Lng="8.121553" Alt="1242.22"/>
+  <AltitudePoint Distance="11748.18" Lat="46.923456" Lng="8.121442" Alt="1246.56"/>
+  <AltitudePoint Distance="11764.28" Lat="46.923296" Lng="8.121446" Alt="1248.53"/>
+  <AltitudePoint Distance="11812.56" Lat="46.922914" Lng="8.121475" Alt="1253.25"/>
+  <AltitudePoint Distance="11828.65" Lat="46.922773" Lng="8.121429" Alt="1255.09"/>
+  <AltitudePoint Distance="11860.84" Lat="46.922424" Lng="8.121252" Alt="1259.31"/>
+  <AltitudePoint Distance="11876.93" Lat="46.922287" Lng="8.121212" Alt="1261.00"/>
+  <AltitudePoint Distance="11893.02" Lat="46.922152" Lng="8.121206" Alt="1262.69"/>
+  <AltitudePoint Distance="11909.12" Lat="46.922018" Lng="8.121242" Alt="1264.67"/>
+  <AltitudePoint Distance="11925.21" Lat="46.921841" Lng="8.121325" Alt="1267.35"/>
+  <AltitudePoint Distance="11957.40" Lat="46.921665" Lng="8.121407" Alt="1270.03"/>
+  <AltitudePoint Distance="11957.40" Lat="46.921609" Lng="8.121422" Alt="1270.77"/>
+  <AltitudePoint Distance="11973.49" Lat="46.921552" Lng="8.121437" Alt="1271.39"/>
+  <AltitudePoint Distance="11973.49" Lat="46.921496" Lng="8.121452" Alt="1271.92"/>
+  <AltitudePoint Distance="11973.49" Lat="46.921440" Lng="8.121467" Alt="1272.37"/>
+  <AltitudePoint Distance="11989.58" Lat="46.921352" Lng="8.121453" Alt="1273.00"/>
+  <AltitudePoint Distance="12005.68" Lat="46.921265" Lng="8.121439" Alt="1273.50"/>
+  <AltitudePoint Distance="12021.77" Lat="46.921089" Lng="8.121412" Alt="1274.49"/>
+  <AltitudePoint Distance="12021.77" Lat="46.920991" Lng="8.121391" Alt="1275.03"/>
+  <AltitudePoint Distance="12037.86" Lat="46.920892" Lng="8.121370" Alt="1275.42"/>
+  <AltitudePoint Distance="12053.96" Lat="46.920789" Lng="8.121370" Alt="1275.70"/>
+  <AltitudePoint Distance="12070.05" Lat="46.920687" Lng="8.121370" Alt="1275.90"/>
+  <AltitudePoint Distance="12086.14" Lat="46.920458" Lng="8.121453" Alt="1276.06"/>
+  <AltitudePoint Distance="12118.33" Lat="46.920231" Lng="8.121525" Alt="1276.22"/>
+  <AltitudePoint Distance="12134.42" Lat="46.919993" Lng="8.121550" Alt="1276.37"/>
+  <AltitudePoint Distance="12166.61" Lat="46.919746" Lng="8.121474" Alt="1276.62"/>
+  <AltitudePoint Distance="12214.89" Lat="46.919447" Lng="8.121261" Alt="1276.80"/>
+  <AltitudePoint Distance="12247.08" Lat="46.919147" Lng="8.121047" Alt="1277.04"/>
+  <AltitudePoint Distance="12263.17" Lat="46.918982" Lng="8.120869" Alt="1277.22"/>
+  <AltitudePoint Distance="12295.36" Lat="46.918817" Lng="8.120691" Alt="1277.45"/>
+  <AltitudePoint Distance="12327.54" Lat="46.918504" Lng="8.120375" Alt="1278.32"/>
+  <AltitudePoint Distance="12391.92" Lat="46.918080" Lng="8.120012" Alt="1280.35"/>
+  <AltitudePoint Distance="12408.01" Lat="46.917903" Lng="8.119781" Alt="1281.73"/>
+  <AltitudePoint Distance="12440.20" Lat="46.917743" Lng="8.119536" Alt="1283.01"/>
+  <AltitudePoint Distance="12504.57" Lat="46.917357" Lng="8.118981" Alt="1285.98"/>
+  <AltitudePoint Distance="12633.32" Lat="46.916251" Lng="8.118242" Alt="1292.64"/>
+  <AltitudePoint Distance="12665.51" Lat="46.916004" Lng="8.118063" Alt="1293.87"/>
+  <AltitudePoint Distance="12697.69" Lat="46.915757" Lng="8.117883" Alt="1294.92"/>
+  <AltitudePoint Distance="12713.79" Lat="46.915630" Lng="8.117663" Alt="1295.58"/>
+  <AltitudePoint Distance="12745.97" Lat="46.915528" Lng="8.117341" Alt="1296.23"/>
+  <AltitudePoint Distance="12762.07" Lat="46.915497" Lng="8.117214" Alt="1296.44"/>
+  <AltitudePoint Distance="12762.07" Lat="46.915466" Lng="8.117088" Alt="1296.90"/>
+  <AltitudePoint Distance="12778.16" Lat="46.915386" Lng="8.116930" Alt="1297.75"/>
+  <AltitudePoint Distance="12794.25" Lat="46.915306" Lng="8.116771" Alt="1298.83"/>
+  <AltitudePoint Distance="12858.63" Lat="46.914902" Lng="8.116330" Alt="1303.66"/>
+  <AltitudePoint Distance="12890.81" Lat="46.914603" Lng="8.115946" Alt="1307.99"/>
+  <AltitudePoint Distance="12955.19" Lat="46.914207" Lng="8.115471" Alt="1313.36"/>
+  <AltitudePoint Distance="13003.47" Lat="46.913768" Lng="8.115045" Alt="1318.65"/>
+  <AltitudePoint Distance="13051.75" Lat="46.913462" Lng="8.114782" Alt="1322.61"/>
+  <AltitudePoint Distance="13083.93" Lat="46.913156" Lng="8.114515" Alt="1326.51"/>
+  <AltitudePoint Distance="13132.21" Lat="46.912835" Lng="8.114258" Alt="1330.46"/>
+  <AltitudePoint Distance="13164.40" Lat="46.912597" Lng="8.114068" Alt="1333.55"/>
+  <AltitudePoint Distance="13196.59" Lat="46.912359" Lng="8.113878" Alt="1336.60"/>
+  <AltitudePoint Distance="13228.77" Lat="46.912160" Lng="8.113605" Alt="1339.57"/>
+  <AltitudePoint Distance="13244.87" Lat="46.911968" Lng="8.113344" Alt="1342.44"/>
+  <AltitudePoint Distance="13309.24" Lat="46.911584" Lng="8.112866" Alt="1347.82"/>
+  <AltitudePoint Distance="13357.52" Lat="46.911307" Lng="8.112431" Alt="1351.86"/>
+  <AltitudePoint Distance="13373.62" Lat="46.911106" Lng="8.112268" Alt="1353.87"/>
+  <AltitudePoint Distance="13454.08" Lat="46.910505" Lng="8.112109" Alt="1358.71"/>
+  <AltitudePoint Distance="13502.36" Lat="46.910028" Lng="8.111898" Alt="1362.53"/>
+  <AltitudePoint Distance="13534.55" Lat="46.909790" Lng="8.111757" Alt="1364.33"/>
+  <AltitudePoint Distance="13566.74" Lat="46.909551" Lng="8.111617" Alt="1366.02"/>
+  <AltitudePoint Distance="13598.92" Lat="46.909280" Lng="8.111423" Alt="1367.70"/>
+  <AltitudePoint Distance="13631.11" Lat="46.909009" Lng="8.111230" Alt="1368.97"/>
+  <AltitudePoint Distance="13647.20" Lat="46.908822" Lng="8.111150" Alt="1369.48"/>
+  <AltitudePoint Distance="13663.30" Lat="46.908610" Lng="8.111157" Alt="1369.89"/>
+  <AltitudePoint Distance="13711.58" Lat="46.908275" Lng="8.111214" Alt="1370.59"/>
+  <AltitudePoint Distance="13775.95" Lat="46.907656" Lng="8.111242" Alt="1371.81"/>
+  <AltitudePoint Distance="13840.32" Lat="46.907037" Lng="8.111270" Alt="1373.28"/>
+  <AltitudePoint Distance="13920.79" Lat="46.906405" Lng="8.111213" Alt="1374.45"/>
+  <AltitudePoint Distance="13985.16" Lat="46.905772" Lng="8.111156" Alt="1375.57"/>
+  <AltitudePoint Distance="14065.63" Lat="46.905049" Lng="8.110833" Alt="1376.04"/>
+  <AltitudePoint Distance="14162.19" Lat="46.904325" Lng="8.110511" Alt="1376.87"/>
+  <AltitudePoint Distance="14194.38" Lat="46.903971" Lng="8.110295" Alt="1377.47"/>
+  <AltitudePoint Distance="14242.66" Lat="46.903618" Lng="8.110079" Alt="1378.37"/>
+  <AltitudePoint Distance="14290.94" Lat="46.903265" Lng="8.109863" Alt="1379.77"/>
+  <AltitudePoint Distance="14323.13" Lat="46.902911" Lng="8.109647" Alt="1381.47"/>
+  <AltitudePoint Distance="14355.31" Lat="46.902688" Lng="8.109552" Alt="1382.93"/>
+  <AltitudePoint Distance="14371.41" Lat="46.902466" Lng="8.109458" Alt="1384.53"/>
+  <AltitudePoint Distance="14403.59" Lat="46.902208" Lng="8.109527" Alt="1386.81"/>
+  <AltitudePoint Distance="14435.78" Lat="46.902002" Lng="8.109769" Alt="1389.29"/>
+  <AltitudePoint Distance="14467.97" Lat="46.901930" Lng="8.110106" Alt="1391.63"/>
+  <AltitudePoint Distance="14484.06" Lat="46.901957" Lng="8.110368" Alt="1393.48"/>
+  <AltitudePoint Distance="14548.43" Lat="46.902247" Lng="8.111152" Alt="1399.79"/>
+  <AltitudePoint Distance="14596.71" Lat="46.902356" Lng="8.111646" Alt="1403.26"/>
+  <AltitudePoint Distance="14628.90" Lat="46.902462" Lng="8.112125" Alt="1406.00"/>
+  <AltitudePoint Distance="14661.09" Lat="46.902567" Lng="8.112459" Alt="1407.81"/>
+  <AltitudePoint Distance="14677.18" Lat="46.902688" Lng="8.112615" Alt="1408.86"/>
+  <AltitudePoint Distance="14709.37" Lat="46.902920" Lng="8.112770" Alt="1410.47"/>
+  <AltitudePoint Distance="14725.46" Lat="46.903065" Lng="8.112885" Alt="1411.84"/>
+  <AltitudePoint Distance="14741.55" Lat="46.903076" Lng="8.113054" Alt="1413.01"/>
+  <AltitudePoint Distance="14741.55" Lat="46.902968" Lng="8.113115" Alt="1414.39"/>
+  <AltitudePoint Distance="14789.83" Lat="46.902624" Lng="8.112907" Alt="1418.92"/>
+  <AltitudePoint Distance="14838.11" Lat="46.902288" Lng="8.112694" Alt="1423.27"/>
+  <AltitudePoint Distance="14870.30" Lat="46.902002" Lng="8.112572" Alt="1426.52"/>
+  <AltitudePoint Distance="14902.49" Lat="46.901706" Lng="8.112464" Alt="1430.04"/>
+  <AltitudePoint Distance="14934.68" Lat="46.901422" Lng="8.112395" Alt="1433.54"/>
+  <AltitudePoint Distance="14966.86" Lat="46.901118" Lng="8.112278" Alt="1437.42"/>
+  <AltitudePoint Distance="14982.96" Lat="46.900901" Lng="8.112183" Alt="1440.23"/>
+  <AltitudePoint Distance="15031.24" Lat="46.900592" Lng="8.112112" Alt="1443.97"/>
+  <AltitudePoint Distance="15063.42" Lat="46.900280" Lng="8.112040" Alt="1447.55"/>
+  <AltitudePoint Distance="15095.61" Lat="46.899965" Lng="8.111968" Alt="1451.05"/>
+  <AltitudePoint Distance="15143.89" Lat="46.899578" Lng="8.111880" Alt="1455.01"/>
+  <AltitudePoint Distance="15176.08" Lat="46.899262" Lng="8.111827" Alt="1458.28"/>
+  <AltitudePoint Distance="15208.26" Lat="46.899016" Lng="8.111808" Alt="1461.05"/>
+  <AltitudePoint Distance="15240.45" Lat="46.898678" Lng="8.111782" Alt="1464.44"/>
+  <AltitudePoint Distance="15304.82" Lat="46.898149" Lng="8.111713" Alt="1469.79"/>
+  <AltitudePoint Distance="15369.20" Lat="46.897601" Lng="8.111386" Alt="1476.20"/>
+  <AltitudePoint Distance="15385.29" Lat="46.897364" Lng="8.111241" Alt="1478.87"/>
+  <AltitudePoint Distance="15417.48" Lat="46.897135" Lng="8.111144" Alt="1481.55"/>
+  <AltitudePoint Distance="15433.57" Lat="46.896982" Lng="8.111116" Alt="1483.35"/>
+  <AltitudePoint Distance="15449.66" Lat="46.896823" Lng="8.111119" Alt="1485.16"/>
+  <AltitudePoint Distance="15465.76" Lat="46.896666" Lng="8.111129" Alt="1487.03"/>
+  <AltitudePoint Distance="15497.94" Lat="46.896516" Lng="8.111044" Alt="1489.04"/>
+  <AltitudePoint Distance="15514.04" Lat="46.896403" Lng="8.110882" Alt="1490.97"/>
+  <AltitudePoint Distance="15530.13" Lat="46.896226" Lng="8.110630" Alt="1494.18"/>
+  <AltitudePoint Distance="15562.32" Lat="46.896007" Lng="8.110378" Alt="1497.58"/>
+  <AltitudePoint Distance="15610.60" Lat="46.895632" Lng="8.110155" Alt="1503.12"/>
+  <AltitudePoint Distance="15642.78" Lat="46.895356" Lng="8.110002" Alt="1507.48"/>
+  <AltitudePoint Distance="15674.97" Lat="46.895064" Lng="8.109873" Alt="1511.86"/>
+  <AltitudePoint Distance="15707.16" Lat="46.894773" Lng="8.109706" Alt="1516.47"/>
+  <AltitudePoint Distance="15739.35" Lat="46.894636" Lng="8.109455" Alt="1519.56"/>
+  <AltitudePoint Distance="15771.53" Lat="46.894450" Lng="8.109090" Alt="1523.33"/>
+  <AltitudePoint Distance="15803.72" Lat="46.894310" Lng="8.108813" Alt="1526.19"/>
+  <AltitudePoint Distance="15835.91" Lat="46.894072" Lng="8.108372" Alt="1531.42"/>
+  <AltitudePoint Distance="15868.09" Lat="46.893900" Lng="8.108209" Alt="1534.31"/>
+  <AltitudePoint Distance="15884.19" Lat="46.893782" Lng="8.108145" Alt="1536.41"/>
+  <AltitudePoint Distance="15884.19" Lat="46.893660" Lng="8.108108" Alt="1538.28"/>
+  <AltitudePoint Distance="15900.28" Lat="46.893538" Lng="8.108070" Alt="1540.16"/>
+  <AltitudePoint Distance="15916.37" Lat="46.893468" Lng="8.108060" Alt="1541.23"/>
+  <AltitudePoint Distance="15916.37" Lat="46.893399" Lng="8.108050" Alt="1542.25"/>
+  <AltitudePoint Distance="15932.47" Lat="46.893329" Lng="8.108039" Alt="1543.20"/>
+  <AltitudePoint Distance="15932.47" Lat="46.893294" Lng="8.108034" Alt="1543.61"/>
+  <AltitudePoint Distance="15932.47" Lat="46.893276" Lng="8.108032" Alt="1543.79"/>
+  <AltitudePoint Distance="15932.47" Lat="46.893259" Lng="8.108029" Alt="1543.95"/>
+  <AltitudePoint Distance="15932.47" Lat="46.893231" Lng="8.108012" Alt="1544.17"/>
+  <AltitudePoint Distance="15948.56" Lat="46.893202" Lng="8.107995" Alt="1544.34"/>
+  <AltitudePoint Distance="15948.56" Lat="46.893174" Lng="8.107979" Alt="1544.46"/>
+  <AltitudePoint Distance="15948.56" Lat="46.893145" Lng="8.107962" Alt="1544.53"/>
+  <AltitudePoint Distance="15948.56" Lat="46.893117" Lng="8.107945" Alt="1544.54"/>
+  <AltitudePoint Distance="15964.65" Lat="46.893088" Lng="8.107928" Alt="1544.50"/>
+  <AltitudePoint Distance="15964.65" Lat="46.893060" Lng="8.107911" Alt="1544.47"/>
+  <AltitudePoint Distance="15964.65" Lat="46.893031" Lng="8.107895" Alt="1544.42"/>
+  <AltitudePoint Distance="15964.65" Lat="46.892974" Lng="8.107861" Alt="1544.27"/>
+  <AltitudePoint Distance="15980.75" Lat="46.892917" Lng="8.107827" Alt="1544.11"/>
+  <AltitudePoint Distance="15980.75" Lat="46.892860" Lng="8.107794" Alt="1543.98"/>
+  <AltitudePoint Distance="15996.84" Lat="46.892803" Lng="8.107760" Alt="1543.85"/>
+  <AltitudePoint Distance="15996.84" Lat="46.892700" Lng="8.107733" Alt="1543.65"/>
+  <AltitudePoint Distance="16012.93" Lat="46.892597" Lng="8.107705" Alt="1543.42"/>
+  <AltitudePoint Distance="16029.03" Lat="46.892496" Lng="8.107694" Alt="1543.21"/>
+  <AltitudePoint Distance="16045.12" Lat="46.892395" Lng="8.107683" Alt="1542.99"/>
+  <AltitudePoint Distance="16061.21" Lat="46.892248" Lng="8.107709" Alt="1542.72"/>
+  <AltitudePoint Distance="16077.31" Lat="46.892101" Lng="8.107734" Alt="1542.30"/>
+  <AltitudePoint Distance="16093.40" Lat="46.891954" Lng="8.107760" Alt="1541.76"/>
+  <AltitudePoint Distance="16109.49" Lat="46.891807" Lng="8.107785" Alt="1541.11"/>
+  <AltitudePoint Distance="16125.59" Lat="46.891614" Lng="8.107823" Alt="1540.27"/>
+  <AltitudePoint Distance="16141.68" Lat="46.891420" Lng="8.107861" Alt="1539.12"/>
+  <AltitudePoint Distance="16173.87" Lat="46.891264" Lng="8.107996" Alt="1537.70"/>
+  <AltitudePoint Distance="16189.96" Lat="46.891108" Lng="8.108131" Alt="1536.02"/>
+  <AltitudePoint Distance="16222.15" Lat="46.890934" Lng="8.108485" Alt="1533.27"/>
+  <AltitudePoint Distance="16254.33" Lat="46.890760" Lng="8.108839" Alt="1530.09"/>
+  <AltitudePoint Distance="16286.52" Lat="46.890574" Lng="8.109244" Alt="1527.40"/>
+  <AltitudePoint Distance="16334.80" Lat="46.890391" Lng="8.109677" Alt="1524.22"/>
+  <AltitudePoint Distance="16366.99" Lat="46.890197" Lng="8.110135" Alt="1520.61"/>
+  <AltitudePoint Distance="16415.27" Lat="46.890022" Lng="8.110630" Alt="1516.48"/>
+  <AltitudePoint Distance="16479.64" Lat="46.889776" Lng="8.111331" Alt="1511.84"/>
+  <AltitudePoint Distance="16511.83" Lat="46.889583" Lng="8.111681" Alt="1508.28"/>
+  <AltitudePoint Distance="16544.02" Lat="46.889434" Lng="8.112195" Alt="1503.93"/>
+  <AltitudePoint Distance="16592.30" Lat="46.889509" Lng="8.112684" Alt="1500.09"/>
+  <AltitudePoint Distance="16624.48" Lat="46.889578" Lng="8.113062" Alt="1496.78"/>
+  <AltitudePoint Distance="16656.67" Lat="46.889547" Lng="8.113488" Alt="1493.44"/>
+  <AltitudePoint Distance="16688.86" Lat="46.889403" Lng="8.113873" Alt="1490.26"/>
+  <AltitudePoint Distance="16721.04" Lat="46.889194" Lng="8.114206" Alt="1486.99"/>
+  <AltitudePoint Distance="16753.23" Lat="46.889008" Lng="8.114577" Alt="1483.83"/>
+  <AltitudePoint Distance="16801.51" Lat="46.888902" Lng="8.115255" Alt="1479.22"/>
+  <AltitudePoint Distance="16833.70" Lat="46.888856" Lng="8.115716" Alt="1476.16"/>
+  <AltitudePoint Distance="16881.98" Lat="46.888946" Lng="8.116300" Alt="1472.59"/>
+  <AltitudePoint Distance="16962.44" Lat="46.889207" Lng="8.117110" Alt="1468.33"/>
+  <AltitudePoint Distance="16962.44" Lat="46.889259" Lng="8.117273" Alt="1467.59"/>
+  <AltitudePoint Distance="16978.54" Lat="46.889312" Lng="8.117435" Alt="1466.91"/>
+  <AltitudePoint Distance="16994.63" Lat="46.889365" Lng="8.117598" Alt="1466.38"/>
+  <AltitudePoint Distance="17010.72" Lat="46.889417" Lng="8.117761" Alt="1465.94"/>
+  <AltitudePoint Distance="17010.72" Lat="46.889450" Lng="8.117865" Alt="1465.49"/>
+  <AltitudePoint Distance="17026.82" Lat="46.889483" Lng="8.117969" Alt="1464.86"/>
+  <AltitudePoint Distance="17042.91" Lat="46.889517" Lng="8.118074" Alt="1464.08"/>
+  <AltitudePoint Distance="17042.91" Lat="46.889550" Lng="8.118178" Alt="1463.35"/>
+  <AltitudePoint Distance="17059.00" Lat="46.889616" Lng="8.118386" Alt="1462.04"/>
+  <AltitudePoint Distance="17075.10" Lat="46.889683" Lng="8.118594" Alt="1460.66"/>
+  <AltitudePoint Distance="17107.28" Lat="46.889815" Lng="8.119011" Alt="1457.48"/>
+  <AltitudePoint Distance="17139.47" Lat="46.889882" Lng="8.119220" Alt="1456.05"/>
+  <AltitudePoint Distance="17155.56" Lat="46.889948" Lng="8.119428" Alt="1454.94"/>
+  <AltitudePoint Distance="17171.66" Lat="46.890019" Lng="8.119754" Alt="1453.83"/>
+  <AltitudePoint Distance="17203.84" Lat="46.890090" Lng="8.120080" Alt="1453.13"/>
+  <AltitudePoint Distance="17219.94" Lat="46.890189" Lng="8.120219" Alt="1452.82"/>
+  <AltitudePoint Distance="17236.03" Lat="46.890288" Lng="8.120358" Alt="1452.50"/>
+  <AltitudePoint Distance="17284.31" Lat="46.890608" Lng="8.120752" Alt="1451.31"/>
+  <AltitudePoint Distance="17316.50" Lat="46.890800" Lng="8.121049" Alt="1450.48"/>
+  <AltitudePoint Distance="17429.15" Lat="46.891326" Lng="8.122406" Alt="1447.70"/>
+  <AltitudePoint Distance="17477.43" Lat="46.891630" Lng="8.122792" Alt="1446.69"/>
+  <AltitudePoint Distance="17509.62" Lat="46.891790" Lng="8.123301" Alt="1446.00"/>
+  <AltitudePoint Distance="17541.81" Lat="46.891904" Lng="8.123654" Alt="1445.71"/>
+  <AltitudePoint Distance="17702.74" Lat="46.892781" Lng="8.125139" Alt="1443.97"/>
+  <AltitudePoint Distance="17718.83" Lat="46.892900" Lng="8.125449" Alt="1443.56"/>
+  <AltitudePoint Distance="17751.02" Lat="46.892928" Lng="8.125814" Alt="1443.21"/>
+</AltitudePoints>
+<VideoPoints>
+  <VideoPoint Distance="0.00" VideoTime="0"/>
+  <VideoPoint Distance="278.20" VideoTime="30"/>
+  <VideoPoint Distance="585.15" VideoTime="60"/>
+  <VideoPoint Distance="836.25" VideoTime="90"/>
+  <VideoPoint Distance="1130.70" VideoTime="120"/>
+  <VideoPoint Distance="1417.02" VideoTime="150"/>
+  <VideoPoint Distance="1712.23" VideoTime="180"/>
+  <VideoPoint Distance="2016.10" VideoTime="210"/>
+  <VideoPoint Distance="2306.07" VideoTime="240"/>
+  <VideoPoint Distance="2634.89" VideoTime="270"/>
+  <VideoPoint Distance="3006.74" VideoTime="300"/>
+  <VideoPoint Distance="3312.14" VideoTime="330"/>
+  <VideoPoint Distance="3639.13" VideoTime="360"/>
+  <VideoPoint Distance="3965.84" VideoTime="390"/>
+  <VideoPoint Distance="4306.65" VideoTime="420"/>
+  <VideoPoint Distance="4746.32" VideoTime="450"/>
+  <VideoPoint Distance="5252.76" VideoTime="480"/>
+  <VideoPoint Distance="5743.01" VideoTime="510"/>
+  <VideoPoint Distance="6236.98" VideoTime="540"/>
+  <VideoPoint Distance="6738.35" VideoTime="570"/>
+  <VideoPoint Distance="7123.54" VideoTime="600"/>
+  <VideoPoint Distance="7567.09" VideoTime="630"/>
+  <VideoPoint Distance="7987.97" VideoTime="660"/>
+  <VideoPoint Distance="8313.67" VideoTime="690"/>
+  <VideoPoint Distance="8716.53" VideoTime="720"/>
+  <VideoPoint Distance="9069.28" VideoTime="750"/>
+  <VideoPoint Distance="9300.56" VideoTime="780"/>
+  <VideoPoint Distance="9572.51" VideoTime="810"/>
+  <VideoPoint Distance="9858.35" VideoTime="840"/>
+  <VideoPoint Distance="10260.61" VideoTime="870"/>
+  <VideoPoint Distance="10640.97" VideoTime="900"/>
+  <VideoPoint Distance="10878.08" VideoTime="930"/>
+  <VideoPoint Distance="11075.86" VideoTime="960"/>
+  <VideoPoint Distance="11268.68" VideoTime="990"/>
+  <VideoPoint Distance="11479.16" VideoTime="1020"/>
+  <VideoPoint Distance="11709.66" VideoTime="1050"/>
+  <VideoPoint Distance="11959.28" VideoTime="1080"/>
+  <VideoPoint Distance="12355.40" VideoTime="1110"/>
+  <VideoPoint Distance="12712.41" VideoTime="1140"/>
+  <VideoPoint Distance="12994.33" VideoTime="1170"/>
+  <VideoPoint Distance="13287.05" VideoTime="1200"/>
+  <VideoPoint Distance="13595.81" VideoTime="1230"/>
+  <VideoPoint Distance="13976.40" VideoTime="1260"/>
+  <VideoPoint Distance="14385.16" VideoTime="1290"/>
+  <VideoPoint Distance="14674.18" VideoTime="1320"/>
+  <VideoPoint Distance="14901.61" VideoTime="1350"/>
+  <VideoPoint Distance="15165.21" VideoTime="1380"/>
+  <VideoPoint Distance="15440.58" VideoTime="1410"/>
+  <VideoPoint Distance="15704.87" VideoTime="1440"/>
+  <VideoPoint Distance="15972.27" VideoTime="1470"/>
+  <VideoPoint Distance="16448.83" VideoTime="1500"/>
+  <VideoPoint Distance="16942.90" VideoTime="1530"/>
+  <VideoPoint Distance="17447.37" VideoTime="1560"/>
+  <VideoPoint Distance="17751.02" VideoTime="1582"/>
+</VideoPoints>
+</Track>

@@ -1,0 +1,47 @@
+27/02/2024:
+***********
+new urls, new search, login nodig
+
+https://riders.rouvy.com/routes/search/?count=&maxAscended=&maxDistance=&minAscended=&minDistance=&scenario=Search-Routes&searchQuery=utah&_data=root
+searchQuery = de tekst die je in het search venster typt (bv utah)
+met filter : 
+https://riders.rouvy.com/routes/search/?count=6&maxAscended=1175&maxDistance=37000&minAscended=489&minDistance=15000&scenario=Search-Routes&searchQuery=&_data=routes%2F_main.routes.search
+
+routeTags:
+the-americas, asia-pacific, europe, africa
+national-parks
+gravel
+iconic-courses
+
+met filter + routeTags:
+https://riders.rouvy.com/routes/search/?count=6&maxAscended=1175&maxDistance=37000&minAscended=489&minDistance=15000&routeTags=iconic-courses&scenario=Search-Routes&searchQuery=&_data=routes%2F_main.routes.search
+
+https://riders.rouvy.com/routes/search/?count=47&maxAscended=1175&maxDistance=37000&minAscended=489&minDistance=15000&routeTags=national-parks&routeTags=gravel&scenario=Search-Routes&searchQuery=&_data=root
+
+https://riders.rouvy.com/routes/search/?count=47&maxAscended=1175&maxDistance=37000&minAscended=489&minDistance=15000&routeTags=national-parks&routeTags=gravel&scenario=Search-Routes&searchQuery=&_data=routes%2F_main.routes.search
+
+https://riders.rouvy.com/routes/search?next=9ad355e0659868319b968e78d83869fe&_data=routes%2F_main.routes.search
+next= recommendationId
+
+large thumbnail wordt door een script gedraaid die een kleine vertikale thumbnail genereert van de originele 1080x720
+
+'thumbnails': {'large': 'https://thumbor.rouvy.com/XbsmDF6xHlARaypzqsZ53WIplIc=/592x800/smart/https%3A%2F%2Fcdn.virtualtraining.eu%2Froutes%2F93334%2Fvideo%2Fthumbnail_1080x720.png',
+  'medium': 'https://cdn.virtualtraining.eu/routes/93334/video/thumbnail_645x300.png',
+  'small': 'https://cdn.virtualtraining.eu/routes/93334/video/thumbnail_313x147.png'}}
+-> niet gebruiken
+
+
+< 02/2024:
+************
+https://rouvy.com/api/route/search?offset=0&averageSlopeFrom=0&averageSlopeTo=100&distanceFrom=0&distanceTo=50&elevationFrom=0&elevationTo=5000&supportsAugmentedReality=false
+https://rouvy.com/api/route/search?offset=0&country=ES&averageSlopeFrom=0&averageSlopeTo=100&distanceFrom=0&distanceTo=50&elevationFrom=0&elevationTo=5000&supportsAugmentedReality=false
+
+country = 2-digit ISO code (SI=slovenia)
+
+https://rouvy.com/api/route/search?offset=0&query=utah&averageSlopeFrom=0&averageSlopeTo=100&distanceFrom=0&distanceTo=50&elevationFrom=0&elevationTo=5000&supportsAugmentedReality=false
+
+de query=utah : free text search op de route
+offset=0 : je krijgt de eerste 6
+offset=1 : je krijgt 1..7,etc
+
+cijfers zijn m & km

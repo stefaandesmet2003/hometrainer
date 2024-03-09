@@ -5,9 +5,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="direto.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/hammerjs"></script>  
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs"></script>
+  <!-- TODO 11/2023 zoom plugin raises error at startup -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script> -->
 
 </head>
 <body onload="onBodyLoad()">
@@ -32,11 +33,41 @@
   <script>
     'use strict';
     // test definition - fixed for now
-    let slices = [
-      {type : 'warmup', duration: 30, targetPower : 0},
-      {type : 'fixed', duration : 10, targetPower : 100},
-      {type : 'auto', duration : 15, targetPower : 20}, // auto-increment by 20W
-    ]
+    let tests = [
+      { name : 'fitnesstest',
+        slices : [
+          {type : 'warmup', duration: 30, targetPower : 5},
+          {type : 'fixed', duration : 10, targetPower : 100},
+          {type : 'auto', duration : 60, targetPower : 20}, // auto-increment by 20W
+        ],
+      },
+      { name : 'interval1',
+        slices : [
+          {type : 'warmup', duration: 30, targetPower : 5},
+          {type : 'fixed', duration : 300, targetPower : 200},
+          {type : 'fixed', duration : 300, targetPower : 100},
+          {type : 'fixed', duration : 300, targetPower : 200},
+          {type : 'fixed', duration : 300, targetPower : 100},
+          {type : 'fixed', duration : 120, targetPower : 5}, // cooldown
+        ],
+      },
+      { name : 'sprint1',
+        slices : [
+          {type : 'warmup', duration: 30, targetPower : 5},
+          {type : 'fixed', duration : 300, targetPower : 200},
+          {type : 'fixed', duration : 15, targetPower : 400},
+          {type : 'fixed', duration : 60, targetPower : 5},
+          {type : 'fixed', duration : 15, targetPower : 400},
+          {type : 'fixed', duration : 60, targetPower : 5},
+          {type : 'fixed', duration : 15, targetPower : 400},
+          {type : 'fixed', duration : 60, targetPower : 5},
+          {type : 'fixed', duration : 300, targetPower : 200},
+          {type : 'fixed', duration : 120, targetPower : 5}, // cooldown
+        ],
+      },
+    ];
+    let slices = tests[2].slices;
+
     let bleConnected = false;
     let secTimer = null;
 
@@ -108,6 +139,32 @@
       rideLog = [];
       chartPowerData = [];
       chartTargetPowerData = [];
+      // 01.2024 : initialiseer chartTargetPowerData met de ganse test
+      let tstart = Date.now(); //ms
+      let t = tstart;
+      let targetPower = 0;
+      for (let sidx=0; sidx < slices.length; sidx++) {
+        if (slices[sidx].type != 'auto') {
+          targetPower = slices[sidx].targetPower;
+          for (let tidx=0;tidx<slices[sidx].duration;tidx++) {
+            chartTargetPowerData.push({t: new Date(t), y: targetPower});
+            t += 1000; //ms
+          }
+        }
+        else {
+          let sliceDuration = 0;
+          while ((t - tstart) < 1800000) { // initialize a 30' test
+            if (sliceDuration == 0) {
+              sliceDuration = slices[sidx].duration;
+              targetPower += slices[sidx].targetPower;
+            }
+            chartTargetPowerData.push({t: new Date(t), y: targetPower});
+            t += 1000; //ms
+            sliceDuration -= 1;
+          }
+        }
+      }
+
       chartCadenceData = [];      
       testDuration = 0;
       sliceIdx = 0;
@@ -252,16 +309,17 @@
           {
             label: 'Target Power',
             yAxisID: 'power-axis',
-            backgroundColor: 'lightblue',
+            backgroundColor: 'rgb(200, 200, 200)',
             borderColor: 'lightblue',
             data: chartTargetPowerData,
             type: 'line',
             pointRadius: 0,
-            fill: false,
+            fill: true,
             lineTension: 0,
             borderWidth: 2,
             showLine : true, // true, false
           },
+          /*
           {
             label: 'Rider Cadence',
             yAxisID: 'cadence-axis',
@@ -275,6 +333,7 @@
             borderWidth: 2,
             showLine : true, // true, false
           },
+          */
           ]
         },
         options: {
@@ -298,7 +357,7 @@
               offset: true,
               ticks: {
                 min: new Date().getTime(),
-                max: new Date().getTime() + 60000, // ms epoch
+                max: new Date().getTime() + 1800000, // ms epoch
                 major: {
                   enabled: true,
                   fontStyle: 'bold'
@@ -326,6 +385,7 @@
                 fontColor: 'rgb(0, 99, 132)',
               }
             },
+            /*
             {
               id: 'cadence-axis',
               type: 'linear', // default wss
@@ -341,77 +401,9 @@
                 labelString: 'cadence (rpm)',
                 fontColor : 'green',
               }
-            }]
+            } */
+            ]
           },
-          plugins: {
-            zoom: {
-              // Container for pan options
-              pan: {
-                // Boolean to enable panning
-                enabled: true,
-                // Panning directions. Remove the appropriate direction to disable
-                // Eg. 'y' would only allow panning in the y direction
-                // A function that is called as the user is panning and returns the
-                // available directions can also be used:
-                //   mode: function({ chart }) {
-                //     return 'xy';
-                //   },
-                mode: 'x',
-
-                rangeMin: {
-                  // Format of min pan range depends on scale type
-                  x: null,
-                  y: null
-                },
-                rangeMax: {
-                  // Format of max pan range depends on scale type
-                  x: null,
-                  y: null
-                },
-              },
-
-              // Container for zoom options
-              zoom: {
-                // Boolean to enable zooming
-                enabled: true,
-
-                // Enable drag-to-zoom behavior
-                drag: false,
-
-                // Drag-to-zoom effect can be customized
-                // drag: {
-                // 	 borderColor: 'rgba(225,225,225,0.3)'
-                // 	 borderWidth: 5,
-                // 	 backgroundColor: 'rgb(225,225,225)',
-                // 	 animationDuration: 0
-                // },
-
-                // Zooming directions. Remove the appropriate direction to disable
-                // Eg. 'y' would only allow zooming in the y direction
-                // A function that is called as the user is zooming and returns the
-                // available directions can also be used:
-                //   mode: function({ chart }) {
-                //     return 'xy';
-                //   },
-                mode: 'x',
-
-                rangeMin: {
-                  // Format of min zoom range depends on scale type
-                  x: null,
-                  y: null
-                },
-                rangeMax: {
-                  // Format of max zoom range depends on scale type
-                  x: null,
-                  y: null
-                },
-
-                // Speed of zoom via mouse wheel
-                // (percentage of zoom on a wheel event)
-                speed: 0.5,
-              } // zoom
-            } // plugin-zoom
-          } // plugin
         } // options
       };
 

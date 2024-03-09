@@ -444,9 +444,9 @@ function initRidesTable() {
   for (let i=0; i < theRides.length; i++) {
     let r, c;
     r = ridesTable.insertRow();
+    c = r.insertCell(); c.innerHTML = `<button class= "aRideButton" id= "ride_${i}">${i+1} GO!</button>`;
     c = r.insertCell(); c.innerHTML = theRides[i].name;
     c = r.insertCell(); c.innerHTML = theRides[i].description;
-    c = r.insertCell(); c.innerHTML = `<button class= "aRideButton" id= "ride_${i}">GO!</button>`;
   }
   let aRideButtons = document.getElementsByClassName("aRideButton");
   for (let i=0; i<aRideButtons.length;i++) {
@@ -476,3 +476,8 @@ async function startRideOnClick(event) {
   }
 
 } // startRideOnClick
+
+function log(line) {
+  let n = Date.now() & 0xffff;
+  console.log (`${n} - ${line}`);
+} // log

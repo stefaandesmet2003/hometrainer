@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
     <Track xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"> 
        <CheckValue>blabla</CheckValue>  
-       <Name>56888</Name>  
-       <Description>La Vuelta 2020 | Stage 11 - Alto de la Farrapona</Description>  
+       <Name>56888_La Vuelta 2020 | Stage 11 - Alto de la Farrapona</Name>  
+       <Description>None</Description>  
        <Date>2020-09-21 12:11:20</Date>  
        <Action>CYCLO_ROAD</Action> 
        <Difficulty>NOT_SPECIFIED</Difficulty> 
