@@ -1,0 +1,144 @@
+<!doctype html>
+<html>
+<head>
+  <title>MyWhoosh Direto Setup</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="ftms.js"></script>
+
+</head>
+<body onload="onBodyLoad()">
+
+  <h1><center>Simple Setup for using Elite Direto with MyWhoosh</center></h1>
+  <p>
+    This page provides a simple fix for the missing gradient feedback in MyWhoosh when
+    the Elite Direto indoor trainer is connected over BLE. <br>
+    The fix may work for other types of indoor trainers as well. <br>
+    How it works :
+    <ul>
+      <li>press the connect button, and choose your indoor trainer from the popup screen and click OK <br>
+        If successful, the connect button turns green. <br>
+        If not, your trainer may not be compatible with this fix. Consult the logs and feel free to modify the code. <br>
+      </li>
+      <li> you can test the gradient feedback, or go straight away to MyWhoosh </li>
+      <li> your trainer only supports 1 BLE connection, therefore press disconnect here, 
+        so your trainer can be discovered by MyWhoosh
+      </li>
+    </ul>
+    </p>
+  <button id="buttonConnectTrainer" title="connect BLE trainer">Connect</button>
+  <span id="data-gradient">Gradient : 0.0%</span>
+  <button id="buttonIncreaseGradient"> UP </button>
+  <button id="buttonDecreaseGradient"> DOWN</button>
+  
+  <p><font id="userinfo" size="4" face="verdana" color="green">User info</font></p>
+  <h2 id="bikedata">&#x1F6B2;</h2>
+  <p>Detailed Logs:</p>
+  <pre id="log"></pre>
+  
+  <script>
+    'use strict';
+
+    let bleConnected = false;
+    let gradientInPct = 0.0;
+    let secTimer = null;
+
+    function onBodyLoad() {
+      log("start");
+      document.getElementById('userinfo').setAttribute('style','white-space: pre;');
+      userInfo("Press Connect button");
+      document.getElementById('buttonConnectTrainer').addEventListener('click', buttonConnectTrainerOnClick);
+      document.getElementById('buttonIncreaseGradient').addEventListener('click', increaseGradient);
+      document.getElementById('buttonDecreaseGradient').addEventListener('click', decreaseGradient);
+      secTimer = setInterval(secUpdate, 1000);
+      //FTMS.logFtmsCommands = true;
+    } // onBodyLoad
+
+    async function buttonConnectTrainerOnClick() {
+      let connectButton = document.getElementById('buttonConnectTrainer');
+      if (!bleConnected) { // connect
+        try {
+          await FTMS.connect();
+          log("connect done");
+          await FTMS.init();
+          log("init done");
+          await FTMS.sleep(100);
+          await FTMS.start();
+          log("FTMS started");
+          // change button color & text
+          connectButton.textContent = "Disconnect";
+          connectButton.style.backgroundColor = "green";
+          bleConnected = true;
+          await FTMS.sleep(10);
+          await FTMS.setSimulationParameters(0.0);
+          userInfo("Indoor Trainer ready for MyWhoosh - disconnect now or give the gradient feedback a try");
+        } catch(error) {
+            userInfo("Error connecting indoor trainer. \r\nIf the error is in FTMS.start() your trainer is probably already started " +
+            "and you're good to go, \r\nor you may choose to powercycle it and retry to connect");
+            log('error connecting indoor trainer : ' + error);
+        }
+      }
+      else { // disconnect
+        try {
+          // don't FTMS.stop() here to keep trainer started and ready for mywhoosh
+          // only release BLE connection
+          await FTMS.disconnect();
+          // change button color & text
+          connectButton.textContent = "Connect";
+          connectButton.style.backgroundColor = "white";
+          bleConnected = false;
+          userInfo("Indoor Trainer disconnected, your trainer is now ready for MyWhoosh");
+        } catch (error) {
+          userInfo("Error disconnecting indoor trainer");
+          log (`error disconnecting indoor trainer : ${error}`);
+        }
+      }
+    } // buttonConnectTrainerOnClick
+
+    async function increaseGradient() {
+      gradientInPct = gradientInPct + 0.5;
+      let dataGradient = document.getElementById('data-gradient');
+      dataGradient.textContent = `Gradient : ${gradientInPct} %`;
+      if (bleConnected) {
+        FTMS.setSimulationParameters(gradientInPct);
+      }
+    } // increaseGradient
+
+    async function decreaseGradient() {
+      gradientInPct = gradientInPct - 0.5;
+      let dataGradient = document.getElementById('data-gradient');
+      dataGradient.textContent = `Gradient : ${gradientInPct} %`;
+      if (bleConnected) {
+        FTMS.setSimulationParameters(gradientInPct);
+      }
+    } // decreaseGradient
+
+    function secUpdate () {
+      let bikeDataPower = 0;
+      let bikeDataCadence = 0;
+      if (bleConnected) {
+        bikeDataPower = FTMS.bikeData.instantaneousPower;
+        bikeDataCadence = FTMS.bikeData.instantaneousCadence;
+      }
+      let bikeDataTxt = document.getElementById('bikedata');
+      bikeDataTxt.innerHTML = `${bikeDataPower}W &#x1F6B2; ${bikeDataCadence} rpm &#x1F6B2; `;
+    } // secUpdate
+
+    function userInfo(line) {
+      document.getElementById('userinfo').textContent = line + '\n';
+    } // userInfo
+
+    function log(line) {
+      document.getElementById('log').textContent += line + '\n';
+    }
+
+    /*
+    function log(line) {
+      let n = Date.now() & 0xffff;
+      console.log (`${n} - ${line}`);
+    }
+    */
+  </script>
+
+</body>
+</html>

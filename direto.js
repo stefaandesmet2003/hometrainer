@@ -7,6 +7,7 @@
   const FTMS_CMD_SET_TARGET_POWER = 5;
   const FTMS_CMD_START_RESUME = 7;
   const FTMS_CMD_STOP_PAUSE = 8;
+  const FTMS_CMD_SET_INDOOR_BIKE_SIMULATION_PARAMETERS = 17;
   const FTMS_CMD_SET_WHEEL_CIRCUMFERENCE = 18;
   const FTMS_CMD_PARAM_STOP = 1;
   const FTMS_CMD_PARAM_PAUSE = 2;
@@ -334,7 +335,40 @@
       return respCode; // implicit Promise.resolve(respCode)
     } // setTargetPower
 
-    // 01.2021 for test
+    async setSimulationParameters (gradeInPct,windSpeedInMs=0,crr=0.0033,cw=0.65) {
+      if (!this.connected) {
+        return Promise.reject("direto.setSimulationParameters error : not connected");
+      }
+      let respCode = FTMS_RESP_SUCCESS;
+      gradeInPct = ~~(gradeInPct * 100 + 0.5) & 0xFFFF; // in 0.01% acc. FTMS spec
+      windSpeedInMs = ~~(windSpeedInMs * 1000 + 0.5) & 0xFFFF; // in 0.001m/s acc. FTMS spec
+      crr = ~~(crr*10000+0.5) & 0xFF; // in 0.0001 acc. FTMS spec
+      cw = ~~(cw*100 + 0.5) & 0xFF;  // in 0.01 acc. FTMS spec
+
+      try {
+        // request control is not strictly necessary
+        // only if a cmd returns FTMS_RESP_CONTROL_NOT_PERMITTED
+        respCode = await this._ftmsCommand(FTMS_CMD_REQUEST_CONTROL);
+        if (respCode == FTMS_RESP_SUCCESS) {
+          respCode = await this._ftmsCommand(
+            FTMS_CMD_SET_INDOOR_BIKE_SIMULATION_PARAMETERS, 
+            [{"type":"int16", "val":windSpeedInMs},
+              {"type":"int16", "val":gradeInPct},
+              {"type":"uint8", "val":crr},
+              {"type":"uint8", "val":cw}
+            ]);
+        }
+      }
+      catch (error) {
+        return Promise.reject(`direto.setSimulationParameters error : command failed (${error})`);
+      }
+
+      if (respCode != FTMS_RESP_SUCCESS) {
+        return Promise.reject(`direto.setSimulationParameters error : command failed (${respCode})`);
+      }
+      return respCode; // implicit Promise.resolve(respCode)
+    } // setSimulationParameters
+
     async setWheelCircumference (wheelCircumferenceInMm) {
       if (!this.connected) {
         return Promise.reject("direto.setWheelCircumference error : not connected");

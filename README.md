@@ -12,6 +12,15 @@ Download your efforts as gpx file, for manual upload to strava or other platform
 
 Have fun!
 
+# Fixing Gradient Feedback in MyWhoosh
+https://stefaandesmet2003.github.io/hometrainer/mywhooshsetup.html
+
+Currently resistance control / gradient feedback doesn't seem to work in the MyWhoosh app on a number of older indoor trainers, including Elite Direto, when connected over BLE.
+
+Until MyWhoosh has the issue fixed, going through this simple setup will get you going. The fix sends the 'Start' command to the indoor trainer that's missing during pairing in Mywhoosh. Obviously this needs to be done after each power on of your indoor trainer.
+
+This fix has been tested on Elite Direto, but may work on other trainer types as well. Feel free to let me know how you go.
+
 # fitness test
 https://stefaandesmet2003.github.io/hometrainer/fitnesstest.html
 
@@ -40,7 +49,7 @@ The cadence sensor provides an accurate reference for every pedal revolution. Wi
 
 ![alt text](https://github.com/stefaandesmet2003/hometrainer/blob/master/pedallingAnalysis.jpg?raw=true)
 
-***Ah, and before I forget, you need chrome://flags/#enable-experimental-web-platform-features*** 
+***Ah, and before I forget, you may need chrome://flags/#enable-experimental-web-platform-features*** 
 
 
 Enjoy!
