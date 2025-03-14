@@ -12,7 +12,8 @@ Download your efforts as gpx file, for manual upload to strava or other platform
 
 Have fun!
 
-# Fixing Gradient Feedback in MyWhoosh
+# Fixing Gradient Feedback in MyWhoosh -> fixed in MyWhoosh version 4.0.0
+Note : this issue in MyWhoosh seems to be fixed in version 4.0.0 (first version with virtual gears). 
 https://stefaandesmet2003.github.io/hometrainer/mywhooshsetup.html
 
 Currently resistance control / gradient feedback doesn't seem to work in the MyWhoosh app on a number of older indoor trainers, including Elite Direto, when connected over BLE.
